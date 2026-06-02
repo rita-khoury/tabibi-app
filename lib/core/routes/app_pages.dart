@@ -8,13 +8,25 @@ import 'package:tabibi/features/favorites/binding/favorites_doctors_binding.dart
 import 'package:tabibi/features/favorites/view/favorites_doctors_view.dart';
 import 'package:tabibi/features/medical_records/binding/medical_records_binding.dart';
 import 'package:tabibi/features/medical_records/view/medical_records_view.dart';
+import 'package:tabibi/features/onboarding/onboarding_screen.dart';
+import 'package:tabibi/features/onboarding/splash_screen.dart';
+import 'package:tabibi/features/profile/binding/edit_profile_binding.dart';
 import 'package:tabibi/features/profile/binding/profile_binding.dart';
+import 'package:tabibi/features/profile/view/edit_profile_view.dart';
 import 'package:tabibi/features/profile/view/profile_view.dart';
 import 'package:tabibi/features/settings/binding/binding_settings.dart';
 import 'package:tabibi/features/settings/view/view_settings.dart';
 
 class AppPages {
   static final pages = [
+     GetPage(
+      name: AppRoutes.splash,
+      page: () => SplashScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.onboarding,
+      page: () => OnboardingScreen(),
+    ),
    GetPage(
       name: AppRoutes.profile,
       page: () => ProfileView(),
@@ -42,7 +54,7 @@ GetPage(
   binding: MedicalRecordsBinding(),
 ),
 GetPage(
-  name: '/favorites',
+  name:AppRoutes.favorites,
   page: () => const FavoritesDoctorsView(),
   binding: FavoritesDoctorsBinding(),
 ),
@@ -52,6 +64,12 @@ GetPage(
       page: () => const HelpSupportView(),
       binding: HelpSupportBinding(),
     ),
+
+    GetPage(
+  name: AppRoutes.editProfile,
+  page: () => const EditProfileView(),
+  binding: EditProfileBinding(),
+),
 
 
   ];

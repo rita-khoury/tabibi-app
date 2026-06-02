@@ -336,21 +336,38 @@ class ProfileView extends GetView<ProfileController> {
 
                 const SizedBox(height: 20),
 
-                Container(
-                  width: 110,
-                  height: 110,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppColors.white,
-                      width: 4,
-                    ),
-                    image: const DecorationImage(
-                      image: NetworkImage('https://i.pravatar.cc/300'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
+               Obx(() {
+  final img = controller.imageUrl.value;
+  final loggedIn = controller.isLoggedIn.value;
+
+  return Container(
+    width: 110,
+    height: 110,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(
+        color: AppColors.white,
+        width: 4,
+      ),
+      color: AppColors.primaryBlue,
+      image: (loggedIn && img.isNotEmpty)
+          ? DecorationImage(
+              image: NetworkImage(img),
+              fit: BoxFit.cover,
+            )
+          : null,
+    ),
+    child: (!loggedIn || img.isEmpty)
+        ? const Center(
+            child: Icon(
+              Icons.person,
+              size: 60,
+              color: Colors.white,
+            ),
+          )
+        : null,
+  );
+}),
 
                 const SizedBox(height: 15),
 
@@ -380,7 +397,9 @@ class ProfileView extends GetView<ProfileController> {
                 const SizedBox(height: 20),
 
                 ElevatedButton(
-                  onPressed: controller.editProfile,
+                  onPressed:  () {
+  Get.toNamed(AppRoutes.editProfile);
+},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.white,
                     foregroundColor: AppColors.primaryBlue,

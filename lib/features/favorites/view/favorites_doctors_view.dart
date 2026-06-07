@@ -60,11 +60,36 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
             Expanded(
               child: Obx(() {
 
-                if (controller.favorites.isEmpty) {
-                  return const Center(
-                    child: Text("No favorite doctors"),
-                  );
-                }
+              if (controller.favorites.isEmpty) {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          'assets/images/photo5.png.png',
+          height: 180,
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          "No Favorite Doctors Yet",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.gray,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "Start adding doctors to your favorites",
+          style: TextStyle(
+            fontSize: 13,
+            color: Colors.grey,
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
                 return ListView.builder(
                   itemCount: controller.favorites.length,

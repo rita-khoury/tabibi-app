@@ -210,47 +210,8 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
 
       // ================= BOTTOM NAV =================
 
-      bottomNavigationBar: Obx(
-        () => BottomNavigationBar(
-
-          currentIndex: controller.selectedIndex.value,
-
-          onTap: controller.changeBottomNav,
-
-          selectedItemColor: AppColors.primaryBlue,
-          unselectedItemColor: AppColors.gray,
-
-          type: BottomNavigationBarType.fixed,
-
-          items: const [
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_view_day),
-              label: "",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bolt),
-              label: "",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline),
-              label: "",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: "",
-            ),
-          ],
-        ),
-      ),
+      
+      
     );
   }
 }

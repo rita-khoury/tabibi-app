@@ -12,4 +12,5 @@ abstract class AppRoutes {
   static const favorites = '/favorites';
   static const helpSupport = '/help-support';
   static const editProfile = '/edit-profile';
+  static const home = '/home';
 }

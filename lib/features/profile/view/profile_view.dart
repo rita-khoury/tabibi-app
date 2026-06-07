@@ -429,13 +429,7 @@ class ProfileView extends GetView<ProfileController> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
 
-     MenuTile(
-  icon: Icons.calendar_month,
-  title: "My Appointments",
-  onTap: () {
-    Get.toNamed(AppRoutes.appointments);
-  },
-),
+     
 
                  MenuTile(
                   icon: Icons.medical_information,
@@ -447,15 +441,8 @@ class ProfileView extends GetView<ProfileController> {
     }
                 ),
 
-                 MenuTile(
-                  icon: Icons.favorite_border,
-                  title: "Favorite Doctors",
-                 onTap: () {
-    
- Get.toNamed(AppRoutes.favorites);
-
-    }
-                ),
+               
+                
 
                 const MenuTile(
                   icon: Icons.payment,
@@ -492,7 +479,7 @@ class ProfileView extends GetView<ProfileController> {
 
       // ================= BOTTOM NAV =================
 
-      bottomNavigationBar: Obx(
+     /* bottomNavigationBar: Obx(
         () => BottomNavigationBar(
           currentIndex: controller.selectedIndex.value,
           onTap: controller.changeBottomNav,
@@ -500,14 +487,29 @@ class ProfileView extends GetView<ProfileController> {
           unselectedItemColor: AppColors.gray,
           type: BottomNavigationBarType.fixed,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.calendar_view_day), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.bolt), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: ""),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: ""),
-          ],
+  BottomNavigationBarItem(
+    icon: Icon(Icons.home_outlined),
+    activeIcon: Icon(Icons.home),
+    label: "Home",
+  ),
+  BottomNavigationBarItem(
+    icon: Icon(Icons.calendar_month_outlined),
+    activeIcon: Icon(Icons.calendar_month),
+    label: "Appointments",
+  ),
+  BottomNavigationBarItem(
+    icon: Icon(Icons.favorite_border),
+    activeIcon: Icon(Icons.favorite),
+    label: "Favorites",
+  ),
+  BottomNavigationBarItem(
+    icon: Icon(Icons.person_outline),
+    activeIcon: Icon(Icons.person),
+    label: "Profile",
+  ),
+],
         ),
-      ),
+      ),*/
     );
   }
 }/*class MenuTile extends StatelessWidget {

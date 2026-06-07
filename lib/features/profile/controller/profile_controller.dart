@@ -27,7 +27,7 @@ class ProfileController extends GetxController {
 
   RxBool isLoggedIn = false.obs;
 
-  RxInt selectedIndex = 4.obs;
+  RxInt selectedIndex = 0.obs;
 
   void changeBottomNav(int index) {
     selectedIndex.value = index;

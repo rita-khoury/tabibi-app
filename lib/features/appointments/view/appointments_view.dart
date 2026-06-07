@@ -1,40 +1,37 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:tabibi/core/constance/app_colors.dart';
+import 'package:tabibi/features/appointments/widget/empty_appointment_state.dart';
+
 import '../controller/appointments_controller.dart';
 import '../widgets/appointment_card.dart';
 
 class AppointmentsView extends GetView<AppointmentsController> {
   const AppointmentsView({super.key});
 
-  Widget _emptyState(String title) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.event_busy,
-            size: 80,
-            color: Colors.grey.shade400,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "No $title Appointments",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+  // ===== EMPTY STATE =====
+  Widget _emptyState({
+    required String title,
+    required String subtitle,
+    required String image,
+  }) {
+    return EmptyAppointmentState(
+      imagePath: image,
+      title: title,
+      subtitle: subtitle,
     );
   }
 
+  // ===== LIST BUILDER =====
   Widget _buildList(List list, Widget Function(int index) itemBuilder) {
-    if (list.isEmpty) return _emptyState(" ");
+    if (list.isEmpty) {
+      return _emptyState(
+        title: "No Appointments",
+        subtitle: "You don't have any appointments yet",
+        image: "assets/images/empty_general.png",
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -97,7 +94,7 @@ class AppointmentsView extends GetView<AppointmentsController> {
               ),
             ),
 
-            // ===== GAP (white separation) =====
+            // ===== GAP =====
             Container(
               height: 12,
               color: Colors.white,
@@ -107,10 +104,18 @@ class AppointmentsView extends GetView<AppointmentsController> {
             Expanded(
               child: TabBarView(
                 children: [
-                  // UPCOMING
+
+                  // ================= UPCOMING =================
                   Obx(() {
                     final list = controller.upcomingAppointments;
-                    if (list.isEmpty) return _emptyState("Upcoming");
+
+                    if (list.isEmpty) {
+                      return _emptyState(
+                        title: "No Upcoming Appointments",
+                        subtitle: "You don't have any upcoming appointments yet",
+                        image: "assets/images/photo8.png",
+                      );
+                    }
 
                     return _buildList(list, (index) {
                       final appointment = list[index];
@@ -124,10 +129,17 @@ class AppointmentsView extends GetView<AppointmentsController> {
                     });
                   }),
 
-                  // COMPLETED
+                  // ================= COMPLETED =================
                   Obx(() {
                     final list = controller.completedAppointments;
-                    if (list.isEmpty) return _emptyState("Completed");
+
+                    if (list.isEmpty) {
+                      return _emptyState(
+                        title: "No Completed Appointments",
+                        subtitle: "Your completed appointments will appear here",
+                        image: "assets/images/photo7.png",
+                      );
+                    }
 
                     return _buildList(list, (index) {
                       final appointment = list[index];
@@ -137,10 +149,17 @@ class AppointmentsView extends GetView<AppointmentsController> {
                     });
                   }),
 
-                  // CANCELED
+                  // ================= CANCELED =================
                   Obx(() {
                     final list = controller.canceledAppointments;
-                    if (list.isEmpty) return _emptyState("Canceled");
+
+                    if (list.isEmpty) {
+                      return _emptyState(
+                        title: "No Canceled Appointments",
+                        subtitle: "You don't have any canceled appointments",
+                        image: "assets/images/photo6.png",
+                      );
+                    }
 
                     return _buildList(list, (index) {
                       final appointment = list[index];

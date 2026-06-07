@@ -12,7 +12,7 @@ class OnboardingScreen extends StatelessWidget {
 
     await prefs.setBool('onboarding_seen', true);
 
-    Get.offAllNamed(AppRoutes.profile);
+    Get.offAllNamed(AppRoutes.home);
   }
 
   Widget buildPage({

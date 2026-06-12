@@ -18,7 +18,7 @@ class NavigationView extends GetView<NavigationController> {
       () => Scaffold(
         body: IndexedStack(
           index: controller.selectedIndex.value,
-          children: const [
+          children: [
             HomeView(),
             AppointmentsView(),
             FavoritesDoctorsView(),

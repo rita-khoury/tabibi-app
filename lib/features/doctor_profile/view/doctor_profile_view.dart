@@ -8,6 +8,7 @@ class DoctorProfileView extends StatelessWidget {
   DoctorProfileView({super.key});
 
   final Map doctor = Get.arguments as Map;
+
   @override
   Widget build(BuildContext context) {
     final doctor = Get.arguments as Map;
@@ -18,8 +19,7 @@ class DoctorProfileView extends StatelessWidget {
         backgroundColor: AppColors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios,
-              color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Get.back(),
         ),
         title: const Text(
@@ -32,7 +32,7 @@ class DoctorProfileView extends StatelessWidget {
         centerTitle: true,
       ),
 
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,38 +40,37 @@ class DoctorProfileView extends StatelessWidget {
             const SizedBox(height: 10),
 
 
-            _buildDoctorImage(doctor['image']),
-            const SizedBox(height: 20),
-
+            Expanded(
+              flex: 4,
+              child: _buildDoctorImage(doctor['image']),
+            ),
+            const SizedBox(height: 15),
 
             _buildDoctorHeader(
               doctor['name'],
               doctor['speciality'],
               doctor['rating'],
             ),
-
-            const SizedBox(height: 24),
-
+            const SizedBox(height: 15),
 
             _buildStatsRow(),
-
-            const SizedBox(height: 24),
-
-
-            _buildAboutSection(),
-
-            const SizedBox(height: 32),
+            const SizedBox(height: 15),
 
 
-            _buildBookButton(),
+            Expanded(
+              flex: 2,
+              child: _buildAboutSection(),
+            ),
 
-            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 25, top: 10),
+              child: _buildBookButton(),
+            ),
           ],
         ),
       ),
     );
   }
-
 
   Widget _buildBookButton() {
     return SizedBox(
@@ -83,10 +82,10 @@ class DoctorProfileView extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
+          elevation: 0,
         ),
         onPressed: () {
           Get.put(AppointmentController());
-
           Get.to(
                 () => const AppointmentView(),
             arguments: doctor,
@@ -94,25 +93,24 @@ class DoctorProfileView extends StatelessWidget {
         },
         child: const Text(
           'Book Appointment',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
     );
   }
 
-
   Widget _buildDoctorImage(String imageUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Image.network(
-        imageUrl,
-        height: 250,
-        width: double.infinity,
-        fit: BoxFit.cover,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        image: DecorationImage(
+          image: NetworkImage(imageUrl),
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
-
 
   Widget _buildDoctorHeader(String name, String spec, dynamic rating) {
     return Row(
@@ -138,75 +136,103 @@ class DoctorProfileView extends StatelessWidget {
             ),
           ],
         ),
-
-        Row(
-          children: [
-            const Icon(Icons.star, color: Colors.amber),
-            Text(" $rating"),
-          ],
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.star, color: Colors.amber, size: 18),
+              const SizedBox(width: 4),
+              Text(
+                "$rating",
+                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
+              ),
+            ],
+          ),
         )
       ],
     );
   }
 
-
   Widget _buildStatsRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildStatItem('116+', 'Patients'),
-        _buildStatItem('3+', 'Years'),
-        _buildStatItem('4.9', 'Rating'),
-        _buildStatItem('90+', 'Reviews'),
+        _buildStatItem('116+', 'Patients', Icons.people_alt_outlined),
+        _buildStatItem('3+', 'Years exp', Icons.workspace_premium_outlined),
+        _buildStatItem('4.9', 'Rating', Icons.star_border_rounded),
+        _buildStatItem('90+', 'Reviews', Icons.chat_bubble_outline_rounded),
       ],
     );
   }
 
-  Widget _buildStatItem(String value, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: const BoxDecoration(
-            color: AppColors.lightGray,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.person,
-            color: AppColors.primaryBlue,
-          ),
+  Widget _buildStatItem(String value, String label, IconData icon) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.lightGray.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(16),
         ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: AppColors.primaryBlue,
+              size: 22,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.gray,
+              ),
+            ),
+          ],
         ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.gray,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildAboutSection() {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        const Text(
           'About Me',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        SizedBox(height: 8),
-        Text(
-          'Experienced doctor dedicated to providing high-quality healthcare services with modern medical practices.',
-          style: TextStyle(color: AppColors.gray),
+        const SizedBox(height: 6),
+        Expanded(
+          child: Text(
+            'Experienced doctor dedicated to providing high-quality healthcare services with modern medical practices.',
+            overflow: TextOverflow.ellipsis,
+            maxLines: 3,
+            style: const TextStyle(
+              color: AppColors.gray,
+              height: 1.4,
+              fontSize: 14,
+            ),
+          ),
         ),
       ],
     );

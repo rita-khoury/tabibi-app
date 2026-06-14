@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../RegisterScreen/view/register_screen.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 import '../controller/login_controller.dart';
@@ -34,15 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
           SingleChildScrollView(
             child: Column(
               children: [
+                // رأس الصفحة (Header)
                 Container(
                   width: double.infinity,
                   height: MediaQuery.of(context).size.height * 0.40,
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        AppColors.primaryBlue,
-                        AppColors.lightBlue
-                      ],
+                      colors: [AppColors.primaryBlue, AppColors.lightBlue],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
@@ -52,41 +49,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   child: SafeArea(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          height: 110,
-                          width: 110,
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.12),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              )
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(14),
-                          child: const Icon(
-                            Icons.local_hospital_rounded,
-                            color: AppColors.primaryBlue,
-                            size: 55,
+                    child: Center(
+                      // الشعار يظهر بشكل دائري ونافر فوق الخلفية
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo2.png',
+                            height: 150,
+                            width: 150,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'tabibi',
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -120,9 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 icon: Icons.email_outlined,
                               ),
                             ),
-
                             const SizedBox(height: 16),
-
                             Obx(() => TextField(
                               controller: passwordController,
                               obscureText: controller.isPasswordObscured.value,
@@ -142,9 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             )),
-
                             const SizedBox(height: 20),
-
                             GestureDetector(
                               onTap: controller.login,
                               child: Container(
@@ -153,62 +133,36 @@ class _LoginScreenState extends State<LoginScreen> {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
                                   gradient: const LinearGradient(
-                                    colors: [
-                                      AppColors.primaryBlue,
-                                      AppColors.lightBlue
-                                    ],
+                                    colors: [AppColors.primaryBlue, AppColors.lightBlue],
                                   ),
                                 ),
                                 child: const Center(
-                                  child: Text(
-                                    'Login',
-                                    style: TextStyle(
-                                      color: AppColors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  child: Text('Login', style: TextStyle(color: AppColors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             ),
-
                             const SizedBox(height: 16),
-
                             Container(
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               decoration: BoxDecoration(
                                 color: AppColors.white,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: AppColors.gray.withOpacity(0.5),
-                                ),
+                                border: Border.all(color: AppColors.gray.withOpacity(0.5)),
                               ),
-                              child: const Center(
-                                child: Text('Continue with Google'),
-                              ),
+                              child: const Center(child: Text('Continue with Google')),
                             ),
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 32),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text("Don't have an account? "),
                           GestureDetector(
-                            onTap: () {
-                              Get.to(() => RegisterScreen());
-                            },
-                            child: const Text(
-                              "Sign Up",
-                              style: TextStyle(
-                                color: AppColors.primaryBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                            onTap: () => Get.to(() => RegisterScreen()),
+                            child: const Text("Sign Up", style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -218,16 +172,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ],
             ),
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: AppColors.white,
-                  size: 28,
-                ),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.white, size: 28),
                 onPressed: () => Get.back(),
               ),
             ),
@@ -237,18 +186,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _buildInputDecoration({
-    required String label,
-    required String hint,
-    required IconData icon,
-  }) {
+  InputDecoration _buildInputDecoration({required String label, required String hint, required IconData icon}) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
       prefixIcon: Icon(icon, color: AppColors.primaryBlue),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 }

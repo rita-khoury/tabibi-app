@@ -18,7 +18,6 @@ class HomeView extends GetView<HomeController> {
       backgroundColor: const Color(0xffF5F7FB),
       body: Stack(
         children: [
-
           SingleChildScrollView(
             padding: const EdgeInsets.only(
               top: 260,
@@ -28,7 +27,6 @@ class HomeView extends GetView<HomeController> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -55,7 +53,9 @@ class HomeView extends GetView<HomeController> {
                 ),
 
                 const SizedBox(height: 15),
+
                 const SpecialitiesSection(),
+
                 const SizedBox(height: 25),
 
                 const Text(
@@ -81,7 +81,6 @@ class HomeView extends GetView<HomeController> {
               ],
             ),
           ),
-
 
           _header(),
         ],
@@ -131,59 +130,72 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
             ),
-            Positioned(
-              top: 35,
-              right: 35,
-              child: GestureDetector(
-                onTap: () {
-                  Get.to(() => const NotificationsScreen());
-                },
-                child: const Icon(
-                  Icons.notifications_none,
-                  color: Colors.white,
-                ),
-              ),
-            ),
 
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        CircleAvatar(radius: 22),
+                        Container(
+                          height: 50,
+                          width: 50,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/logo2.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
 
+                        GestureDetector(
+                          onTap: () {
+                            Get.to(() => const NotificationsScreen());
+                          },
+                          child: const Icon(
+                            Icons.notifications_none,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 6),
 
-                    GestureDetector(
-                      onTap: () {
-                        Get.to(() => AccountScreen());
-                      },
-                      child: const Text(
-                        "Login",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          Get.to(() => AccountScreen());
+                        },
+                        child: const Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 20),
 
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      height: 50,
+                      height: 52,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(30),
                       ),
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: const Row(
                         children: [
                           Icon(Icons.search, color: Colors.grey),
@@ -191,7 +203,10 @@ class HomeView extends GetView<HomeController> {
                           Expanded(
                             child: Text(
                               "Search for doctor or speciality...",
-                              style: TextStyle(color: Colors.grey),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),

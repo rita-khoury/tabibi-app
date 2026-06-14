@@ -139,7 +139,7 @@ class DoctorProfileView extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.amber.withOpacity(0.1),
+            color: Colors.amber.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -175,7 +175,7 @@ class DoctorProfileView extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.lightGray.withOpacity(0.5),
+          color: AppColors.lightGray.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(

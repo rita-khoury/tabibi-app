@@ -116,7 +116,7 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.12),
+            color: Colors.grey.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, 6),
           ),
@@ -129,7 +129,7 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
             width: 55,
             height: 55,
             decoration: BoxDecoration(
-              color: AppColors.lightBlue.withOpacity(0.2),
+              color: AppColors.lightBlue.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(

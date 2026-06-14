@@ -231,7 +231,7 @@ class SettingsView extends GetView<SettingsController> {
                 color: AppColors.primaryBlue,
               ),
 
-              activeColor: AppColors.primaryBlue,
+              activeThumbColor: AppColors.primaryBlue,
             ),
           ),
 
@@ -258,7 +258,7 @@ class SettingsView extends GetView<SettingsController> {
                 color: AppColors.primaryBlue,
               ),
 
-              activeColor: AppColors.primaryBlue,
+              activeThumbColor: AppColors.primaryBlue,
             ),
           ),
 
@@ -279,7 +279,7 @@ class SettingsView extends GetView<SettingsController> {
               boxShadow: [
 
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.12),
+                  color: Colors.grey.withValues(alpha: 0.12),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),

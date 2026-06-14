@@ -6,8 +6,6 @@ import 'package:tabibi/features/appointments/binding/appointments_binding.dart';
 import 'package:tabibi/features/appointments/view/appointments_view.dart';
 import 'package:tabibi/features/favorites/binding/favorites_doctors_binding.dart';
 import 'package:tabibi/features/favorites/view/favorites_doctors_view.dart';
-import 'package:tabibi/features/home/binding/home_binding.dart';
-import 'package:tabibi/features/home/view/home_view.dart';
 import 'package:tabibi/features/medical_records/binding/medical_records_binding.dart';
 import 'package:tabibi/features/medical_records/view/medical_records_view.dart';
 import 'package:tabibi/features/navigation/binding/navigation_binding.dart';
@@ -21,7 +19,6 @@ import 'package:tabibi/features/profile/view/edit_profile_view.dart';
 import 'package:tabibi/features/profile/view/profile_view.dart';
 import 'package:tabibi/features/settings/binding/binding_settings.dart';
 import 'package:tabibi/features/settings/view/view_settings.dart';
-import 'package:tabibi/main.dart';
 
 class AppPages {
   static final pages = [

@@ -133,7 +133,7 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
                             borderRadius: BorderRadius.circular(18),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.grey.withOpacity(0.10),
+                                color: Colors.grey.withValues(alpha: 0.10),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
@@ -153,7 +153,7 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
 
                               decoration: BoxDecoration(
                                 color: AppColors.lightBlue
-                                    .withOpacity(0.12),
+                                    .withValues(alpha: 0.12),
 
                                 borderRadius:
                                     BorderRadius.circular(12),

@@ -291,7 +291,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 import 'package:tabibi/core/routes/app_routes.dart';
-import 'package:tabibi/features/settings/view/view_settings.dart';
 import '../controller/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -588,7 +587,7 @@ class MenuTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.12),
+            color: Colors.grey.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),

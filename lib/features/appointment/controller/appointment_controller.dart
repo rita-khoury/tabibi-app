@@ -12,10 +12,6 @@ class AppointmentController extends GetxController {
   String selectedType = 'Consultation';
   bool showTermsDialog = true;
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
   void toggleShowTerms(bool? value) {
     showTermsDialog = value ?? true;

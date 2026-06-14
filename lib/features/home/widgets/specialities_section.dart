@@ -1,25 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../widgets/DoctorsPage.dart';
-
-
-final List<Map<String, dynamic>> doctorsList = [
-  {"name": "Dr. Ahmad Hassan", "speciality": "Cardiology", "image": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d", "rating": 4.8},
-  {"name": "Dr. Sara Ali", "speciality": "Dermatology", "image": "https://images.unsplash.com/photo-1594824476967-48c8b964273f", "rating": 4.6},
-  {"name": "Dr. Omar Khaled", "speciality": "Ophthalmology", "image": "https://images.unsplash.com/photo-1576765607924-3f7b8410a787", "rating": 4.7},
-  {"name": "Dr. Lina Mustafa", "speciality": "Dentistry", "image": "https://images.unsplash.com/photo-1582750433449-648ed127bb54", "rating": 4.5},
-  {"name": "Dr. Youssef Nabil", "speciality": "Cardiology", "image": "https://images.unsplash.com/photo-1622253692010-333f2da6031d", "rating": 4.9},
-  {"name": "Dr. Huda Samir", "speciality": "Neurology", "image": "https://images.unsplash.com/photo-1559839734-2b71ea197ec2", "rating": 4.6},
-  {"name": "Dr. Ali Mahmoud", "speciality": "Orthopedics", "image": "https://images.unsplash.com/photo-1580281657527-47f249e8f15d", "rating": 4.4},
-  {"name": "Dr. Mona Salah", "speciality": "Pediatrics", "image": "https://images.unsplash.com/photo-1618498082410-b4aa22193b38", "rating": 4.7},
-  {"name": "Dr. Tamer Fathy", "speciality": "ENT", "image": "https://images.unsplash.com/photo-1622902046581-3a8a1b0b6b6d", "rating": 4.5},
-  {"name": "Dr. Rania Fawzy", "speciality": "Gynecology", "image": "https://images.unsplash.com/photo-1594824476950-1b6c9f0f8a9d", "rating": 4.8},
-];
+import '../../../core/services/doctor_service.dart';
 
 class SpecialitiesSection extends StatelessWidget {
   final bool isGrid;
+  final DoctorService _service = DoctorService();
 
-  const SpecialitiesSection({super.key, this.isGrid = false});
+  SpecialitiesSection({super.key, this.isGrid = false});
 
   @override
   Widget build(BuildContext context) {
@@ -38,57 +26,47 @@ class SpecialitiesSection extends StatelessWidget {
     Widget buildItem(int index) {
       return InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => Get.to(() => DoctorsPage(
-          speciality: items[index]["title"].toString(),
-          doctors: doctorsList,
-        )),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-
-                gradient: const LinearGradient(
-                  colors: [Color(0xff2F80ED), Color(0xff56CCF2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xff2F80ED).withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Icon(
-                  items[index]["icon"] as IconData,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
+        onTap: () {
+          Get.to(() => DoctorsPage(
+            speciality: items[index]["title"].toString(),
+            doctors: _service.getAll(),
+          ));
+        },
+        child: Container(
+          width: 90,
+          height: 85, // تم تصغير الطول هنا
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xff2F80ED), Color(0xff56CCF2)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: 80,
-              child: Text(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xff2F80ED).withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(items[index]["icon"] as IconData, color: Colors.white, size: 26), // صغرت الأيقونة قليلاً
+              const SizedBox(height: 6),
+              Text(
                 items[index]["title"].toString(),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.3,
+                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -100,24 +78,21 @@ class SpecialitiesSection extends StatelessWidget {
         itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 18,
-          childAspectRatio: 0.78,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 15,
+          childAspectRatio: 1.1, // تم ضبط النسبة لتناسب الطول الجديد
         ),
         itemBuilder: (context, index) => buildItem(index),
       );
     }
 
     return SizedBox(
-      height: 125,
-      child: ListView.builder(
+      height: 95, // تم تصغير ارتفاع الـ SizedBox ليناسب الطول الجديد
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
-        itemBuilder: (context, index) => Container(
-          width: 90,
-          margin: const EdgeInsets.only(right: 12),
-          child: buildItem(index),
-        ),
+        separatorBuilder: (context, index) => const SizedBox(width: 12),
+        itemBuilder: (context, index) => buildItem(index),
       ),
     );
   }

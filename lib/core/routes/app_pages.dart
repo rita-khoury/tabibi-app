@@ -1,3 +1,6 @@
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/src/bindings_interface.dart';
+import 'package:get/get_instance/src/extension_instance.dart';
 import 'package:get/get_navigation/src/routes/get_route.dart';
 import 'package:tabibi/core/routes/app_routes.dart';
 import 'package:tabibi/features/Help%20&%20Support/binding/help_support_binding.dart';
@@ -19,6 +22,17 @@ import 'package:tabibi/features/profile/view/edit_profile_view.dart';
 import 'package:tabibi/features/profile/view/profile_view.dart';
 import 'package:tabibi/features/settings/binding/binding_settings.dart';
 import 'package:tabibi/features/settings/view/view_settings.dart';
+
+import '../../features/LoginScreen/binding/login_binding.dart';
+import '../../features/LoginScreen/view/login_screen.dart';
+import '../../features/complete_profile/binding/complete_profile_binding.dart';
+import '../../features/complete_profile/middleware/profile_guard.dart';
+import '../../features/complete_profile/view/complete_profile_view.dart';
+import '../../features/notifications/binding/notification_binding.dart';
+import '../../features/notifications/controller/notification_controller.dart';
+import '../../features/notifications/view/notification_view.dart';
+import '../../features/wallet/binding/wallet_binding.dart';
+import '../../features/wallet/view/wallet_view.dart';
 
 class AppPages {
   static final pages = [
@@ -78,8 +92,38 @@ GetPage(
   page: () => const NavigationView(),
   binding: NavigationBinding(),
 ),
- 
 
+
+    GetPage(
+      name: '/medical-profile',
+      page: () => CompleteProfileView(),
+      binding: CompleteProfileBinding(),
+      middlewares: [ProfileMiddleware()],
+    ),
+    GetPage(
+
+      name: AppRoutes.wallet,
+
+      page: () => const WalletView(),
+
+      binding: WalletBinding(),
+
+    ),
+
+    GetPage(
+      name: '/login',
+      page: () =>  LoginScreen(),
+      binding: LoginBinding(),
+    ),
+
+    GetPage(
+      name: '/notifications',
+      page: () => const NotificationView(),
+
+      binding: BindingsBuilder(() {
+        Get.put(NotificationController());
+      }),
+    ),
 
   ];
 }

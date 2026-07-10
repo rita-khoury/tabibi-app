@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../widgets/DoctorsPage.dart';
 import '../../../core/services/doctor_service.dart';
+import '../../../features/auth/data/models/DoctorModel.dart';
 
 class SpecialitiesSection extends StatelessWidget {
   final bool isGrid;
@@ -26,15 +27,22 @@ class SpecialitiesSection extends StatelessWidget {
     Widget buildItem(int index) {
       return InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () {
-          Get.to(() => DoctorsPage(
-            speciality: items[index]["title"].toString(),
-            doctors: _service.getAll(),
-          ));
+        onTap: () async {
+          final rawData = await _service.getAll();
+          final List<DoctorModel> doctorsList = rawData
+              .map((e) => DoctorModel.fromJson(e))
+              .toList();
+
+          Get.to(
+            () => DoctorsPage(
+              speciality: items[index]["title"].toString(),
+              doctors: doctorsList,
+            ),
+          );
         },
         child: Container(
           width: 90,
-          height: 85, // تم تصغير الطول هنا
+          height: 85,
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
@@ -54,7 +62,11 @@ class SpecialitiesSection extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(items[index]["icon"] as IconData, color: Colors.white, size: 26), // صغرت الأيقونة قليلاً
+              Icon(
+                items[index]["icon"] as IconData,
+                color: Colors.white,
+                size: 26,
+              ),
               const SizedBox(height: 6),
               Text(
                 items[index]["title"].toString(),
@@ -62,7 +74,10 @@ class SpecialitiesSection extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  height: 1.1,
                 ),
               ),
             ],
@@ -80,14 +95,14 @@ class SpecialitiesSection extends StatelessWidget {
           crossAxisCount: 3,
           crossAxisSpacing: 10,
           mainAxisSpacing: 15,
-          childAspectRatio: 1.1, // تم ضبط النسبة لتناسب الطول الجديد
+          childAspectRatio: 1.1,
         ),
         itemBuilder: (context, index) => buildItem(index),
       );
     }
 
     return SizedBox(
-      height: 95, // تم تصغير ارتفاع الـ SizedBox ليناسب الطول الجديد
+      height: 95,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: items.length,

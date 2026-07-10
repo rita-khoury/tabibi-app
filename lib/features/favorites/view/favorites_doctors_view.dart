@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:tabibi/core/constance/app_colors.dart';
 import '../controller/favorites_doctors_controller.dart';
+import '../../auth/data/models/DoctorModel.dart';
 
 class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
   const FavoritesDoctorsView({super.key});
@@ -11,7 +11,6 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightGray,
-
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
         centerTitle: true,
@@ -20,22 +19,16 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
-            // HEADER
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [
-                    AppColors.primaryBlue,
-                    AppColors.lightBlue,
-                  ],
+                  colors: [AppColors.primaryBlue, AppColors.lightBlue],
                 ),
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -53,50 +46,42 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
 
-            // LIST
             Expanded(
               child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              if (controller.favorites.isEmpty) {
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          'assets/images/photo5.png.png',
-          height: 180,
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          "No Favorite Doctors Yet",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.gray,
-          ),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Start adding doctors to your favorites",
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey,
-          ),
-        ),
-      ],
-    ),
-  );
-}
+                if (controller.favoriteDoctors.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/photo5.png.png',
+                          height: 180,
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "No Favorite Doctors Yet",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.gray,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
 
                 return ListView.builder(
-                  itemCount: controller.favorites.length,
+                  itemCount: controller.favoriteDoctors.length,
                   itemBuilder: (context, index) {
-                    final doctor = controller.favorites[index];
-
-                    return _doctorCard(index, doctor["name"]!, doctor["specialty"]!);
+                    final doctor = controller.favoriteDoctors[index];
+                    return _doctorCard(doctor);
                   },
                 );
               }),
@@ -107,7 +92,7 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
     );
   }
 
-  Widget _doctorCard(int index, String name, String specialty) {
+  Widget _doctorCard(DoctorModel doctor) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
@@ -124,28 +109,24 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
       ),
       child: Row(
         children: [
-
           Container(
             width: 55,
             height: 55,
             decoration: BoxDecoration(
-              color: AppColors.lightBlue.withValues(alpha: 0.2),
+              image: DecorationImage(
+                image: NetworkImage(doctor.image),
+                fit: BoxFit.cover,
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.person,
-              color: AppColors.primaryBlue,
-            ),
           ),
-
           const SizedBox(width: 12),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  doctor.name,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -154,24 +135,17 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  specialty,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
-                  ),
+                  doctor.specialization,
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               ],
             ),
           ),
-
           IconButton(
             onPressed: () {
-              controller.removeFavorite(index);
+              controller.removeFavorite(doctor);
             },
-            icon: const Icon(
-              Icons.favorite,
-              color: Colors.red,
-            ),
+            icon: const Icon(Icons.favorite, color: Colors.red),
           ),
         ],
       ),

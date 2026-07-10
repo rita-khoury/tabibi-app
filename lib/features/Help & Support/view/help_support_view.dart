@@ -11,44 +11,41 @@ class HelpSupportView extends GetView<HelpSupportController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.lightGray,
-
-      // ================= APP BAR =================
       appBar: AppBar(
         backgroundColor: AppColors.primaryBlue,
+        iconTheme: const IconThemeData(color: AppColors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Get.back(),
+        ),
         title: const Text(
           "Help & Support",
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
       ),
-
-      // ================= BODY =================
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
             _buildTile(
               icon: Icons.support_agent,
               title: "Contact Support (WhatsApp)",
               color: Colors.green,
               onTap: controller.openWhatsApp,
             ),
-
             _buildTile(
               icon: Icons.report_problem,
               title: "Report a Problem",
               color: Colors.orange,
               onTap: controller.reportProblem,
             ),
-
             _buildTile(
               icon: Icons.privacy_tip,
               title: "Privacy Policy",
               color: Colors.blue,
               onTap: controller.openPrivacyPolicy,
             ),
-
             _buildTile(
               icon: Icons.info,
               title: "About App",
@@ -85,12 +82,7 @@ class HelpSupportView extends GetView<HelpSupportController> {
           backgroundColor: color.withValues(alpha: 0.15),
           child: Icon(icon, color: color),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
       ),

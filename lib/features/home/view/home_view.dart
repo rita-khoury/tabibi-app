@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../LoginScreen/view/login_screen.dart';
 import '../controller/home_controller.dart';
 import '../widgets/specialities_section.dart';
 import '../widgets/doctor_card.dart';
@@ -21,31 +22,59 @@ class HomeView extends StatelessWidget {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 290, left: 20, right: 20, bottom: 20),
+            padding: const EdgeInsets.only(
+              top: 290,
+              left: 20,
+              right: 20,
+              bottom: 20,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
-                _buildSectionHeader("Specialities", () => Get.to(() => const AllSpecialitiesPage())),
+                _buildSectionHeader(
+                  "Specialities",
+                  () => Get.to(() => const AllSpecialitiesPage()),
+                ),
                 const SizedBox(height: 15),
                 SpecialitiesSection(),
                 const SizedBox(height: 25),
 
-                // العنوان الديناميكي: يتغير حسب حالة البحث
-                Obx(() => Text(
-                  controller.isSearching.value ? "Your Requested Doctor" : "Top Doctors",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                )),
+                Obx(
+                  () => Text(
+                    controller.isSearching.value
+                        ? "Your Requested Doctor"
+                        : "Top Doctors",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 15),
+                Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
 
-                // القائمة المفلترة (تتحدث تلقائياً)
-                Obx(() => ListView.builder(
-                  key: ValueKey(controller.filteredDoctors.length),
-                  itemCount: controller.filteredDoctors.length,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) => DoctorCard(doc: controller.filteredDoctors[index]),
-                )),
+                  if (controller.filteredDoctors.isEmpty) {
+                    return const Center(child: Text("No doctors found"));
+                  }
+
+                  return ListView.builder(
+                    key: ValueKey(controller.filteredDoctors.length),
+                    itemCount: controller.filteredDoctors.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) =>
+                        DoctorCard(doc: controller.filteredDoctors[index]),
+                  );
+                }),
               ],
             ),
           ),
@@ -59,10 +88,16 @@ class HomeView extends StatelessWidget {
   Widget _buildSectionHeader(String title, VoidCallback onTap) => Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      Text(
+        title,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
       GestureDetector(
         onTap: onTap,
-        child: const Text("See all", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500)),
+        child: const Text(
+          "See all",
+          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w500),
+        ),
       ),
     ],
   );
@@ -77,7 +112,11 @@ class HomeView extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5))
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
         ],
       ),
       child: TextField(
@@ -99,7 +138,9 @@ class HomeView extends StatelessWidget {
       child: Container(
         height: 260,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(colors: [Color(0xff2F80ED), Color(0xff56CCF2)]),
+          gradient: LinearGradient(
+            colors: [Color(0xff2F80ED), Color(0xff56CCF2)],
+          ),
         ),
         child: SafeArea(
           child: Padding(
@@ -109,17 +150,66 @@ class HomeView extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(height: 50, width: 50, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white), child: ClipOval(child: Image.asset('assets/images/logo2.png', fit: BoxFit.cover))),
+                    Container(
+                      height: 50,
+                      width: 50,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/logo2.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                     Row(
                       children: [
-                        GestureDetector(onTap: () => Get.to(() => const NotificationsScreen()), child: const Icon(Icons.notifications_none, color: Colors.white, size: 28)),
+                        GestureDetector(
+                          onTap: () =>
+                              Get.to(() => const NotificationsScreen()),
+                          child: const Icon(
+                            Icons.notifications_none,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
                         const SizedBox(width: 15),
-                        GestureDetector(onTap: () => Get.to(() => AccountScreen()), child: const Text("Login", style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600))),
+                        Obx(
+                          () => Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                debugPrint("Login/Logout Button Pressed");
+                                controller.handleAuthAction();
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  controller.isLoggedIn.value
+                                      ? "Logout"
+                                      : "Login",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
-                const Expanded(child: Padding(padding: EdgeInsets.symmetric(vertical: 10), child: AdsBanner())),
+                const Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: AdsBanner(),
+                  ),
+                ),
               ],
             ),
           ),

@@ -11,7 +11,11 @@ class AllSpecialitiesPage extends StatelessWidget {
       backgroundColor: const Color(0xffF5F7FB),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.chevron_left_rounded, size: 35, color: Colors.black),
+          icon: const Icon(
+            Icons.chevron_left_rounded,
+            size: 35,
+            color: Colors.black,
+          ),
           onPressed: () => Get.back(),
         ),
         title: const Text("All Specialities"),
@@ -19,7 +23,6 @@ class AllSpecialitiesPage extends StatelessWidget {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      // تم إزالة const من هنا نهائياً
       body: Padding(
         padding: const EdgeInsets.all(15),
         child: SpecialitiesSection(isGrid: true),

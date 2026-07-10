@@ -1,59 +1,87 @@
-/*import 'package:get/get.dart';
-
-class ProfileController extends GetxController {
-
-  RxString userName = "Ahmed Khaled".obs;
-
-  RxString email = "ahmed.khaled@email.com".obs;
-
-  RxInt selectedIndex = 4.obs;
-
-  void changeBottomNav(int index) {
-    selectedIndex.value = index;
-  }
-
-  void editProfile() {
-    userName.value = "Dr. Ahmed";
-  }
-}*/
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:tabibi/features/profile/model/profile_model.dart';
+
+import '../../auth/repository/AuthController.dart';
+import '../../auth/repository/auth_repository.dart';
 
 class ProfileController extends GetxController {
+  final AuthRepository _authRepository = Get.find<AuthRepository>();
+  final AuthController _authController = Get.find<AuthController>();
 
-  RxString userName = "Guest".obs;
-  RxString email = "Not logged in".obs;
-
-  RxString imageUrl = "".obs;
-
-  RxBool isLoggedIn = false.obs;
-
+  Rxn<ProfileModel> profile = Rxn<ProfileModel>();
   RxInt selectedIndex = 0.obs;
 
+  bool get isLoggedIn => _authController.isLoggedIn;
+
+  String get userName => _authController.currentUser.value?.fullName ?? "Guest";
+
+  String get email =>
+      _authController.currentUser.value?.email ?? "Not logged in";
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    ever(_authController.currentUser, (user) {
+      if (user != null) {
+        fetchProfile(user.id.toString());
+      } else {
+        profile.value = null;
+      }
+    });
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    if (isLoggedIn) {
+      fetchProfile(_authController.currentUser.value!.id.toString());
+    }
+  }
+
+  Future<void> fetchProfile(String id) async {
+    try {
+      final response = await _authRepository.dio.get('/users/$id');
+      profile.value = ProfileModel.fromJson(response.data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        logout();
+      }
+      throw ProfileRepositoryException(_handleDioError(e));
+    } catch (e) {
+      throw ProfileRepositoryException('Failed to load profile: $e');
+    }
+  }
+
+  String _handleDioError(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Connection timed out. Please check your internet.';
+      case DioExceptionType.badResponse:
+        return 'Server error: ${error.response?.statusCode}';
+      case DioExceptionType.connectionError:
+        return 'No internet connection.';
+      default:
+        return 'Unexpected error: ${error.message}';
+    }
+  }
+
   void changeBottomNav(int index) {
     selectedIndex.value = index;
   }
 
-  // 👇 لما يعمل login
-  void loginUser({
-    required String name,
-    required String email,
-    required String image,
-  }) {
-    userName.value = name;
-    this.email.value = email;
-    imageUrl.value = image;
-    isLoggedIn.value = true;
-  }
-
-  // 👇 logout
   void logout() {
-    userName.value = "Guest";
-    email.value = "Not logged in";
-    imageUrl.value = "";
-    isLoggedIn.value = false;
+    _authController.logout();
   }
+}
 
-  void editProfile() {
-    userName.value = "Dr. Ahmed";
-  }
+class ProfileRepositoryException implements Exception {
+  final String message;
+
+  ProfileRepositoryException(this.message);
+
+  @override
+  String toString() => message;
 }

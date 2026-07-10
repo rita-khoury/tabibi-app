@@ -1,5 +1,4 @@
 class MedicalRecordModel {
-
   final String fileName;
   final String date;
   final String fileUrl;

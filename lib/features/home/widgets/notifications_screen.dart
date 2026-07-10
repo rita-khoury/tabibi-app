@@ -7,7 +7,6 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     const Color backgroundColor = AppColors.white;
     const Color primaryColor = AppColors.primaryBlue;
     const Color subtitleColor = AppColors.gray;
@@ -18,8 +17,11 @@ class NotificationsScreen extends StatelessWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black87,
+            size: 20,
+          ),
           onPressed: () => Get.back(),
         ),
         title: const Text(
@@ -37,7 +39,6 @@ class NotificationsScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
               Container(
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(

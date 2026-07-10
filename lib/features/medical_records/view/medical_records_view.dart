@@ -11,22 +11,14 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
     return Scaffold(
       backgroundColor: AppColors.lightGray,
 
-      // ================= HEADER =================
       body: Column(
         children: [
-
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(
-              top: 60,
-              bottom: 25,
-            ),
+            padding: const EdgeInsets.only(top: 60, bottom: 25),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppColors.primaryBlue,
-                  AppColors.lightBlue,
-                ],
+                colors: [AppColors.primaryBlue, AppColors.lightBlue],
               ),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
@@ -36,10 +28,8 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
 
             child: Column(
               children: [
-
                 Row(
                   children: [
-
                     IconButton(
                       onPressed: () {
                         Get.back();
@@ -63,7 +53,6 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
                     ),
 
                     const SizedBox(width: 48),
-
                   ],
                 ),
 
@@ -88,24 +77,18 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
 
                   label: const Text(
                     "Upload File",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-
               ],
             ),
           ),
 
           const SizedBox(height: 20),
 
-          // ================= RECORDS LIST =================
-
           Expanded(
             child: Obx(
               () => controller.records.isEmpty
-
                   ? const Center(
                       child: Text(
                         "No medical records found",
@@ -116,13 +99,11 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
                         ),
                       ),
                     )
-
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       itemCount: controller.records.length,
 
                       itemBuilder: (context, index) {
-
                         final record = controller.records[index];
 
                         return Container(
@@ -141,9 +122,7 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
                           ),
 
                           child: ListTile(
-
-                            contentPadding:
-                                const EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 18,
                               vertical: 12,
                             ),
@@ -152,11 +131,11 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
                               padding: const EdgeInsets.all(10),
 
                               decoration: BoxDecoration(
-                                color: AppColors.lightBlue
-                                    .withValues(alpha: 0.12),
+                                color: AppColors.lightBlue.withValues(
+                                  alpha: 0.12,
+                                ),
 
-                                borderRadius:
-                                    BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(12),
                               ),
 
                               child: const Icon(
@@ -175,8 +154,7 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
                             ),
 
                             subtitle: Padding(
-                              padding:
-                                  const EdgeInsets.only(top: 6),
+                              padding: const EdgeInsets.only(top: 6),
 
                               child: Text(
                                 record.date,
@@ -207,11 +185,6 @@ class MedicalRecordsView extends GetView<MedicalRecordsController> {
           ),
         ],
       ),
-
-      // ================= BOTTOM NAV =================
-
-      
-      
     );
   }
 }

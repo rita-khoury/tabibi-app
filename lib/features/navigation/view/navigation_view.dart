@@ -24,34 +24,28 @@ class NavigationView extends GetView<NavigationController> {
             ProfileView(),
           ],
         ),
-      bottomNavigationBar: BottomNavigationBar(
-  currentIndex: controller.selectedIndex.value,
-  onTap: controller.changeTab,
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: controller.selectedIndex.value,
+          onTap: controller.changeTab,
 
-  selectedItemColor: AppColors.primaryBlue,
-  unselectedItemColor: AppColors.gray,
+          selectedItemColor: AppColors.primaryBlue,
+          unselectedItemColor: AppColors.gray,
 
-  type: BottomNavigationBarType.fixed,
+          type: BottomNavigationBarType.fixed,
 
-  items: const [
-    BottomNavigationBarItem(
-      icon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.calendar_month),
-      label: 'Appointments',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.favorite),
-      label: 'Favorites',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ],
-),
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month),
+              label: 'Appointments',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
+            ),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
       ),
     );
   }

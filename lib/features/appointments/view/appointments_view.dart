@@ -1,44 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import 'package:tabibi/core/constance/app_colors.dart';
 import 'package:tabibi/features/appointments/widget/empty_appointment_state.dart';
-
 import '../controller/appointments_controller.dart';
 import '../widgets/appointment_card.dart';
 
 class AppointmentsView extends GetView<AppointmentsController> {
   const AppointmentsView({super.key});
-
-  // ===== EMPTY STATE =====
-  Widget _emptyState({
-    required String title,
-    required String subtitle,
-    required String image,
-  }) {
-    return EmptyAppointmentState(
-      imagePath: image,
-      title: title,
-      subtitle: subtitle,
-    );
-  }
-
-  // ===== LIST BUILDER =====
-  Widget _buildList(List list, Widget Function(int index) itemBuilder) {
-    if (list.isEmpty) {
-      return _emptyState(
-        title: "No Appointments",
-        subtitle: "You don't have any appointments yet",
-        image: "assets/images/empty_general.png",
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: list.length,
-      itemBuilder: (context, index) => itemBuilder(index),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,23 +14,17 @@ class AppointmentsView extends GetView<AppointmentsController> {
       length: 3,
       child: Scaffold(
         backgroundColor: AppColors.lightGray,
-
         appBar: AppBar(
           backgroundColor: AppColors.primaryBlue,
           elevation: 0,
           centerTitle: true,
           title: const Text(
             "My Appointments",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
-
         body: Column(
           children: [
-            // ===== TABS =====
             Container(
               color: AppColors.primaryBlue,
               padding: const EdgeInsets.only(bottom: 12),
@@ -74,17 +36,12 @@ class AppointmentsView extends GetView<AppointmentsController> {
                   borderRadius: BorderRadius.circular(30),
                 ),
                 child: const TabBar(
-                  indicatorSize: TabBarIndicatorSize.tab,
                   indicator: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(30)),
                   ),
                   labelColor: AppColors.primaryBlue,
                   unselectedLabelColor: Colors.white,
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
                   tabs: [
                     Tab(text: "Upcoming"),
                     Tab(text: "Completed"),
@@ -94,86 +51,74 @@ class AppointmentsView extends GetView<AppointmentsController> {
               ),
             ),
 
-            // ===== GAP =====
-            Container(
-              height: 12,
-              color: Colors.white,
-            ),
-
-            // ===== CONTENT =====
             Expanded(
               child: TabBarView(
                 children: [
+                  Obx(
+                    () => _buildAppointmentList(
+                      list: controller.upcomingAppointments,
+                      emptyImage: "assets/images/photo8.png",
+                      emptyTitle: "No Upcoming Appointments",
+                      isUpcoming: true,
+                    ),
+                  ),
 
-                  // ================= UPCOMING =================
-                  Obx(() {
-                    final list = controller.upcomingAppointments;
+                  Obx(
+                    () => _buildAppointmentList(
+                      list: controller.completedAppointments,
+                      emptyImage: "assets/images/photo7.png",
+                      emptyTitle: "No Completed Appointments",
+                    ),
+                  ),
 
-                    if (list.isEmpty) {
-                      return _emptyState(
-                        title: "No Upcoming Appointments",
-                        subtitle: "You don't have any upcoming appointments yet",
-                        image: "assets/images/photo8.png",
-                      );
-                    }
-
-                    return _buildList(list, (index) {
-                      final appointment = list[index];
-                      return AppointmentCard(
-                        appointment: appointment,
-                        onComplete: () =>
-                            controller.completeAppointment(index),
-                        onCancel: () =>
-                            controller.cancelAppointment(index),
-                      );
-                    });
-                  }),
-
-                  // ================= COMPLETED =================
-                  Obx(() {
-                    final list = controller.completedAppointments;
-
-                    if (list.isEmpty) {
-                      return _emptyState(
-                        title: "No Completed Appointments",
-                        subtitle: "Your completed appointments will appear here",
-                        image: "assets/images/photo7.png",
-                      );
-                    }
-
-                    return _buildList(list, (index) {
-                      final appointment = list[index];
-                      return AppointmentCard(
-                        appointment: appointment,
-                      );
-                    });
-                  }),
-
-                  // ================= CANCELED =================
-                  Obx(() {
-                    final list = controller.canceledAppointments;
-
-                    if (list.isEmpty) {
-                      return _emptyState(
-                        title: "No Canceled Appointments",
-                        subtitle: "You don't have any canceled appointments",
-                        image: "assets/images/photo6.png",
-                      );
-                    }
-
-                    return _buildList(list, (index) {
-                      final appointment = list[index];
-                      return AppointmentCard(
-                        appointment: appointment,
-                      );
-                    });
-                  }),
+                  Obx(
+                    () => _buildAppointmentList(
+                      list: controller.canceledAppointments,
+                      emptyImage: "assets/images/photo6.png",
+                      emptyTitle: "No Canceled Appointments",
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildAppointmentList({
+    required List<dynamic> list,
+    required String emptyImage,
+    required String emptyTitle,
+    bool isUpcoming = false,
+  }) {
+    if (controller.isLoading.value) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (list.isEmpty) {
+      return EmptyAppointmentState(
+        imagePath: emptyImage,
+        title: emptyTitle,
+        subtitle: "Check back later",
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final appointment = list[index];
+        return AppointmentCard(
+          appointment: appointment,
+          onCancel: () => controller.cancelAppointmentById(appointment['id']),
+
+          onComplete: isUpcoming
+              ? () => controller.completeAppointmentById(appointment['id'])
+              : null,
+        );
+      },
     );
   }
 }

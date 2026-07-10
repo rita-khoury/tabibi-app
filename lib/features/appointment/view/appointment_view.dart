@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controller/appointment_controller.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 
@@ -7,74 +8,89 @@ class AppointmentView extends GetView<AppointmentController> {
   const AppointmentView({super.key});
 
   void _processFinalBooking() {
-    Get.dialog(
-      Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.calendar_month_outlined, color: AppColors.primaryBlue, size: 40),
-              const SizedBox(height: 12),
-              const Text(
-                "Confirm Appointment",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const Divider(height: 25, thickness: 1),
-              Text(
-                "Your appointment will be set on Day (${controller.selectedDate}) during the (${controller.selectedPeriod}) period. Do you want to proceed?",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey,
-                        side: BorderSide(color: Colors.grey.shade300),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () => Get.back(),
-                      child: const Text("No"),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () {
-                        Get.back(); // إغلاق الديالوج
+    if (controller.selectedType == '' || controller.selectedPeriod == '') {
+      Get.snackbar("خطأ", "يرجى تحديد الفترة ونوع الموعد");
+      return;
+    }
 
-                        // استدعاء الدالة المحدثة من الـ Controller لتشغيل الصوت والـ Snackbar معاً
-                        controller.confirmAndPlaySound();
-                      },
-                      child: const Text("Yes", style: TextStyle(fontWeight: FontWeight.bold)),
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Column(
+          children: [
+            Icon(Icons.calendar_month, size: 48, color: AppColors.primaryBlue),
+            SizedBox(height: 16),
+            Text(
+              "Confirm Appointment",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Text(
+          "Your appointment will be set on Day (${controller.selectedDate.day}) during the (${controller.selectedPeriod}) period. Do you want to proceed?",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.grey.shade700, height: 1.4),
+        ),
+        actionsPadding: const EdgeInsets.all(16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Get.back(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey.shade600,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                ],
-              )
+                  child: const Text("No"),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                    _processActualBooking();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text("Yes"),
+                ),
+              ),
             ],
           ),
-        ),
+        ],
       ),
-      barrierDismissible: false,
     );
+  }
+
+  void _processActualBooking() {
+    controller.submitAppointment(doctorId: 1, clinicId: 1);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<AppointmentController>()) {
+      Get.put(AppointmentController());
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
@@ -86,7 +102,7 @@ class AppointmentView extends GetView<AppointmentController> {
         ),
       ),
       body: GetBuilder<AppointmentController>(
-        builder: (_) {
+        builder: (controller) {
           return Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -102,14 +118,17 @@ class AppointmentView extends GetView<AppointmentController> {
                         const SizedBox(height: 12),
                         _periodRow(),
                         const SizedBox(height: 25),
-                        _sectionTitle("Appointment Type", Icons.medical_services),
+                        _sectionTitle(
+                          "Appointment Type",
+                          Icons.medical_services,
+                        ),
                         const SizedBox(height: 12),
                         _typeRow(),
                       ],
                     ),
                   ),
                 ),
-                _confirmButton(context),
+                _confirmButton(),
               ],
             ),
           );
@@ -118,13 +137,16 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
-  Widget _sectionTitle(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.primaryBlue),
-        const SizedBox(width: 8),
-        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-      ],
+  Widget _typeRow() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: controller.appointmentTypes.map((type) {
+        return SizedBox(
+          width: (Get.width - 60) / 2,
+          child: _chip(type, controller.selectedType, controller.selectType),
+        );
+      }).toList(),
     );
   }
 
@@ -136,10 +158,10 @@ class AppointmentView extends GetView<AppointmentController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -153,20 +175,23 @@ class AppointmentView extends GetView<AppointmentController> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               IconButton(
-                icon: const Icon(Icons.calendar_month, color: AppColors.primaryBlue),
+                icon: const Icon(
+                  Icons.calendar_month,
+                  color: AppColors.primaryBlue,
+                ),
                 onPressed: () async {
                   DateTime? picked = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now(),
+                    initialDate: controller.selectedDate,
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2100),
+
                     builder: (context, child) {
                       return Theme(
                         data: Theme.of(context).copyWith(
                           colorScheme: const ColorScheme.light(
                             primary: AppColors.primaryBlue,
                             onPrimary: Colors.white,
-                            surface: Colors.white,
                             onSurface: Colors.black,
                           ),
                           textButtonTheme: TextButtonThemeData(
@@ -179,50 +204,49 @@ class AppointmentView extends GetView<AppointmentController> {
                       );
                     },
                   );
-
-                  if (picked != null) {
-                    controller.selectedDate = picked.day.toString();
-                    controller.update();
-                  }
+                  if (picked != null) controller.selectDate(picked);
                 },
-              )
+              ),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: controller.nextDays.map((date) {
-              final isSelected = controller.selectedDate == date.day.toString();
-
+              final selected =
+                  controller.selectedDate.day == date.day &&
+                  controller.selectedDate.month == date.month;
               return GestureDetector(
-                onTap: () {
-                  controller.selectDate(date.day.toString());
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                onTap: () => controller.selectDate(date),
+                child: Container(
+                  width: 55,
+                  height: 55,
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryBlue : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    color: selected ? AppColors.primaryBlue : Colors.white,
+                    shape: BoxShape.circle,
                     border: Border.all(
-                      color: isSelected ? Colors.transparent : Colors.grey.shade300,
+                      color: selected
+                          ? Colors.transparent
+                          : Colors.grey.shade300,
                     ),
                   ),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         _weekday(date.weekday),
                         style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected ? Colors.white : Colors.black,
+                          color: selected ? Colors.white : Colors.black,
+                          fontSize: 11,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 2),
                       Text(
                         date.day.toString(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : Colors.black,
+                          color: selected ? Colors.white : Colors.black,
+                          fontSize: 14,
                         ),
                       ),
                     ],
@@ -236,54 +260,72 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
-  String _weekday(int d) {
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    return days[d - 1];
+  Widget _sectionTitle(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.primaryBlue),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  String _weekday(int day) {
+    return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day - 1];
   }
 
   Widget _periodRow() {
     return Row(
       children: [
-        _chip("Morning", controller.selectedPeriod, controller.selectPeriod),
-        _chip("Afternoon", controller.selectedPeriod, controller.selectPeriod),
-        _chip("Evening", controller.selectedPeriod, controller.selectPeriod),
-      ],
-    );
-  }
-
-  Widget _typeRow() {
-    return Row(
-      children: [
-        _chip("Consultation", controller.selectedType, controller.selectType),
-        _chip("Follow-up", controller.selectedType, controller.selectType),
-        _chip("Advice", controller.selectedType, controller.selectType),
+        Expanded(
+          child: _chip(
+            "Morning",
+            controller.selectedPeriod,
+            controller.selectPeriod,
+          ),
+        ),
+        Expanded(
+          child: _chip(
+            "Afternoon",
+            controller.selectedPeriod,
+            controller.selectPeriod,
+          ),
+        ),
+        Expanded(
+          child: _chip(
+            "Evening",
+            controller.selectedPeriod,
+            controller.selectPeriod,
+          ),
+        ),
       ],
     );
   }
 
   Widget _chip(String text, String selected, Function(String) onTap) {
-    final isSelected = selected == text;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onTap(text),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryBlue : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isSelected ? Colors.transparent : Colors.grey.shade300,
-            ),
+    final bool isSelected = selected == text;
+    return GestureDetector(
+      onTap: () => onTap(text),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? Colors.transparent : Colors.grey.shade300,
           ),
-          child: Center(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : Colors.black,
-              ),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : Colors.black,
+              fontSize: 12,
             ),
           ),
         ),
@@ -291,194 +333,184 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
-  Widget _confirmButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 55,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryBlue,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+  Widget _confirmButton() {
+    return Obx(
+      () => SizedBox(
+        width: double.infinity,
+        height: 55,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryBlue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
           ),
-        ),
-        onPressed: () {
-          if (!controller.showTermsDialog) {
-            _processFinalBooking();
-            return;
-          }
+          onPressed: controller.isLoading.value
+              ? null
+              : () {
+                  final box = GetStorage();
+                  bool shouldHide = box.read('hideTerms') ?? false;
 
-          Get.dialog(
-            Dialog(
-              backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                  if (shouldHide) {
+                    _processFinalBooking();
+                  } else {
+                    _showTermsDialog();
+                  }
+                },
+          child: controller.isLoading.value
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text(
+                  "Confirm",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+        ),
+      ),
+    );
+  }
+
+  void _showTermsDialog() {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        titlePadding: const EdgeInsets.only(top: 24, bottom: 8),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        title: const Column(
+          children: [
+            Icon(Icons.info_outline, size: 48, color: AppColors.primaryBlue),
+            SizedBox(height: 16),
+            Text(
+              "Booking Terms & Conditions",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              ListBody(
+                children: [
+                  _buildRichText(
+                    "Checkup Fee:",
+                    " 100 S.P will be deducted upon booking.",
+                    Icons.attach_money,
+                    Colors.green,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildRichText(
+                    "Cancellation:",
+                    " If canceled within the allowed time, you'll receive a full refund.",
+                    Icons.check_circle_outline,
+                    Colors.blue,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildRichText(
+                    "No-Show (1st Time):",
+                    " 10% of the booking amount will be deducted.",
+                    Icons.warning_amber_rounded,
+                    Colors.orange,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildRichText(
+                    "No-Show (2nd Time):",
+                    " Your account will be permanently banned from the platform.",
+                    Icons.gavel,
+                    Colors.red,
+                  ),
+                ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: GetBuilder<AppointmentController>(
-                  builder: (logic) {
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.info_outline,
-                          color: AppColors.primaryBlue,
-                          size: 40,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          "Booking Terms & Conditions",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const Divider(height: 25, thickness: 1),
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Column(
-                            children: [
-                              _buildPolicyRow(
-                                icon: Icons.payments_outlined,
-                                iconColor: Colors.green,
-                                title: "Checkup Fee:",
-                                description: "100 S.P will be deducted upon booking.",
-                              ),
-                              const SizedBox(height: 14),
-                              _buildPolicyRow(
-                                icon: Icons.check_circle_outline,
-                                iconColor: AppColors.primaryBlue,
-                                title: "Cancellation:",
-                                description: "If canceled within the allowed time, you'll receive a full refund.",
-                              ),
-                              const SizedBox(height: 14),
-                              _buildPolicyRow(
-                                icon: Icons.warning_amber_rounded,
-                                iconColor: Colors.orange,
-                                title: "No-Show (1st Time):",
-                                description: "10% of the booking amount will be deducted.",
-                              ),
-                              const SizedBox(height: 14),
-                              _buildPolicyRow(
-                                icon: Icons.gavel_rounded,
-                                iconColor: Colors.red,
-                                title: "No-Show (2nd Time):",
-                                description: "Your account will be permanently banned from the platform.",
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        Theme(
-                          data: ThemeData(
-                            checkboxTheme: CheckboxThemeData(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                            ),
-                          ),
-                          child: CheckboxListTile(
-                            title: const Text(
-                              "Don't show this again",
-                              style: TextStyle(fontSize: 13, color: Colors.black54),
-                            ),
-                            value: !logic.showTermsDialog,
-                            onChanged: (val) {
-                              logic.toggleShowTerms(!(val ?? false));
-                            },
-                            controlAffinity: ListTileControlAffinity.leading,
-                            contentPadding: EdgeInsets.zero,
-                            activeColor: AppColors.primaryBlue,
-                            dense: true,
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.grey,
-                                  side: BorderSide(color: Colors.grey.shade300),
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: () => Get.back(),
-                                child: const Center(
-                                  child: Text(
-                                    "Cancel",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryBlue,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                onPressed: () {
-                                  Get.back();
-                                  _processFinalBooking();
-                                },
-                                child: const Center(
-                                  child: Text(
-                                    "Accept & Confirm",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    );
-                  },
+              const SizedBox(height: 16),
+
+              Obx(
+                () => CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text(
+                    "Don't show again",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  value: controller.dontShowAgain.value,
+                  onChanged: (val) => controller.dontShowAgain.value = val!,
+                  activeColor: AppColors.primaryBlue,
                 ),
               ),
-            ),
-            barrierDismissible: false,
-          );
-        },
-        child: const Text(
-          "Confirm",
-          style: TextStyle(color: Colors.white, fontSize: 16),
+            ],
+          ),
         ),
+        actionsPadding: const EdgeInsets.all(16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Get.back(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey.shade600,
+                    side: BorderSide(color: Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text("Cancel"),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    controller.saveTermsPreference();
+                    Get.back();
+                    _processFinalBooking();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text("Accept & Confirm"),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPolicyRow({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String description,
-  }) {
+  static Widget _buildRichText(
+    String stringTitle,
+    String stringBody,
+    IconData icon,
+    Color iconColor,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: iconColor, size: 22),
-        const SizedBox(width: 10),
+        Icon(icon, size: 20, color: iconColor),
+        const SizedBox(width: 8),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+              style: TextStyle(
+                color: Colors.grey.shade800,
+                height: 1.4,
+                fontSize: 14,
+              ),
               children: [
                 TextSpan(
-                  text: "$title ",
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                  text: stringTitle,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                TextSpan(text: description),
+                TextSpan(text: stringBody),
               ],
             ),
           ),

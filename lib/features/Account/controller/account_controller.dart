@@ -2,14 +2,15 @@ import 'package:get/get.dart';
 import 'package:country_picker/country_picker.dart';
 
 class AccountController extends GetxController {
-  var selectedCountryCode = "DE".obs;
-  var selectedCountryName = "Germany".obs;
+  Rxn<Country> selectedCountry = Rxn<Country>();
 
   void pickCountry(Country c) {
-    selectedCountryCode.value = c.countryCode;
-    selectedCountryName.value = c.name;
+    selectedCountry.value = c;
   }
 
-  String get countryDisplay =>
-      "${selectedCountryCode.value} (${selectedCountryName.value.substring(0, 3)})";
+
+  String get countryDisplay {
+    if (selectedCountry.value == null) return "Select Country";
+    return "${selectedCountry.value!.countryCode} (${selectedCountry.value!.name.substring(0, 3)})";
+  }
 }

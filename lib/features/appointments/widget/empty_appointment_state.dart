@@ -19,11 +19,7 @@ class EmptyAppointmentState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-
-          Image.asset(
-            imagePath,
-            height: 180,
-          ),
+          Image.asset(imagePath, height: 180),
 
           const SizedBox(height: 16),
 
@@ -41,10 +37,7 @@ class EmptyAppointmentState extends StatelessWidget {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
           ),
         ],
       ),

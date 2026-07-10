@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'features/Search Feature/controller/search_controller.dart';
+import 'package:get_storage/get_storage.dart';
 import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
+import 'features/auth/repository/auth_binding.dart';
 
-void main() {
-
-  Get.put(DoctorSearchController());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
 
   runApp(const MyApp());
 }
@@ -20,6 +21,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: AppRoutes.splash,
       getPages: AppPages.pages,
+
+      initialBinding: AuthBinding(),
     );
   }
 }

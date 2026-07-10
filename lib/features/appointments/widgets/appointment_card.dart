@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
-
+import 'package:tabibi/core/constance/appointment_status.dart';
 import '../model/appointment_model.dart';
 
 class AppointmentCard extends StatelessWidget {
-
   final AppointmentModel appointment;
 
   final VoidCallback? onComplete;
@@ -19,7 +18,6 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -38,11 +36,9 @@ class AppointmentCard extends StatelessWidget {
       ),
 
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           Text(
             appointment.doctorName,
             style: const TextStyle(
@@ -56,20 +52,14 @@ class AppointmentCard extends StatelessWidget {
 
           Text(
             appointment.specialty,
-            style: const TextStyle(
-              color: AppColors.gray,
-            ),
+            style: const TextStyle(color: AppColors.gray),
           ),
 
           const SizedBox(height: 15),
 
           Row(
             children: [
-
-              const Icon(
-                Icons.calendar_month,
-                color: AppColors.primaryBlue,
-              ),
+              const Icon(Icons.calendar_month, color: AppColors.primaryBlue),
 
               const SizedBox(width: 8),
 
@@ -81,14 +71,11 @@ class AppointmentCard extends StatelessWidget {
             ],
           ),
 
-          if (appointment.status ==
-              AppointmentStatus.upcoming) ...[
-
+          if (appointment.status == AppointmentStatus.upcoming) ...[
             const SizedBox(height: 18),
 
             Row(
               children: [
-
                 Expanded(
                   child: ElevatedButton(
                     onPressed: onCancel,
@@ -108,8 +95,7 @@ class AppointmentCard extends StatelessWidget {
                     onPressed: onComplete,
 
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppColors.primaryBlue,
+                      backgroundColor: AppColors.primaryBlue,
                     ),
 
                     child: const Text("Complete"),
@@ -117,7 +103,7 @@ class AppointmentCard extends StatelessWidget {
                 ),
               ],
             ),
-          ]
+          ],
         ],
       ),
     );

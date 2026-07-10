@@ -1,66 +1,138 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import '../../../core/routes/app_routes.dart';
+import '../../auth/repository/auth_repository.dart';
+import '../../auth/repository/AuthController.dart';
+import '../../OTP/view/otp_screen.dart';
 
 class LoginController extends GetxController {
-  final emailOrPhone = ''.obs;
-  final password = ''.obs;
+  final AuthRepository _authRepository = Get.find<AuthRepository>();
+  final AuthController _authController = Get.find<AuthController>();
+
+  final _storage = GetStorage();
+  final String _historyKey = 'email_history';
+
+  final TextEditingController emailOrPhoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
   final isPasswordObscured = true.obs;
   final isLoading = false.obs;
 
-  void togglePassword() {
-    isPasswordObscured.value = !isPasswordObscured.value;
-  }
-
-  void setEmailOrPhone(String value) {
-    emailOrPhone.value = value;
-  }
-
-  void setPassword(String value) {
-    password.value = value;
+  @override
+  void onClose() {
+    emailOrPhoneController.dispose();
+    passwordController.dispose();
+    super.onClose();
   }
 
   Future<void> login() async {
-    String input = emailOrPhone.value.trim();
+    String identifier = emailOrPhoneController.text.trim();
+    String password = passwordController.text.trim();
 
-    // التحقق من الحقول مع رسالة خطأ باللون الأحمر الداكن الاحترافي
-    if (input.isEmpty || password.value.isEmpty) {
+    if (identifier.isEmpty || password.isEmpty) {
       Get.snackbar(
-        "Alert",
-        "Please fill in all fields to continue",
-        backgroundColor: Colors.redAccent.shade700, // لون أحمر متناسق
+        "تنبيه",
+        "يرجى تعبئة كافة الحقول",
+        backgroundColor: Colors.red,
         colorText: Colors.white,
-        snackPosition: SnackPosition.TOP, // تظهر من الأعلى
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(15),
-        borderRadius: 15,
-        icon: const Icon(Icons.error_outline, color: Colors.white),
-        snackStyle: SnackStyle.FLOATING,
-        boxShadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
       );
       return;
     }
 
     isLoading.value = true;
 
-    // محاكاة الاتصال بالسيرفر
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final authResponse = await _authRepository.login(identifier, password);
 
-    bool isEmail = input.contains('@');
-    Map<String, dynamic> loginData = {
-      "password": password.value,
-      isEmail ? "email" : "phone": input,
-    };
+      await _authController.loginSuccess(
+        authResponse.user,
+        authResponse.accessToken,
+        authResponse.refreshToken,
+      );
 
-    print("Sending data to API: $loginData");
+      await _saveEmailToHistory();
 
-    isLoading.value = false;
+      try {
+        final status = await _authRepository.getCompletionStatus();
+        final bool isCompleted = status.completed;
+        await _storage.write('profileCompleted', isCompleted);
+        _authController.updateProfileCompletionStatus(isCompleted);
 
-    // يمكنك إضافة منطق التنقل للصفحة التالية هنا
+        if (isCompleted) {
+          Get.offAllNamed(AppRoutes.home);
+        } else {
+          Get.offAllNamed(
+            '/medical-profile',
+            arguments: {
+              "completionPercentage": status.completionPercentage,
+              "missingFields": status.missingFields,
+            },
+          );
+        }
+      } catch (e) {
+        debugPrint("Error checking profile status: $e");
+        Get.offAllNamed(AppRoutes.home);
+      }
+    } on DioException catch (e) {
+      String errorMessage =
+          e.response?.data['message'] ?? "بيانات الدخول غير صحيحة";
+      Get.snackbar(
+        "خطأ",
+        errorMessage,
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      debugPrint("Login error: $e");
+      Get.snackbar(
+        "خطأ",
+        "حدث خطأ غير متوقع",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
+
+  Future<void> _saveEmailToHistory() async {
+    List<String> history = _getSavedEmails();
+    String identifier = emailOrPhoneController.text.trim();
+
+    if (!history.contains(identifier) && identifier.isNotEmpty) {
+      history.add(identifier);
+      if (history.length > 10) history.removeAt(0);
+      await _storage.write(_historyKey, history);
+    }
+  }
+
+  List<String> _getSavedEmails() {
+    final List<dynamic>? history = _storage.read<List<dynamic>>(_historyKey);
+    return history != null ? List<String>.from(history) : [];
+  }
+
+  Future<void> handleForgotPassword() async {
+    String identifier = emailOrPhoneController.text.trim();
+    if (identifier.isEmpty) {
+      Get.snackbar("تنبيه", "يرجى إدخال البريد الإلكتروني أو رقم الهاتف");
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      await _authRepository.requestOtp(identifier, "reset-password");
+      Get.to(
+        () => const OtpScreen(),
+        arguments: {'identifier': identifier, 'purpose': 'reset-password'},
+      );
+    } catch (e) {
+      Get.snackbar("خطأ", "فشل في إرسال الكود");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void togglePassword() => isPasswordObscured.value = !isPasswordObscured.value;
 }

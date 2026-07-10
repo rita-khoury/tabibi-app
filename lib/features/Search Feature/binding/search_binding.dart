@@ -1,4 +1,3 @@
-// المسار: lib/features/search/binding/search_binding.dart
 import 'package:get/get.dart';
 import '../controller/search_controller.dart';
 

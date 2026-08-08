@@ -26,22 +26,20 @@ class DoctorCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              color: Colors.grey[200],
-              image: doc.image.isNotEmpty
-                  ? DecorationImage(
-                      image: NetworkImage(doc.image),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Image.network(
+              doc.image,
+              width: 70,
+              height: 70,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                width: 70,
+                height: 70,
+                color: Colors.grey[200],
+                child: const Icon(Icons.person, color: Colors.grey),
+              ),
             ),
-            child: doc.image.isEmpty
-                ? const Icon(Icons.person, color: Colors.grey)
-                : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -54,6 +52,8 @@ class DoctorCard extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   doc.specialization,
@@ -63,7 +63,7 @@ class DoctorCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.star, color: Colors.orange, size: 16),
                     const SizedBox(width: 4),
-                    Text(doc.averageRating.toString()),
+                    Text(doc.averageRating.toStringAsFixed(1)),
                   ],
                 ),
               ],

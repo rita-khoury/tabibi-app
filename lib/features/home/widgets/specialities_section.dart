@@ -1,44 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../auth/data/models/LookupModel.dart';
 import '../widgets/DoctorsPage.dart';
 import '../../../core/services/doctor_service.dart';
 import '../../../features/auth/data/models/DoctorModel.dart';
 
 class SpecialitiesSection extends StatelessWidget {
   final bool isGrid;
+  final List<LookupModel> specialities;
   final DoctorService _service = DoctorService();
 
-  SpecialitiesSection({super.key, this.isGrid = false});
+  SpecialitiesSection({
+    super.key,
+    this.isGrid = false,
+    required this.specialities,
+  });
+
+  IconData _getIconForSpeciality(String name) {
+    switch (name.toLowerCase()) {
+      case 'cardiology':
+        return Icons.favorite_sharp;
+      case 'dermatology':
+        return Icons.face_sharp;
+      case 'optometry':
+        return Icons.visibility_sharp;
+      case 'dentistry':
+        return Icons.medical_services_sharp;
+      case 'brain & nerves':
+        return Icons.psychology_sharp;
+      case 'orthopedics':
+        return Icons.accessible_sharp;
+      case 'pediatrics':
+        return Icons.child_care_sharp;
+      case 'ent':
+        return Icons.hearing_sharp;
+      case 'gynecology':
+        return Icons.pregnant_woman_sharp;
+      default:
+        return Icons.medical_information_sharp;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      {"icon": Icons.favorite_sharp, "title": "Cardiology"},
-      {"icon": Icons.face_sharp, "title": "Dermatology"},
-      {"icon": Icons.visibility_sharp, "title": "Optometry"},
-      {"icon": Icons.medical_services_sharp, "title": "Dentistry"},
-      {"icon": Icons.psychology_sharp, "title": "Brain & Nerves"},
-      {"icon": Icons.accessible_sharp, "title": "Orthopedics"},
-      {"icon": Icons.child_care_sharp, "title": "Pediatrics"},
-      {"icon": Icons.hearing_sharp, "title": "ENT"},
-      {"icon": Icons.pregnant_woman_sharp, "title": "Gynecology"},
-    ];
-
     Widget buildItem(int index) {
+      final item = specialities[index];
+
       return InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: () async {
-          final rawData = await _service.getAll();
-          final List<DoctorModel> doctorsList = rawData
-              .map((e) => DoctorModel.fromJson(e))
-              .toList();
+          Get.dialog(const Center(child: CircularProgressIndicator()));
+          try {
+            final rawData = await _service.getAll();
 
-          Get.to(
-            () => DoctorsPage(
-              speciality: items[index]["title"].toString(),
-              doctors: doctorsList,
-            ),
-          );
+            debugPrint("DEBUG: Searching for speciality: ${item.value}");
+
+            final List<DoctorModel> doctorsList = [];
+            for (var e in rawData) {
+              final doc = DoctorModel.fromJson(e);
+
+              debugPrint(
+                "DEBUG: Comparing '${doc.specialization}' with '${item.value}'",
+              );
+
+              if (doc.specialization.trim().toLowerCase() ==
+                  item.value.trim().toLowerCase()) {
+                doctorsList.add(doc);
+              }
+            }
+
+            Get.back();
+
+            if (doctorsList.isEmpty) {
+              Get.snackbar("تنبيه", "لا يوجد أطباء في هذا التخصص حالياً");
+            } else {
+              Get.to(
+                () =>
+                    DoctorsPage(speciality: item.labelEn, doctors: doctorsList),
+              );
+            }
+          } catch (e) {
+            Get.back();
+            Get.snackbar("خطأ", "تعذر جلب البيانات: ${e.toString()}");
+          }
         },
         child: Container(
           width: 90,
@@ -63,13 +107,13 @@ class SpecialitiesSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                items[index]["icon"] as IconData,
+                _getIconForSpeciality(item.value),
                 color: Colors.white,
                 size: 26,
               ),
               const SizedBox(height: 6),
               Text(
-                items[index]["title"].toString(),
+                item.labelEn,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -90,7 +134,7 @@ class SpecialitiesSection extends StatelessWidget {
       return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
+        itemCount: specialities.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           crossAxisSpacing: 10,
@@ -105,7 +149,7 @@ class SpecialitiesSection extends StatelessWidget {
       height: 95,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: items.length,
+        itemCount: specialities.length,
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) => buildItem(index),
       ),

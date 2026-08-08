@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 import '../controller/appointment_controller.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 
 class AppointmentView extends GetView<AppointmentController> {
-  const AppointmentView({super.key});
+  final int doctorId;
+  final int clinicId;
 
-  void _processFinalBooking() {
-    if (controller.selectedType == '' || controller.selectedPeriod == '') {
-      Get.snackbar("خطأ", "يرجى تحديد الفترة ونوع الموعد");
-      return;
-    }
+  const AppointmentView({
+    super.key,
+    required this.doctorId,
+    required this.clinicId,
+  });
 
+  void _showFinalBookingDialog() {
     Get.dialog(
       AlertDialog(
         backgroundColor: Colors.white,
@@ -77,7 +80,10 @@ class AppointmentView extends GetView<AppointmentController> {
   }
 
   void _processActualBooking() {
-    controller.submitAppointment(doctorId: 1, clinicId: 1);
+    controller.submitAppointment(
+      doctorId: doctorId,
+      clinicId: controller.selectedClinicId.value ?? clinicId,
+    );
   }
 
   @override
@@ -85,6 +91,7 @@ class AppointmentView extends GetView<AppointmentController> {
     if (!Get.isRegistered<AppointmentController>()) {
       Get.put(AppointmentController());
     }
+    controller.fetchClinics(doctorId);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -92,13 +99,21 @@ class AppointmentView extends GetView<AppointmentController> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.primaryBlue,
+          ),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           "Book Appointment",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppColors.primaryBlue,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
       ),
       body: GetBuilder<AppointmentController>(
@@ -185,24 +200,20 @@ class AppointmentView extends GetView<AppointmentController> {
                     initialDate: controller.selectedDate,
                     firstDate: DateTime.now(),
                     lastDate: DateTime(2100),
-
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: const ColorScheme.light(
-                            primary: AppColors.primaryBlue,
-                            onPrimary: Colors.white,
-                            onSurface: Colors.black,
-                          ),
-                          textButtonTheme: TextButtonThemeData(
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.primaryBlue,
-                            ),
-                          ),
-                        ),
-                        child: child!,
-                      );
+                    selectableDayPredicate: (DateTime day) {
+                      String dayName = DateFormat('EEEE').format(day);
+                      return controller.doctorWorkDays.contains(dayName);
                     },
+                    builder: (context, child) => Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: AppColors.primaryBlue,
+                          onPrimary: Colors.white,
+                          onSurface: Colors.black,
+                        ),
+                      ),
+                      child: child!,
+                    ),
                   );
                   if (picked != null) controller.selectDate(picked);
                 },
@@ -210,50 +221,63 @@ class AppointmentView extends GetView<AppointmentController> {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: controller.nextDays.map((date) {
-              final selected =
-                  controller.selectedDate.day == date.day &&
-                  controller.selectedDate.month == date.month;
-              return GestureDetector(
-                onTap: () => controller.selectDate(date),
-                child: Container(
-                  width: 55,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    color: selected ? AppColors.primaryBlue : Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: selected
-                          ? Colors.transparent
-                          : Colors.grey.shade300,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: controller.doctorAvailableDays.map((date) {
+                final selected =
+                    controller.selectedDate.day == date.day &&
+                        controller.selectedDate.month == date.month &&
+                        controller.selectedDate.year == date.year;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: GestureDetector(
+                    onTap: () => controller.selectDate(date),
+                    child: Container(
+                      width: 55,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.primaryBlue
+                            : Colors.blue.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: selected
+                              ? Colors.transparent
+                              : AppColors.primaryBlue.withOpacity(0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _weekday(date.weekday),
+                            style: TextStyle(
+                              color: selected
+                                  ? Colors.white
+                                  : AppColors.primaryBlue,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            date.day.toString(),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: selected ? Colors.white : Colors.black87,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _weekday(date.weekday),
-                        style: TextStyle(
-                          color: selected ? Colors.white : Colors.black,
-                          fontSize: 11,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        date.day.toString(),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: selected ? Colors.white : Colors.black,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
@@ -273,35 +297,33 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
-  String _weekday(int day) {
-    return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day - 1];
-  }
+  String _weekday(int day) =>
+      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][day - 1];
 
   Widget _periodRow() {
+    if (controller.availablePeriodsForSelectedDay.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text(
+          "لا توجد فترات متاحة في هذا اليوم",
+          style: TextStyle(color: Colors.grey, fontSize: 13),
+        ),
+      );
+    }
+
     return Row(
-      children: [
-        Expanded(
-          child: _chip(
-            "Morning",
-            controller.selectedPeriod,
-            controller.selectPeriod,
+      children: controller.availablePeriodsForSelectedDay.map((period) {
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: _chip(
+              period,
+              controller.selectedPeriod,
+              controller.selectPeriod,
+            ),
           ),
-        ),
-        Expanded(
-          child: _chip(
-            "Afternoon",
-            controller.selectedPeriod,
-            controller.selectPeriod,
-          ),
-        ),
-        Expanded(
-          child: _chip(
-            "Evening",
-            controller.selectedPeriod,
-            controller.selectPeriod,
-          ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 
@@ -335,7 +357,7 @@ class AppointmentView extends GetView<AppointmentController> {
 
   Widget _confirmButton() {
     return Obx(
-      () => SizedBox(
+          () => SizedBox(
         width: double.infinity,
         height: 55,
         child: ElevatedButton(
@@ -348,21 +370,33 @@ class AppointmentView extends GetView<AppointmentController> {
           onPressed: controller.isLoading.value
               ? null
               : () {
-                  final box = GetStorage();
-                  bool shouldHide = box.read('hideTerms') ?? false;
+            if (controller.selectedPeriod.isEmpty ||
+                controller.selectedType.isEmpty) {
+              Get.snackbar(
+                "خطأ",
+                "يرجى تحديد الفترة ونوع الموعد",
+                backgroundColor: Colors.red,
+                colorText: Colors.white,
+              );
+              return;
+            }
 
-                  if (shouldHide) {
-                    _processFinalBooking();
-                  } else {
-                    _showTermsDialog();
-                  }
-                },
+            controller.checkProfileAndProceed(() {
+              bool shouldHide = GetStorage().read('hideTerms') ?? false;
+
+              if (shouldHide) {
+                _showFinalBookingDialog();
+              } else {
+                _showTermsDialog();
+              }
+            });
+          },
           child: controller.isLoading.value
               ? const CircularProgressIndicator(color: Colors.white)
               : const Text(
-                  "Confirm",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+            "Confirm Appointment",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
         ),
       ),
     );
@@ -374,60 +408,43 @@ class AppointmentView extends GetView<AppointmentController> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        titlePadding: const EdgeInsets.only(top: 24, bottom: 8),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
         title: const Column(
           children: [
             Icon(Icons.info_outline, size: 48, color: AppColors.primaryBlue),
             SizedBox(height: 16),
             Text(
-              "Booking Terms & Conditions",
-              textAlign: TextAlign.center,
+              "Booking Terms & Violations",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         content: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ListBody(
-                children: [
-                  _buildRichText(
-                    "Checkup Fee:",
-                    " 100 S.P will be deducted upon booking.",
-                    Icons.attach_money,
-                    Colors.green,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildRichText(
-                    "Cancellation:",
-                    " If canceled within the allowed time, you'll receive a full refund.",
-                    Icons.check_circle_outline,
-                    Colors.blue,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildRichText(
-                    "No-Show (1st Time):",
-                    " 10% of the booking amount will be deducted.",
-                    Icons.warning_amber_rounded,
-                    Colors.orange,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildRichText(
-                    "No-Show (2nd Time):",
-                    " Your account will be permanently banned from the platform.",
-                    Icons.gavel,
-                    Colors.red,
-                  ),
-                ],
+              _buildRichText(
+                "Checkup Fee:",
+                " 100 S.P deducted.",
+                Icons.attach_money,
+                Colors.green,
+              ),
+              const SizedBox(height: 12),
+              _buildRichText(
+                "Cancellation:",
+                " Refund available.",
+                Icons.check_circle_outline,
+                Colors.blue,
+              ),
+              const SizedBox(height: 12),
+              _buildRichText(
+                "No-Show Policy:",
+                " Repeated no-shows may lead to patient violations restrictions based on your record.",
+                Icons.warning_amber_rounded,
+                Colors.orange,
               ),
               const SizedBox(height: 16),
-
               Obx(
-                () => CheckboxListTile(
+                    () => CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                   title: const Text(
@@ -436,7 +453,6 @@ class AppointmentView extends GetView<AppointmentController> {
                   ),
                   value: controller.dontShowAgain.value,
                   onChanged: (val) => controller.dontShowAgain.value = val!,
-                  activeColor: AppColors.primaryBlue,
                 ),
               ),
             ],
@@ -452,7 +468,7 @@ class AppointmentView extends GetView<AppointmentController> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.grey.shade600,
                     side: BorderSide(color: Colors.grey.shade400),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
@@ -466,17 +482,17 @@ class AppointmentView extends GetView<AppointmentController> {
                   onPressed: () {
                     controller.saveTermsPreference();
                     Get.back();
-                    _processFinalBooking();
+                    _showFinalBookingDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: const Text("Accept & Confirm"),
+                  child: const Text("Accept"),
                 ),
               ),
             ],
@@ -486,36 +502,24 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
-  static Widget _buildRichText(
-    String stringTitle,
-    String stringBody,
-    IconData icon,
-    Color iconColor,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: iconColor),
-        const SizedBox(width: 8),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(
-                color: Colors.grey.shade800,
-                height: 1.4,
-                fontSize: 14,
+  static Widget _buildRichText(String t, String b, IconData i, Color c) => Row(
+    children: [
+      Icon(i, size: 20, color: c),
+      const SizedBox(width: 8),
+      Expanded(
+        child: RichText(
+          text: TextSpan(
+            style: TextStyle(color: Colors.grey.shade800),
+            children: [
+              TextSpan(
+                text: t,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              children: [
-                TextSpan(
-                  text: stringTitle,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                TextSpan(text: stringBody),
-              ],
-            ),
+              TextSpan(text: b),
+            ],
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
 }

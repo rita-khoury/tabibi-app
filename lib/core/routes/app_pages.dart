@@ -28,23 +28,20 @@ import '../../features/LoginScreen/view/login_screen.dart';
 import '../../features/complete_profile/binding/complete_profile_binding.dart';
 import '../../features/complete_profile/middleware/profile_guard.dart';
 import '../../features/complete_profile/view/complete_profile_view.dart';
+import '../../features/doctor_profile/binding/doctor_profile_binding.dart';
+import '../../features/doctor_profile/view/doctor_profile_view.dart';
 import '../../features/notifications/binding/notification_binding.dart';
 import '../../features/notifications/controller/notification_controller.dart';
 import '../../features/notifications/view/notification_view.dart';
+import '../../features/profile/view/violations_view.dart';
 import '../../features/wallet/binding/wallet_binding.dart';
 import '../../features/wallet/view/wallet_view.dart';
 
 class AppPages {
   static final pages = [
-     GetPage(
-      name: AppRoutes.splash,
-      page: () => SplashScreen(),
-    ),
+    GetPage(name: AppRoutes.splash, page: () => SplashScreen()),
+    GetPage(name: AppRoutes.onboarding, page: () => OnboardingScreen()),
     GetPage(
-      name: AppRoutes.onboarding,
-      page: () => OnboardingScreen(),
-    ),
-   GetPage(
       name: AppRoutes.profile,
       page: () => ProfileView(),
       binding: ProfileBinding(),
@@ -55,27 +52,29 @@ class AppPages {
       binding: SettingsBinding(),
     ),*/
     GetPage(
-  name: AppRoutes.settings,
-  page: () => SettingsView(),
-  binding: SettingsBinding(),
-),GetPage(
-  name: AppRoutes.appointments,
+      name: AppRoutes.settings,
+      page: () => SettingsView(),
+      binding: SettingsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.appointments,
 
-  page: () => const AppointmentsView(),
+      page: () => const AppointmentsView(),
 
-  binding: AppointmentsBinding(),
-),
-GetPage(
-  name: AppRoutes.medicalRecords,
-  page: () => const MedicalRecordsView(),
-  binding: MedicalRecordsBinding(),
-),
-GetPage(
-  name:AppRoutes.favorites,
-  page: () => const FavoritesDoctorsView(),
-  binding: FavoritesDoctorsBinding(),
-),
-
+      binding: AppointmentsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.medicalRecords,
+      page: () =>  MedicalRecordView(),
+      binding: MedicalRecordBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.favorites,
+      page: () => const FavoritesDoctorsView(),
+      binding: FavoritesDoctorsBinding(),
+    ),
+    GetPage(name: AppRoutes.violationsView,
+        page: () => const ViolationsView()),
     GetPage(
       name: AppRoutes.helpSupport,
       page: () => const HelpSupportView(),
@@ -83,16 +82,15 @@ GetPage(
     ),
 
     GetPage(
-  name: AppRoutes.editProfile,
-  page: () => const EditProfileView(),
-  binding: EditProfileBinding(),
-),
- GetPage(
-  name: AppRoutes.home,
-  page: () => const NavigationView(),
-  binding: NavigationBinding(),
-),
-
+      name: AppRoutes.editProfile,
+      page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.home,
+      page: () => const NavigationView(),
+      binding: NavigationBinding(),
+    ),
 
     GetPage(
       name: '/medical-profile',
@@ -101,20 +99,14 @@ GetPage(
       middlewares: [ProfileMiddleware()],
     ),
     GetPage(
-
       name: AppRoutes.wallet,
 
       page: () => const WalletView(),
 
       binding: WalletBinding(),
-
     ),
 
-    GetPage(
-      name: '/login',
-      page: () =>  LoginScreen(),
-      binding: LoginBinding(),
-    ),
+    GetPage(name: '/login', page: () => LoginScreen(), binding: LoginBinding()),
 
     GetPage(
       name: '/notifications',
@@ -125,5 +117,10 @@ GetPage(
       }),
     ),
 
+    GetPage(
+      name: '/doctor-profile',
+      page: () => DoctorProfileView(),
+      binding: DoctorProfileBinding(),
+    ),
   ];
 }

@@ -13,6 +13,7 @@ abstract class AppRoutes {
   static const login = '/login';
   static const medicalProfile = '/medical-profile';
   static const notifications = '/notifications';
-
+  static const doctorProfile = '/doctor-profile';
+  static const String violationsView = '/violations-view';
 
 }

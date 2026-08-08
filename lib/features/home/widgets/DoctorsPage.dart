@@ -5,35 +5,41 @@ import '../../../features/auth/data/models/DoctorModel.dart';
 
 class DoctorsPage extends StatelessWidget {
   final String speciality;
-  final List<DoctorModel> filteredDoctors;
+  final List<DoctorModel> doctors;
 
-  DoctorsPage({
+  const DoctorsPage({
     super.key,
     required this.speciality,
-    required List<DoctorModel> doctors,
-  }) : filteredDoctors = doctors
-           .where(
-             (doc) =>
-                 doc.specialization.toLowerCase() == speciality.toLowerCase(),
-           )
-           .toList();
+    required this.doctors,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final filteredDoctors = doctors
+        .where(
+          (doc) => doc.specialization.toLowerCase() == speciality.toLowerCase(),
+        )
+        .toList();
+
     return Scaffold(
       backgroundColor: AppColors.lightGray,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.primaryBlue,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        backgroundColor: AppColors.lightGray,
+        backgroundColor:  AppColors.lightGray,
         elevation: 0,
+        centerTitle: true,
         title: Text(
           speciality,
           style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
+            color: AppColors.primaryBlue,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
       ),

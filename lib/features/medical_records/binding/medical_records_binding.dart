@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import '../controller/medical_records_controller.dart';
+import 'package:tabibi/features/medical_records/controller/medical_records_controller.dart';
 
-class MedicalRecordsBinding extends Bindings {
+class MedicalRecordBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<MedicalRecordsController>(() => MedicalRecordsController());
+    Get.lazyPut<MedicalRecordController>(() => MedicalRecordController());
   }
 }

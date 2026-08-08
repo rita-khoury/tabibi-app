@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
+import '../../auth/data/models/LookupModel.dart';
 import '../controller/complete_profile_controller.dart';
 
 class CompleteProfileView extends StatelessWidget {
@@ -32,58 +33,70 @@ class CompleteProfileView extends StatelessWidget {
                         index: controller.currentStep.value,
                         children: [
                           _buildWelcomeStep(),
+
                           _buildStep(
                             "Personal",
                             "What is your blood type?",
                             "help_blood",
-                            [_buildBloodTypeSection("Blood Type")],
+                            [_buildBloodTypeSection()],
                           ),
+
                           _buildStep(
                             "Allergies",
-                            "Known allergies?",
+                            "Select your known allergies",
                             "help_allergy",
                             [
-                              _buildField(
-                                controller.allergiesController,
-                                "e.g., Penicillin, Dust",
-                                Icons.warning_amber_rounded,
+                              _buildLookupChipsSection(
+                                "Choose Allergies",
+                                controller.allergyList,
+                                controller.selectedAllergies,
                               ),
                             ],
                           ),
+
                           _buildStep(
                             "Health Status",
-                            "Symptoms & Disability",
+                            "Chronic Conditions & Symptoms",
                             "help_details",
                             [
+                              _buildLookupChipsSection(
+                                "Select Chronic Conditions",
+                                controller.chronicList,
+                                controller.selectedChronic,
+                              ),
+                              const SizedBox(height: 10),
                               _buildField(
                                 controller.symptomsController,
-                                "Current symptoms",
+                                "Current symptoms (optional)",
                                 Icons.sick,
                               ),
                               _buildField(
                                 controller.disabilityController,
-                                "Disability info",
+                                "Disability info (optional)",
                                 Icons.accessible,
                               ),
                             ],
                           ),
+
                           _buildStep(
                             "Medical History",
                             "Medications & Surgeries",
                             "help_history",
                             [
-                              _buildField(
-                                controller.medicationsController,
-                                "Current medications",
-                                Icons.medication,
+                              _buildLookupChipsSection(
+                                "Select Past Surgeries",
+                                controller.surgeryList,
+                                controller.selectedSurgeries,
                               ),
-                              _buildField(
-                                controller.surgeriesController,
-                                "Past surgeries",
-                                Icons.local_hospital,
+                              const SizedBox(height: 15),
+                              _buildLookupChipsSection(
+                                "Select Current Medications",
+                                controller.medicationList,
+                                controller.selectedMedications,
                               ),
                             ],
                           ),
+
                           _buildStep(
                             "Lifestyle",
                             "Habits & Family History",
@@ -119,11 +132,11 @@ class CompleteProfileView extends StatelessWidget {
       case "help_blood":
         return "Knowing your blood type is essential for medical emergencies.";
       case "help_allergy":
-        return "Listing your allergies ensures your safety.";
+        return "Selecting your allergies ensures your safety.";
       case "help_details":
-        return "Information about symptoms and disability helps in personalized care.";
+        return "Information about chronic conditions helps in personalized care.";
       case "help_history":
-        return "Past surgeries and current meds assist in accurate diagnosis.";
+        return "Past surgeries and medications assist in accurate diagnosis.";
       case "help_lifestyle":
         return "Your habits and family history are key to long-term health.";
       default:
@@ -161,12 +174,12 @@ class CompleteProfileView extends StatelessWidget {
     String question,
     String helpKey,
     List<Widget> children,
-  ) => Padding(
+  ) => SingleChildScrollView(
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        const SizedBox(height: 10),
         Text(
           title.toUpperCase(),
           style: const TextStyle(
@@ -194,7 +207,7 @@ class CompleteProfileView extends StatelessWidget {
             fontStyle: FontStyle.italic,
           ),
         ),
-        const SizedBox(height: 48),
+        const SizedBox(height: 35),
         ...children.map(
           (child) =>
               Padding(padding: const EdgeInsets.only(bottom: 20), child: child),
@@ -229,7 +242,7 @@ class CompleteProfileView extends StatelessWidget {
         ),
       );
 
-  Widget _buildBloodTypeSection(String label) => Wrap(
+  Widget _buildBloodTypeSection() => Wrap(
     spacing: 10,
     runSpacing: 10,
     children: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-']
@@ -264,6 +277,88 @@ class CompleteProfileView extends StatelessWidget {
         .toList(),
   );
 
+  Widget _buildLookupChipsSection(
+    String label,
+    RxList<LookupModel> items,
+    RxList<String> selectedList,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Obx(() {
+          if (items.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Text(
+                "No predefined options available. You can write your condition or skip.",
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            );
+          }
+          return Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((lookup) {
+              final displayItem = lookup.labelEn.isNotEmpty
+                  ? lookup.labelEn
+                  : lookup.value;
+              return Obx(() {
+                final isSelected = selectedList.contains(displayItem);
+                return GestureDetector(
+                  onTap: () {
+                    if (isSelected) {
+                      selectedList.remove(displayItem);
+                    } else {
+                      selectedList.add(displayItem);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Text(
+                      displayItem,
+                      style: TextStyle(
+                        color: isSelected
+                            ? AppColors.primaryBlue
+                            : Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                );
+              });
+            }).toList(),
+          );
+        }),
+      ],
+    );
+  }
+
   Widget _buildHeader() => Padding(
     padding: const EdgeInsets.all(24),
     child: Row(
@@ -271,7 +366,10 @@ class CompleteProfileView extends StatelessWidget {
       children: [
         TextButton(
           onPressed: controller.skipProfile,
-          child: const Text("Skip", style: TextStyle(color: Colors.white)),
+          child: const Text(
+            "Skip",
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
         ),
       ],
     ),
@@ -292,7 +390,9 @@ class CompleteProfileView extends StatelessWidget {
                 ),
               ),
             ),
+          if (controller.currentStep.value > 0) const SizedBox(width: 15),
           Expanded(
+            flex: 2,
             child: ElevatedButton(
               onPressed: controller.currentStep.value == 5
                   ? controller.submitCompleteProfile
@@ -307,6 +407,10 @@ class CompleteProfileView extends StatelessWidget {
               ),
               child: Text(
                 controller.currentStep.value == 5 ? "Finish" : "Next",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),

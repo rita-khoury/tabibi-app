@@ -34,6 +34,7 @@ dependencies:
   material_design_icons_flutter: ^7.0.7296
   cupertino_icons: ^1.0.8
   get: ^4.7.3
+  flutter_rating_bar: ^4.0.1
   get_storage: ^2.1.1
   smooth_page_indicator: ^1.1.0
   audioplayers: ^6.0.0
@@ -43,6 +44,8 @@ dependencies:
   introduction_screen: ^4.0.0
   shared_preferences: ^2.5.5
   image_picker: ^1.2.2
+  file_picker_writable: ^2.1.0+1
+  file_picker: ^8.0.0
   country_picker: ^2.0.26
   country_flags: ^2.0.0
   dio: ^5.4.0

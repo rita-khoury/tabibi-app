@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../LoginScreen/view/login_screen.dart';
+import '../../appointments/view/PatientQueueView.dart';
+import '../binding/doctor_reminders_binding.dart';
 import '../controller/home_controller.dart';
 import '../widgets/specialities_section.dart';
 import '../widgets/doctor_card.dart';
@@ -9,6 +11,7 @@ import '../widgets/AllSpecialitiesPage.dart';
 import '../../Account/view/account_screen.dart';
 import '../widgets/notifications_screen.dart';
 import '../widgets/ads_banner.dart';
+import 'doctor_reminders_view.dart';
 
 class HomeView extends StatelessWidget {
   final HomeController controller = Get.put(HomeController());
@@ -37,7 +40,18 @@ class HomeView extends StatelessWidget {
                   () => Get.to(() => const AllSpecialitiesPage()),
                 ),
                 const SizedBox(height: 15),
-                SpecialitiesSection(),
+
+                Obx(
+                  () => controller.specialities.isEmpty
+                      ? const SizedBox(
+                          height: 50,
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : SpecialitiesSection(
+                          specialities: controller.specialities,
+                        ),
+                ),
+
                 const SizedBox(height: 25),
 
                 Obx(
@@ -52,22 +66,14 @@ class HomeView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 15),
+
                 Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  }
-
-                  if (controller.filteredDoctors.isEmpty) {
+                  if (controller.isLoading.value)
+                    return const Center(child: CircularProgressIndicator());
+                  if (controller.filteredDoctors.isEmpty)
                     return const Center(child: Text("No doctors found"));
-                  }
-
                   return ListView.builder(
-                    key: ValueKey(controller.filteredDoctors.length),
+                    key: const ValueKey("doctor_list"),
                     itemCount: controller.filteredDoctors.length,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -78,8 +84,12 @@ class HomeView extends StatelessWidget {
               ],
             ),
           ),
+
           _header(),
+
           _buildSearchBar(),
+
+          _buildFloatingQueueButton(),
         ],
       ),
     );
@@ -132,6 +142,33 @@ class HomeView extends StatelessWidget {
     ),
   );
 
+  Widget _buildFloatingQueueButton() {
+    return Obx(() {
+      if (controller.activeAppointmentId.value == null) {
+        return const SizedBox.shrink();
+      }
+
+      return Positioned(
+        bottom: 75,
+        right: 20,
+        child: FloatingActionButton(
+          onPressed: () {
+            int appointmentId = controller.activeAppointmentId.value!;
+            Get.to(() => PatientQueueView(appointmentId: appointmentId));
+          },
+          shape: const CircleBorder(),
+          backgroundColor: const Color(0xffFF5722),
+          elevation: 6,
+          child: const Icon(
+            Icons.access_time_filled_rounded,
+            color: Colors.white,
+            size: 28,
+          ),
+        ),
+      );
+    });
+  }
+
   Widget _header() {
     return ClipPath(
       clipper: HeaderWaveClipper(),
@@ -164,43 +201,92 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () =>
-                              Get.to(() => const NotificationsScreen()),
-                          child: const Icon(
-                            Icons.notifications_none,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 15),
-                        Obx(
-                          () => Material(
-                            color: Colors.transparent,
-                            child: InkWell(
+                    Obx(
+                      () => Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (controller.isLoggedIn.value) ...[
+                            GestureDetector(
+                              onTap: () =>
+                                  Get.to(() => const NotificationsScreen()),
+                              child: const Icon(
+                                Icons.notifications_none,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+
+                            GestureDetector(
                               onTap: () {
-                                debugPrint("Login/Logout Button Pressed");
-                                controller.handleAuthAction();
+                                Get.to(
+                                  () => const DoctorRemindersView(),
+                                  binding: DoctorRemindersBinding(),
+                                );
                               },
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  controller.isLoggedIn.value
-                                      ? "Logout"
-                                      : "Login",
-                                  style: const TextStyle(
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  const Icon(
+                                    Icons.chat_bubble_outline,
                                     color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
+                                    size: 26,
+                                  ),
+
+                                  if (controller.referralsCount.value > 0)
+                                    Positioned(
+                                      top: -4,
+                                      right: -4,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "${controller.referralsCount.value}",
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () {
+                                  debugPrint("Login Button Pressed");
+                                  controller.handleAuthAction();
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: Text(
+                                    "Login",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        ],
+                      ),
                     ),
                   ],
                 ),

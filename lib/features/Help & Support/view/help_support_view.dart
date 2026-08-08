@@ -12,15 +12,22 @@ class HelpSupportView extends GetView<HelpSupportController> {
     return Scaffold(
       backgroundColor: AppColors.lightGray,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: AppColors.lightGray,
         iconTheme: const IconThemeData(color: AppColors.white),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.primaryBlue,
+          ),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           "Help & Support",
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: AppColors.primaryBlue,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
       ),

@@ -1,8 +1,161 @@
+// // import 'package:flutter/material.dart';
+// // import 'package:get/get.dart';
+// //
+// // import '../../auth/data/models/RatingModel.dart';
+// // import '../../auth/repository/auth_repository.dart';
+// //
+// // class DoctorRatingsController extends GetxController {
+// //   final AuthRepository _authRepository = AuthRepository();
+// //
+// //   final int doctorId;
+// //
+// //   DoctorRatingsController({required this.doctorId});
+// //
+// //   var ratingsList = <RatingModel>[].obs;
+// //   var isLoading = false.obs;
+// //   var isMoreLoading = false.obs;
+// //
+// //   int page = 1;
+// //   int limit = 10;
+// //   bool hasMore = true;
+// //
+// //   final scoreController = 5.0.obs;
+// //   final commentController = TextEditingController();
+// //
+// //   @override
+// //   void onInit() {
+// //     super.onInit();
+// //     fetchDoctorRatings();
+// //   }
+// //
+// //   Future<void> fetchDoctorRatings({bool isRefresh = false}) async {
+// //     if (isRefresh) {
+// //       page = 1;
+// //       hasMore = true;
+// //       ratingsList.clear();
+// //     }
+// //
+// //     if (!hasMore) return;
+// //
+// //     try {
+// //       if (page == 1) {
+// //         isLoading.value = true;
+// //       } else {
+// //         isMoreLoading.value = true;
+// //       }
+// //
+// //       final response = await _authRepository.getDoctorRatings(
+// //         doctorId,
+// //         page: page,
+// //         limit: limit,
+// //       );
+// //       final List data = response['data'] ?? [];
+// //       final int total = response['total'] ?? 0;
+// //
+// //       final fetchedRatings = data
+// //           .map((json) => RatingModel.fromJson(json))
+// //           .toList();
+// //
+// //       if (ratingsList.length + fetchedRatings.length >= total ||
+// //           fetchedRatings.isEmpty) {
+// //         hasMore = false;
+// //       }
+// //
+// //       ratingsList.addAll(fetchedRatings);
+// //       page++;
+// //     } catch (e) {
+// //       Get.snackbar(
+// //         "خطأ",
+// //         e.toString(),
+// //         backgroundColor: Colors.red,
+// //         colorText: Colors.white,
+// //       );
+// //     } finally {
+// //       isLoading.value = false;
+// //       isMoreLoading.value = false;
+// //     }
+// //   }
+// //
+// //   Future<void> createRating(int appointmentId) async {
+// //     try {
+// //       Get.dialog(
+// //         const Center(child: CircularProgressIndicator()),
+// //         barrierDismissible: false,
+// //       );
+// //
+// //       await _authRepository.createRating({
+// //         "appointmentId": appointmentId,
+// //         "score": scoreController.value.toInt(),
+// //         "comment": commentController.text.trim(),
+// //       });
+// //
+// //       Get.back();
+// //       Get.back();
+// //
+// //       commentController.clear();
+// //       scoreController.value = 5.0;
+// //
+// //       Get.snackbar(
+// //         "نجاح",
+// //         "تم إضافة تقييمك بنجاح",
+// //         backgroundColor: Colors.green,
+// //         colorText: Colors.white,
+// //       );
+// //       fetchDoctorRatings(isRefresh: true);
+// //     } catch (e) {
+// //       Get.back();
+// //       Get.snackbar(
+// //         "خطأ",
+// //         e.toString(),
+// //         backgroundColor: Colors.red,
+// //         colorText: Colors.white,
+// //       );
+// //     }
+// //   }
+// //
+// //   Future<void> reportRating(
+// //     int ratingId,
+// //     String reason,
+// //     String? explanation,
+// //   ) async {
+// //     try {
+// //       await _authRepository.reportRating(ratingId, {
+// //         "reason": reason,
+// //         "explanation": explanation,
+// //       });
+// //       Get.snackbar(
+// //         "تم",
+// //         "تم إرسال البلاغ بنجاح",
+// //         backgroundColor: Colors.green,
+// //         colorText: Colors.white,
+// //       );
+// //     } catch (e) {
+// //       Get.snackbar(
+// //         "خطأ",
+// //         e.toString(),
+// //         backgroundColor: Colors.red,
+// //         colorText: Colors.white,
+// //       );
+// //     }
+// //   }
+// //
+// //   @override
+// //   void onClose() {
+// //     commentController.dispose();
+// //     super.onClose();
+// //   }
+// // }
+//
+//
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 //
 // import '../../auth/data/models/RatingModel.dart';
 // import '../../auth/repository/auth_repository.dart';
+//
+// // استيراد ملفات الرسائل والتنبيهات المركزية
+// import '../../../core/constance/app_messages.dart';
+// import '../../../core/constance/app_alerts.dart';
 //
 // class DoctorRatingsController extends GetxController {
 //   final AuthRepository _authRepository = AuthRepository();
@@ -64,11 +217,9 @@
 //       ratingsList.addAll(fetchedRatings);
 //       page++;
 //     } catch (e) {
-//       Get.snackbar(
-//         "خطأ",
-//         e.toString(),
-//         backgroundColor: Colors.red,
-//         colorText: Colors.white,
+//       AppAlerts.showError(
+//         title: AppMessages.ratingErrorTitle,
+//         message: e.toString(),
 //       );
 //     } finally {
 //       isLoading.value = false;
@@ -95,46 +246,38 @@
 //       commentController.clear();
 //       scoreController.value = 5.0;
 //
-//       Get.snackbar(
-//         "نجاح",
-//         "تم إضافة تقييمك بنجاح",
-//         backgroundColor: Colors.green,
-//         colorText: Colors.white,
+//       AppAlerts.showSuccess(
+//         title: AppMessages.ratingSuccessTitle,
+//         message: AppMessages.ratingSuccessBody,
 //       );
 //       fetchDoctorRatings(isRefresh: true);
 //     } catch (e) {
 //       Get.back();
-//       Get.snackbar(
-//         "خطأ",
-//         e.toString(),
-//         backgroundColor: Colors.red,
-//         colorText: Colors.white,
+//       AppAlerts.showError(
+//         title: AppMessages.ratingErrorTitle,
+//         message: e.toString(),
 //       );
 //     }
 //   }
 //
 //   Future<void> reportRating(
-//     int ratingId,
-//     String reason,
-//     String? explanation,
-//   ) async {
+//       int ratingId,
+//       String reason,
+//       String? explanation,
+//       ) async {
 //     try {
 //       await _authRepository.reportRating(ratingId, {
 //         "reason": reason,
 //         "explanation": explanation,
 //       });
-//       Get.snackbar(
-//         "تم",
-//         "تم إرسال البلاغ بنجاح",
-//         backgroundColor: Colors.green,
-//         colorText: Colors.white,
+//       AppAlerts.showSuccess(
+//         title: AppMessages.reportSuccessTitle,
+//         message: AppMessages.reportSuccessBody,
 //       );
 //     } catch (e) {
-//       Get.snackbar(
-//         "خطأ",
-//         e.toString(),
-//         backgroundColor: Colors.red,
-//         colorText: Colors.white,
+//       AppAlerts.showError(
+//         title: AppMessages.ratingErrorTitle,
+//         message: e.toString(),
 //       );
 //     }
 //   }
@@ -145,8 +288,6 @@
 //     super.onClose();
 //   }
 // }
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -227,7 +368,19 @@ class DoctorRatingsController extends GetxController {
     }
   }
 
-  Future<void> createRating(int appointmentId) async {
+  // إضافة تقييم جديد (مع دعم جلب appointmentId تلقائياً إن لم يُمرر)
+  Future<void> createRating(int? appointmentId) async {
+    // محاولة جلب الـ ID من Get.arguments إن كان مرسلاً من هناك
+    int? finalAppointmentId = appointmentId ?? (Get.arguments is int ? Get.arguments : null);
+
+    if (finalAppointmentId == null) {
+      AppAlerts.showError(
+        title: AppMessages.ratingErrorTitle,
+        message: "لا يمكن إضافة التقييم بدون تحديد الموعد المكتمل.",
+      );
+      return;
+    }
+
     try {
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
@@ -235,7 +388,51 @@ class DoctorRatingsController extends GetxController {
       );
 
       await _authRepository.createRating({
-        "appointmentId": appointmentId,
+        "appointmentId": finalAppointmentId,
+        "score": scoreController.value.toInt(),
+        "comment": commentController.text.trim(),
+      });
+
+      Get.back(); // إغلاق شاشة التحميل
+      Get.back(); // إغلاق حوار التقييم (Dialog)
+
+      commentController.clear();
+      scoreController.value = 5.0;
+
+      AppAlerts.showSuccess(
+        title: AppMessages.ratingSuccessTitle,
+        message: AppMessages.ratingSuccessBody,
+      );
+      fetchDoctorRatings(isRefresh: true);
+    } catch (e) {
+      Get.back(); // إغلاق شاشة التحميل في حال حدوث خطأ
+      AppAlerts.showError(
+        title: AppMessages.ratingErrorTitle,
+        message: e.toString(),
+      );
+    }
+  }
+
+  // تعديل تقييم موجود
+  Future<void> updateRating(int ratingId, int? appointmentId) async {
+    int? finalAppointmentId = appointmentId ?? (Get.arguments is int ? Get.arguments : null);
+
+    if (finalAppointmentId == null) {
+      AppAlerts.showError(
+        title: AppMessages.ratingErrorTitle,
+        message: "معرف الموعد مطلوب لتعديل التقييم.",
+      );
+      return;
+    }
+
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      await _authRepository.updateRating(ratingId, {
+        "appointmentId": finalAppointmentId,
         "score": scoreController.value.toInt(),
         "comment": commentController.text.trim(),
       });
@@ -247,8 +444,34 @@ class DoctorRatingsController extends GetxController {
       scoreController.value = 5.0;
 
       AppAlerts.showSuccess(
-        title: AppMessages.ratingSuccessTitle,
-        message: AppMessages.ratingSuccessBody,
+        title: "Success",
+        message: "Rating updated successfully",
+      );
+      fetchDoctorRatings(isRefresh: true);
+    } catch (e) {
+      Get.back();
+      AppAlerts.showError(
+        title: AppMessages.ratingErrorTitle,
+        message: e.toString(),
+      );
+    }
+  }
+
+  // حذف تقييم
+  Future<void> deleteRating(int ratingId) async {
+    try {
+      Get.dialog(
+        const Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
+
+      await _authRepository.deleteRating(ratingId);
+
+      Get.back(); // إغلاق التحميل
+
+      AppAlerts.showSuccess(
+        title: "Success",
+        message: "Rating deleted successfully",
       );
       fetchDoctorRatings(isRefresh: true);
     } catch (e) {

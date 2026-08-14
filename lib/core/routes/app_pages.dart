@@ -51,6 +51,7 @@ class AppPages {
       page: () => const SettingsScreen(),
       binding: SettingsBinding(),
     ),*/
+
     GetPage(
       name: AppRoutes.settings,
       page: () => SettingsView(),

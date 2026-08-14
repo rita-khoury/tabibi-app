@@ -102,5 +102,17 @@ class AppMessages {
   static const String loginInvalidCredentials = "Invalid login credentials";
   static const String otpSendError = "Failed to send code";
 
-
+// Medical Record & Profile Messages
+  static const String undefinedValue = "Not specified";
+  static const String noneValue = "None";
+  static const String fetchProfileError = "Failed to fetch medical profile";
+  static const String fetchHistoryError = "Failed to fetch medical history";
+  static const String fetchMoreHistoryError = "Failed to load more visits";
+  static const String uploadAttachmentSuccess = "Attachment uploaded successfully";
+  static const String uploadAttachmentError = "Failed to upload attachment";
+  static const String deleteAttachmentSuccess = "Attachment deleted successfully";
+  static const String deleteAttachmentError = "Failed to delete attachment: ";
+  static const String fetchMedicinesError = "Failed to fetch medicines";
+  static const String updateProfileSuccess = "Medical profile updated successfully";
+  static const String updateProfileError = "Update failed";
 }

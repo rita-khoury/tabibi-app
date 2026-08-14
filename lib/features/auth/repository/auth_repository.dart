@@ -1154,6 +1154,8 @@ import '../data/models/user_model.dart';
 class AuthRepository {
   final Dio _dio = Dio(
     BaseOptions(
+
+
       baseUrl: 'http://localhost:3000',
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
@@ -1379,7 +1381,18 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
-
+  Future<void> resendVerification(String identifier) async {
+    final isEmail = identifier.contains('@');
+    try {
+      await _dio.post(
+        '/auth/resend-verification', // تأكدي أن هذا المسار يطابق الـ Endpoint في الـ Backend لديك
+        data: {isEmail ? 'email' : 'phone': identifier},
+      );
+    } on DioException catch (e) {
+      debugPrint("❌ خطأ في إعادة الإرسال: ${e.response?.data}");
+      throw Exception(_handleDioError(e));
+    }
+  }
   Future<void> resetPassword(ResetPasswordModel model) async {
     try {
       await _dio.post(

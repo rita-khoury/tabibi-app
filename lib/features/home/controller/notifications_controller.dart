@@ -84,7 +84,6 @@
 //     }
 //   }
 // }
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -180,10 +179,6 @@ class NotificationsController extends GetxController {
     if (!notification.isRead) {
       markAsRead(notification.id);
     }
-
-    if (notification.targetType == 'APPOINTMENT' &&
-        notification.targetId != null) {
-      Get.toNamed('/appointment-details', arguments: notification.targetId);
-    }
+    // تم إزالة أمر الانتقال تماماً، ليصبح الإشعار مقروءاً فقط دون مغادرة الشاشة
   }
 }

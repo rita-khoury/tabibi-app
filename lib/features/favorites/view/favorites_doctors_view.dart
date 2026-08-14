@@ -179,8 +179,8 @@ class FavoritesDoctorsView extends GetView<FavoritesDoctorsController> {
                 IconButton(
                   onPressed: () => controller.removeFavorite(doctor),
                   icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.redAccent,
+                    Icons.favorite,
+                    color: Colors.redAccent,size: 24
                   ),
                   tooltip: "Remove from favorites",
                 ),

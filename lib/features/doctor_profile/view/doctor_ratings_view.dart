@@ -6,10 +6,16 @@ import '../card/rating_card.dart';
 import '../controller/doctor_ratings_controller.dart';
 
 class DoctorRatingsView extends GetView<DoctorRatingsController> {
-  const DoctorRatingsView({Key? key}) : super(key: key);
+  final int? appointmentId;
+
+  const DoctorRatingsView({Key? key, this.appointmentId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // تحديد ما إذا كان هناك معرف موعد صالح (إما من الـ constructor أو Get.arguments)
+    final int? currentAppointmentId = appointmentId ??
+        (Get.arguments is int ? Get.arguments : null);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -48,7 +54,7 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
                 Icon(
                   Icons.star_border_rounded,
                   size: 64,
-                  color: AppColors.gray.withOpacity(0.5),
+                  color: AppColors.gray.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 12),
                 const Text(
@@ -70,7 +76,7 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount:
-                controller.ratingsList.length + (controller.hasMore ? 1 : 0),
+            controller.ratingsList.length + (controller.hasMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == controller.ratingsList.length) {
                 if (!controller.isMoreLoading.value) {
@@ -98,6 +104,103 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
           ),
         );
       }),
+      // يظهر زر إضافة التقييم حصرياً إذا كان هناك موعد مكتمل مرتبط (appointmentId)
+      floatingActionButton: currentAppointmentId != null
+          ? FloatingActionButton.extended(
+        onPressed: () => _showAddRatingDialog(context, currentAppointmentId),
+        backgroundColor: AppColors.primaryBlue,
+        icon: const Icon(Icons.rate_review_rounded, color: Colors.white),
+        label: const Text(
+          "Add Rating",
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+        ),
+      )
+          : null,
+    );
+  }
+
+  void _showAddRatingDialog(BuildContext context, int validAppointmentId) {
+    controller.scoreController.value = 5.0;
+    controller.commentController.clear();
+
+    Get.defaultDialog(
+      title: "Add Your Rating",
+      titleStyle: const TextStyle(
+        color: AppColors.primaryBlue,
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      ),
+      backgroundColor: Colors.white,
+      radius: 16,
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Column(
+          children: [
+            const Text(
+              "How was your experience with the doctor?",
+              style: TextStyle(color: AppColors.gray, fontSize: 13),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Obx(
+                  () => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    onPressed: () {
+                      controller.scoreController.value = (index + 1).toDouble();
+                    },
+                    icon: Icon(
+                      index < controller.scoreController.value
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
+                  );
+                }),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller.commentController,
+              decoration: InputDecoration(
+                labelText: 'Write your comment...',
+                labelStyle: const TextStyle(color: AppColors.gray),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.gray),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppColors.primaryBlue,
+                    width: 2,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+      ),
+      textConfirm: "Submit",
+      confirmTextColor: Colors.white,
+      buttonColor: AppColors.primaryBlue,
+      onConfirm: () async {
+        Get.back();
+        await controller.createRating(validAppointmentId);
+      },
+      textCancel: "Cancel",
+      cancelTextColor: AppColors.gray,
     );
   }
 

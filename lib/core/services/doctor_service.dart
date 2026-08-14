@@ -23,7 +23,7 @@
 import 'package:dio/dio.dart';
 
 class DoctorService {
-  final Dio _dio = Dio(BaseOptions(baseUrl: 'http://localhost:3000'));
+  final Dio _dio = Dio(BaseOptions(  baseUrl : 'http://localhost:3000',));
 
   Future<List<dynamic>> getAll() async {
     try {

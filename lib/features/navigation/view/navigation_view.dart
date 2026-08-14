@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
-import 'package:get/get_state_manager/src/simple/get_view.dart';
+import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 import 'package:tabibi/features/appointments/view/appointments_view.dart';
 import 'package:tabibi/features/favorites/view/favorites_doctors_view.dart';
@@ -13,40 +13,58 @@ class NavigationView extends GetView<NavigationController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Scaffold(
+    final GetStorage box = GetStorage();
+
+    return Obx(() {
+      // التحقق هل المستخدم مسجل دخول أم لا مباشرة من المخزن
+      final bool isLoggedIn = box.read('isLoggedIn') == true;
+
+      // قائمة الشاشات الديناميكية (البروفايل يضاف فقط إذا كان مسجلاً دخول)
+      final List<Widget> screens = [
+         HomeView(),
+        const AppointmentsView(),
+        const FavoritesDoctorsView(),
+        if (isLoggedIn) const ProfileView(),
+      ];
+
+      // التأكد من أن الـ Index الحالي لا يتجاوز عدد الشاشات المتاح لمنع أي خطأ
+      if (controller.selectedIndex.value >= screens.length) {
+        controller.selectedIndex.value = 0;
+      }
+
+      return Scaffold(
         body: IndexedStack(
           index: controller.selectedIndex.value,
-          children: [
-            HomeView(),
-            AppointmentsView(),
-            FavoritesDoctorsView(),
-            ProfileView(),
-          ],
+          children: screens,
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: controller.selectedIndex.value,
           onTap: controller.changeTab,
-
           selectedItemColor: AppColors.primaryBlue,
           unselectedItemColor: AppColors.gray,
-
           type: BottomNavigationBarType.fixed,
-
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            const BottomNavigationBarItem(
               icon: Icon(Icons.calendar_month),
               label: 'Appointments',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.favorite),
               label: 'Favorites',
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+            // إظهار تبويب البروفايل في الشريط السفلي فقط عند تسجيل الدخول
+            if (isLoggedIn)
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person),
+                label: 'Profile',
+              ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 }

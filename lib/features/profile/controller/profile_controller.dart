@@ -186,7 +186,7 @@ class ProfileController extends GetxController {
 
         // إذا كان السيرفر يعيد مساراً نسبياً، يتم دمجه مع localhost للديسكتوب
         if (!avatarPath.startsWith('http')) {
-          String baseUrl = "http://localhost:3000/"; // مخصص للديسكتوب
+          String baseUrl = "http://10.231.129.19:3000/"; // مخصص للديسكتوب
 
           if (avatarPath.startsWith('/')) {
             avatarPath = avatarPath.substring(1);

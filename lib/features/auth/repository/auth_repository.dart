@@ -1672,27 +1672,27 @@ class AuthRepository {
     }
   }
 
-  Future<List<dynamic>> getAvailableDays(
-      int doctorId,
-      int clinicId,
-      int scheduleId,
-      String month,
-      ) async {
-    try {
-      final response = await _dio.post(
-        '/appointments/available-days',
-        data: {
-          'doctorId': doctorId,
-          'clinicId': clinicId,
-          'scheduleId': scheduleId,
-          'month': month,
-        },
-      );
-      return response.data;
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
-  }
+  // Future<List<dynamic>> getAvailableDays(
+  //     int doctorId,
+  //     int clinicId,
+  //     int scheduleId,
+  //     String month,
+  //     ) async {
+  //   try {
+  //     final response = await _dio.post(
+  //       '/appointments/available-days',
+  //       data: {
+  //         'doctorId': doctorId,
+  //         'clinicId': clinicId,
+  //         'scheduleId': scheduleId,
+  //         'month': month,
+  //       },
+  //     );
+  //     return response.data;
+  //   } on DioException catch (e) {
+  //     throw Exception(_handleDioError(e));
+  //   }
+  // }
 
   Future<List<NotificationsModel>> getMyNotifications({
     String lang = 'en',
@@ -1867,6 +1867,9 @@ class AuthRepository {
     }
   }
 
+
+
+
   Future<Map<String, dynamic>> createRating(Map<String, dynamic> data) async {
     try {
       final response = await _dio.post('/ratings', data: data);
@@ -1875,7 +1878,25 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
-
+  Future<Map<String, dynamic>> getDayStatus({
+    required int doctorId,
+    required int clinicId,
+    required String requestedDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/doctor-schedules/day-status', // أو المسار الموجود عندك في الباك إند
+        queryParameters: {
+          'doctorId': doctorId,
+          'clinicId': clinicId,
+          'requestedDate': requestedDate,
+        },
+      );
+      return response.data;
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
   Future<Map<String, dynamic>> updateRating(
       int ratingId,
       Map<String, dynamic> data,
@@ -2081,6 +2102,46 @@ class AuthRepository {
       return response.data is List
           ? response.data
           : (response.data['data'] ?? []);
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+  Future<void> rateDoctor({
+    required int appointmentId,
+    required double rating,
+    String? comment,
+  }) async {
+    try {
+      await _dio.post(
+        '/ratings',
+        data: {
+          'appointmentId': appointmentId,
+          'score': rating.toInt(), // تحويل القيمة إلى عدد صحيح وإرسالها باسم score حسب طلب السيرفر
+          if (comment != null && comment.isNotEmpty) 'comment': comment,
+        },
+      );
+    } on DioException catch (e) {
+      debugPrint("❌ خطأ في إرسال التقييم: ${e.response?.data}");
+      throw Exception(_handleDioError(e));
+    }
+  }
+  Future<List<dynamic>> getAvailableDays({
+    required int doctorId,
+    required int clinicId,
+    required int scheduleId,
+    required String month,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/appointments/available-days',
+        data: {
+          'doctorId': doctorId,
+          'clinicId': clinicId,
+          'scheduleId': scheduleId,
+          'month': month,
+        },
+      );
+      return response.data;
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }

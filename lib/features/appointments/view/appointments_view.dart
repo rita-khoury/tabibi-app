@@ -53,6 +53,9 @@
 //                         icon: const Icon(Icons.list_alt, color: Colors.white),
 //                         tooltip: "قائمة الانتظار",
 //                         onPressed: () {
+//                           if (Get.isRegistered<AppointmentsController>()) {
+//                             Get.find<AppointmentsController>().fetchWaitlist();
+//                           }
 //                           Get.to(() => const WaitlistBottomSheetView());
 //                         },
 //                       ),
@@ -113,23 +116,29 @@
 //
 //                   return TabBarView(
 //                     children: [
+//                       // Upcoming Tab
 //                       _buildAppointmentList(
 //                         controller,
 //                         controller.upcomingAppointments,
 //                         "assets/images/photo8.png",
 //                         "No Upcoming Appointments",
+//                         isCompletedTab: false,
 //                       ),
+//                       // Completed Tab (مع زر التقييم)
 //                       _buildAppointmentList(
 //                         controller,
 //                         controller.completedAppointments,
 //                         "assets/images/photo7.png",
 //                         "No Completed Appointments",
+//                         isCompletedTab: true,
 //                       ),
+//                       // Canceled Tab
 //                       _buildAppointmentList(
 //                         controller,
 //                         controller.canceledAppointments,
 //                         "assets/images/photo6.png",
 //                         "No Canceled Appointments",
+//                         isCompletedTab: false,
 //                       ),
 //                     ],
 //                   );
@@ -143,11 +152,12 @@
 //   }
 //
 //   Widget _buildAppointmentList(
-//     AppointmentsController controller,
-//     List<AppointmentModel> list,
-//     String img,
-//     String title,
-//   ) {
+//       AppointmentsController controller,
+//       List<AppointmentModel> list,
+//       String img,
+//       String title, {
+//         required bool isCompletedTab,
+//       }) {
 //     if (list.isEmpty) {
 //       return EmptyAppointmentState(
 //         imagePath: img,
@@ -162,14 +172,99 @@
 //       itemCount: list.length,
 //       itemBuilder: (context, index) {
 //         final appointment = list[index];
-//         return AppointmentCard(
-//           appointment: appointment,
-//
-//           onCancel: appointment.status.toLowerCase() == 'confirmed'
-//               ? () => controller.cancelAppointmentById(appointment.id)
-//               : null,
+//         return Column(
+//           children: [
+//             AppointmentCard(
+//               appointment: appointment,
+//               onCancel: appointment.status.toLowerCase() == 'confirmed'
+//                   ? () => controller.cancelAppointmentById(appointment.id)
+//                   : null,
+//             ),
+//             if (isCompletedTab) ...[
+//               const SizedBox(height: 8),
+//               SizedBox(
+//                 width: double.infinity,
+//                 child: ElevatedButton.icon(
+//                   onPressed: () => _showRatingDialog(context, appointment),
+//                   icon: const Icon(Icons.star, size: 16, color: Colors.amber),
+//                   label: const Text("تقييم الطبيب"),
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: AppColors.primaryBlue,
+//                     foregroundColor: Colors.white,
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//             const SizedBox(height: 12),
+//           ],
 //         );
 //       },
+//     );
+//   }
+//
+//   // دالة لإظهار نافذة التقييم المنبثقة
+//   void _showRatingDialog(BuildContext context, AppointmentModel appointment) {
+//     double selectedRating = 5.0;
+//     final TextEditingController commentController = TextEditingController();
+//     final AppointmentsController controller = Get.find<AppointmentsController>();
+//
+//     Get.defaultDialog(
+//       title: "تقييم الطبيب",
+//       titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+//       content: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 8.0),
+//         child: Column(
+//           children: [
+//             const Text("ما مدى رضاك عن استشارتك مع الطبيب؟"),
+//             const SizedBox(height: 10),
+//             Slider(
+//               value: selectedRating,
+//               min: 1,
+//               max: 5,
+//               divisions: 4,
+//               activeColor: Colors.amber,
+//               label: selectedRating.toStringAsFixed(0),
+//               onChanged: (val) {
+//                 selectedRating = val;
+//               },
+//             ),
+//             const SizedBox(height: 10),
+//             TextField(
+//               controller: commentController,
+//               decoration: const InputDecoration(
+//                 hintText: "اكتب تعليقك هنا (اختياري)",
+//                 border: OutlineInputBorder(),
+//               ),
+//               maxLines: 3,
+//             ),
+//             const SizedBox(height: 15),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: [
+//                 TextButton(
+//                   onPressed: () => Get.back(),
+//                   child: const Text("إلغاء", style: TextStyle(color: Colors.grey)),
+//                 ),
+//                 ElevatedButton(
+//                   onPressed: () {
+//                     Get.back(); // إغلاق النافذة
+//                     controller.rateDoctorForAppointment(
+//                       appointmentId: appointment.id,
+//                       rating: selectedRating,
+//                       comment: commentController.text,
+//                     );
+//                   },
+//                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue),
+//                   child: const Text("إرسال", style: TextStyle(color: Colors.white)),
+//                 ),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
 //     );
 //   }
 // }
@@ -179,25 +274,51 @@
 //
 //   @override
 //   Widget build(BuildContext context) {
+//     if (Get.isRegistered<AppointmentsController>()) {
+//       Get.find<AppointmentsController>().fetchWaitlist();
+//     }
+//
 //     return Scaffold(
 //       backgroundColor: AppColors.lightGray,
 //       appBar: AppBar(
-//         title: const Text("Your Waitlist"),
-//         backgroundColor: AppColors.primaryBlue,
-//         foregroundColor: AppColors.white,
+//         title: const Text(
+//           "Your Waitlist",
+//           style: TextStyle(
+//             fontSize: 22,
+//             fontWeight: FontWeight.bold,
+//             color: AppColors.primaryBlue,
+//           ),
+//         ),
+//         backgroundColor: AppColors.lightGray,
+//         foregroundColor: AppColors.primaryBlue,
 //         elevation: 0,
+//         centerTitle: true,
 //         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back_ios_new),
+//           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primaryBlue),
 //           onPressed: () => Get.back(),
 //         ),
 //       ),
 //       body: GetBuilder<AppointmentsController>(
 //         builder: (controller) {
+//           if (controller.isLoading) {
+//             return const Center(child: CircularProgressIndicator());
+//           }
+//
 //           if (controller.waitlistAppointments.isEmpty) {
-//             return const Center(
-//               child: Text(
-//                 "لا توجد عناصر في قائمة الانتظار",
-//                 style: TextStyle(fontSize: 16, color: AppColors.gray),
+//             return Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   const Text(
+//                     "No items in the waitlist",
+//                     style: TextStyle(fontSize: 16, color: AppColors.gray),
+//                   ),
+//                   const SizedBox(height: 12),
+//                   ElevatedButton(
+//                     onPressed: () => controller.fetchWaitlist(),
+//                     child: const Text("Retry"),
+//                   ),
+//                 ],
 //               ),
 //             );
 //           }
@@ -208,51 +329,88 @@
 //             itemBuilder: (context, index) {
 //               final waitlistItem = controller.waitlistAppointments[index];
 //
-//               final doctorName = waitlistItem.doctor?.user?.fullName ?? 'طبيب';
-//               final requestedDate = waitlistItem.requestedDate;
-//               final doctorId = waitlistItem.doctorId;
-//               final clinicId = waitlistItem.clinicId;
+//               String doctorName = 'Doctor';
+//               String? avatarUrl;
+//               String specialization = 'Specialist';
+//
+//               final dynamic doctorData = waitlistItem.doctor;
+//
+//               if (doctorData != null && doctorData is Map) {
+//                 specialization = doctorData['specialization']?.toString() ?? 'Specialist';
+//
+//                 final userData = doctorData['user'];
+//                 if (userData != null && userData is Map) {
+//                   doctorName = userData['full_name']?.toString() ??
+//                       userData['fullName']?.toString() ??
+//                       userData['name']?.toString() ??
+//                       'Doctor';
+//                   avatarUrl = userData['avatarUrl']?.toString();
+//                 } else {
+//                   doctorName = doctorData['full_name']?.toString() ??
+//                       doctorData['fullName']?.toString() ??
+//                       doctorData['name']?.toString() ??
+//                       'Doctor';
+//                 }
+//               }
+//
+//               final requestedDate = waitlistItem.requestedDate ?? '';
+//
+//               int doctorId = 0;
+//               if (doctorData != null && doctorData is Map) {
+//                 doctorId = int.tryParse(doctorData['id']?.toString() ?? '0') ?? 0;
+//               }
+//
+//               final int clinicId = waitlistItem.clinicId ?? 0;
 //
 //               return Container(
-//                 margin: const EdgeInsets.only(bottom: 12),
+//                 margin: const EdgeInsets.only(bottom: 16),
+//                 padding: const EdgeInsets.all(16),
 //                 decoration: BoxDecoration(
 //                   color: AppColors.white,
-//                   borderRadius: BorderRadius.circular(15),
+//                   borderRadius: BorderRadius.circular(20),
 //                   boxShadow: [
 //                     BoxShadow(
-//                       color: Colors.black.withOpacity(0.03),
-//                       blurRadius: 8,
-//                       offset: const Offset(0, 3),
+//                       color: Colors.black.withValues(alpha: 0.04),
+//                       blurRadius: 10,
+//                       offset: const Offset(0, 4),
 //                     ),
 //                   ],
 //                 ),
-//                 child: Padding(
-//                   padding: const EdgeInsets.all(16.0),
-//                   child: Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       Column(
-//                         crossAxisAlignment: CrossAxisAlignment.start,
-//                         children: [
-//                           Text(
-//                             "د. $doctorName",
-//                             style: const TextStyle(
-//                               fontSize: 16,
-//                               fontWeight: FontWeight.bold,
-//                               color: AppColors.primaryBlue,
-//                             ),
+//                 child: Column(
+//                   children: [
+//                     Row(
+//                       children: [
+//                         ClipRRect(
+//                           borderRadius: BorderRadius.circular(15),
+//                           child: SizedBox(
+//                             width: 60,
+//                             height: 60,
+//                             child: avatarUrl != null && avatarUrl.isNotEmpty
+//                                 ? Image.network(
+//                               avatarUrl,
+//                               fit: BoxFit.cover,
+//                               errorBuilder: (context, error, stackTrace) =>
+//                                   _buildDefaultAvatar(),
+//                             )
+//                                 : _buildDefaultAvatar(),
 //                           ),
-//                           const SizedBox(height: 6),
-//                           Row(
+//                         ),
+//                         const SizedBox(width: 14),
+//                         Expanded(
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
 //                             children: [
-//                               const Icon(
-//                                 Icons.calendar_today,
-//                                 size: 14,
-//                                 color: AppColors.gray,
-//                               ),
-//                               const SizedBox(width: 6),
 //                               Text(
-//                                 "التاريخ المطلوب: $requestedDate",
+//                                 "Dr. $doctorName",
+//                                 style: const TextStyle(
+//                                   fontSize: 16,
+//                                   fontWeight: FontWeight.bold,
+//                                   color: Colors.black87,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 4),
+//                               Text(
+//                                 specialization,
 //                                 style: const TextStyle(
 //                                   color: AppColors.gray,
 //                                   fontSize: 13,
@@ -260,21 +418,42 @@
 //                               ),
 //                             ],
 //                           ),
-//                         ],
-//                       ),
-//                       IconButton(
-//                         icon: const Icon(Icons.exit_to_app, color: Colors.red),
-//                         tooltip: "مغادرة القائمة",
-//                         onPressed: () {
-//                           controller.leaveWaitlist(
-//                             doctorId: doctorId,
-//                             clinicId: clinicId,
-//                             requestedDate: requestedDate,
-//                           );
-//                         },
-//                       ),
-//                     ],
-//                   ),
+//                         ),
+//                         IconButton(
+//                           icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
+//                           tooltip: "Leave List",
+//                           onPressed: () {
+//                             controller.leaveWaitlist(
+//                               doctorId: doctorId,
+//                               clinicId: clinicId,
+//                               requestedDate: requestedDate,
+//                             );
+//                           },
+//                         ),
+//                       ],
+//                     ),
+//                     const Padding(
+//                       padding: EdgeInsets.symmetric(vertical: 12),
+//                       child: Divider(color: Colors.black12, height: 1),
+//                     ),
+//                     Row(
+//                       children: [
+//                         const Icon(
+//                           Icons.calendar_today_outlined,
+//                           size: 15,
+//                           color: AppColors.gray,
+//                         ),
+//                         const SizedBox(width: 6),
+//                         Text(
+//                           "Requested Date: $requestedDate",
+//                           style: const TextStyle(
+//                             color: AppColors.gray,
+//                             fontSize: 13,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
 //                 ),
 //               );
 //             },
@@ -283,7 +462,19 @@
 //       ),
 //     );
 //   }
+//
+//   Widget _buildDefaultAvatar() {
+//     return Container(
+//       color: AppColors.primaryBlue.withValues(alpha: 0.1),
+//       child: const Icon(
+//         Icons.person,
+//         color: AppColors.primaryBlue,
+//         size: 30,
+//       ),
+//     );
+//   }
 // }
+
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -338,7 +529,7 @@ class AppointmentsView extends StatelessWidget {
                       ),
                       IconButton(
                         icon: const Icon(Icons.list_alt, color: Colors.white),
-                        tooltip: "قائمة الانتظار",
+                        tooltip: "Waitlist",
                         onPressed: () {
                           if (Get.isRegistered<AppointmentsController>()) {
                             Get.find<AppointmentsController>().fetchWaitlist();
@@ -408,18 +599,21 @@ class AppointmentsView extends StatelessWidget {
                         controller.upcomingAppointments,
                         "assets/images/photo8.png",
                         "No Upcoming Appointments",
+                        isCompletedTab: false,
                       ),
                       _buildAppointmentList(
                         controller,
                         controller.completedAppointments,
                         "assets/images/photo7.png",
                         "No Completed Appointments",
+                        isCompletedTab: true,
                       ),
                       _buildAppointmentList(
                         controller,
                         controller.canceledAppointments,
                         "assets/images/photo6.png",
                         "No Canceled Appointments",
+                        isCompletedTab: false,
                       ),
                     ],
                   );
@@ -436,8 +630,9 @@ class AppointmentsView extends StatelessWidget {
       AppointmentsController controller,
       List<AppointmentModel> list,
       String img,
-      String title,
-      ) {
+      String title, {
+        required bool isCompletedTab,
+      }) {
     if (list.isEmpty) {
       return EmptyAppointmentState(
         imagePath: img,
@@ -452,16 +647,102 @@ class AppointmentsView extends StatelessWidget {
       itemCount: list.length,
       itemBuilder: (context, index) {
         final appointment = list[index];
-        return AppointmentCard(
-          appointment: appointment,
-          onCancel: appointment.status.toLowerCase() == 'confirmed'
-              ? () => controller.cancelAppointmentById(appointment.id)
-              : null,
+        return Column(
+          children: [
+            AppointmentCard(
+              appointment: appointment,
+              onCancel: appointment.status.toLowerCase() == 'confirmed'
+                  ? () => controller.cancelAppointmentById(appointment.id)
+                  : null,
+            ),
+            if (isCompletedTab) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showRatingDialog(context, appointment),
+                  icon: const Icon(Icons.star, size: 16, color: Colors.amber),
+                  label: const Text("Rate Doctor"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+          ],
         );
       },
     );
   }
+
+  void _showRatingDialog(BuildContext context, AppointmentModel appointment) {
+    double selectedRating = 5.0;
+    final TextEditingController commentController = TextEditingController();
+    final AppointmentsController controller = Get.find<AppointmentsController>();
+
+    Get.defaultDialog(
+      title: "Rate Doctor",
+      titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+      content: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Column(
+          children: [
+            const Text("How satisfied are you with your consultation?"),
+            const SizedBox(height: 10),
+            Slider(
+              value: selectedRating,
+              min: 1,
+              max: 5,
+              divisions: 4,
+              activeColor: Colors.amber,
+              label: selectedRating.toStringAsFixed(0),
+              onChanged: (val) {
+                selectedRating = val;
+              },
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: commentController,
+              decoration: const InputDecoration(
+                hintText: "Write your comment here (optional)",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => Get.back(),
+                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Get.back();
+                    controller.rateDoctorForAppointment(
+                      appointmentId: appointment.id,
+                      rating: selectedRating,
+                      comment: commentController.text,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue),
+                  child: const Text("Submit", style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
+
 class WaitlistBottomSheetView extends StatelessWidget {
   const WaitlistBottomSheetView({super.key});
 
@@ -522,7 +803,6 @@ class WaitlistBottomSheetView extends StatelessWidget {
             itemBuilder: (context, index) {
               final waitlistItem = controller.waitlistAppointments[index];
 
-              // استخراج البيانات من كائن الدكتور واليوزر بأمان تام
               String doctorName = 'Doctor';
               String? avatarUrl;
               String specialization = 'Specialist';
@@ -574,7 +854,6 @@ class WaitlistBottomSheetView extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        // صورة الطبيب دائرية أو الأيقونة الافتراضية
                         ClipRRect(
                           borderRadius: BorderRadius.circular(15),
                           child: SizedBox(
@@ -591,7 +870,6 @@ class WaitlistBottomSheetView extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 14),
-                        // الاسم والتخصص
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -615,7 +893,6 @@ class WaitlistBottomSheetView extends StatelessWidget {
                             ],
                           ),
                         ),
-                        // زر الحذف (سلة المهملات الحمراء)
                         IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
                           tooltip: "Leave List",
@@ -633,7 +910,6 @@ class WaitlistBottomSheetView extends StatelessWidget {
                       padding: EdgeInsets.symmetric(vertical: 12),
                       child: Divider(color: Colors.black12, height: 1),
                     ),
-                    // التاريخ المطلوب
                     Row(
                       children: [
                         const Icon(

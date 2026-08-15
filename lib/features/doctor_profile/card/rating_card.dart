@@ -6,11 +6,13 @@ import '../../auth/data/models/RatingModel.dart';
 class RatingCard extends StatelessWidget {
   final RatingModel rating;
   final VoidCallback onReportPressed;
+  final VoidCallback? onDeletePressed;
 
   const RatingCard({
     Key? key,
     required this.rating,
     required this.onReportPressed,
+    this.onDeletePressed,
   }) : super(key: key);
 
   @override
@@ -65,17 +67,37 @@ class RatingCard extends StatelessWidget {
                   ),
                 ],
               ),
-              InkWell(
-                onTap: onReportPressed,
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: Icon(
-                    Icons.flag_outlined,
-                    color: AppColors.gray.withOpacity(0.7),
-                    size: 18,
+
+              Row(
+                children: [
+                  if (onDeletePressed != null) ...[
+                    InkWell(
+                      onTap: onDeletePressed,
+                      borderRadius: BorderRadius.circular(25),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.red,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: onReportPressed,
+                    borderRadius: BorderRadius.circular(25),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.flag_outlined,
+                        color: AppColors.gray,
+                        size: 24,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -86,7 +108,7 @@ class RatingCard extends StatelessWidget {
               RatingBarIndicator(
                 rating: rating.score.toDouble(),
                 itemBuilder: (context, _) =>
-                    const Icon(Icons.star, color: Colors.amber),
+                const Icon(Icons.star, color: Colors.amber),
                 itemCount: 5,
                 itemSize: 16.0,
                 direction: Axis.horizontal,

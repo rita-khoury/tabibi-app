@@ -12,10 +12,6 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
 
   @override
   Widget build(BuildContext context) {
-    // تحديد ما إذا كان هناك معرف موعد صالح (إما من الـ constructor أو Get.arguments)
-    final int? currentAppointmentId = appointmentId ??
-        (Get.arguments is int ? Get.arguments : null);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -75,8 +71,7 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
           onRefresh: () => controller.fetchDoctorRatings(isRefresh: true),
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount:
-            controller.ratingsList.length + (controller.hasMore ? 1 : 0),
+            itemCount: controller.ratingsList.length + (controller.hasMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == controller.ratingsList.length) {
                 if (!controller.isMoreLoading.value) {
@@ -93,111 +88,37 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
               }
 
               final rating = controller.ratingsList[index];
+
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
+                padding: const EdgeInsets.only(bottom: 16.0),
                 child: RatingCard(
                   rating: rating,
                   onReportPressed: () => _showReportDialog(context, rating.id),
+                  // تمرير دالة الحذف للكارد مباشرة
+                  onDeletePressed: () => _confirmDelete(rating.id),
                 ),
               );
             },
           ),
         );
       }),
-      // يظهر زر إضافة التقييم حصرياً إذا كان هناك موعد مكتمل مرتبط (appointmentId)
-      floatingActionButton: currentAppointmentId != null
-          ? FloatingActionButton.extended(
-        onPressed: () => _showAddRatingDialog(context, currentAppointmentId),
-        backgroundColor: AppColors.primaryBlue,
-        icon: const Icon(Icons.rate_review_rounded, color: Colors.white),
-        label: const Text(
-          "Add Rating",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-      )
-          : null,
     );
   }
 
-  void _showAddRatingDialog(BuildContext context, int validAppointmentId) {
-    controller.scoreController.value = 5.0;
-    controller.commentController.clear();
-
+  void _confirmDelete(int ratingId) {
     Get.defaultDialog(
-      title: "Add Your Rating",
+      title: "Delete Rating",
       titleStyle: const TextStyle(
         color: AppColors.primaryBlue,
         fontWeight: FontWeight.bold,
-        fontSize: 18,
       ),
-      backgroundColor: Colors.white,
-      radius: 16,
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Column(
-          children: [
-            const Text(
-              "How was your experience with the doctor?",
-              style: TextStyle(color: AppColors.gray, fontSize: 13),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Obx(
-                  () => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(5, (index) {
-                  return IconButton(
-                    onPressed: () {
-                      controller.scoreController.value = (index + 1).toDouble();
-                    },
-                    icon: Icon(
-                      index < controller.scoreController.value
-                          ? Icons.star_rounded
-                          : Icons.star_border_rounded,
-                      color: Colors.amber,
-                      size: 32,
-                    ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller.commentController,
-              decoration: InputDecoration(
-                labelText: 'Write your comment...',
-                labelStyle: const TextStyle(color: AppColors.gray),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.gray),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.primaryBlue,
-                    width: 2,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 14,
-                ),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ),
-      textConfirm: "Submit",
+      middleText: "Are you sure you want to delete this rating?",
+      textConfirm: "Delete",
       confirmTextColor: Colors.white,
-      buttonColor: AppColors.primaryBlue,
-      onConfirm: () async {
+      buttonColor: Colors.red,
+      onConfirm: () {
         Get.back();
-        await controller.createRating(validAppointmentId);
+        controller.deleteRating(ratingId);
       },
       textCancel: "Cancel",
       cancelTextColor: AppColors.gray,
@@ -247,10 +168,7 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
               ),
               items: const [
                 DropdownMenuItem(value: 'spam', child: Text('Spam')),
-                DropdownMenuItem(
-                  value: 'inappropriate',
-                  child: Text('Inappropriate'),
-                ),
+                DropdownMenuItem(value: 'inappropriate', child: Text('Inappropriate')),
                 DropdownMenuItem(value: 'abusive', child: Text('Abusive')),
                 DropdownMenuItem(value: 'other', child: Text('Other')),
               ],
@@ -268,13 +186,6 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: AppColors.gray),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.primaryBlue,
-                    width: 2,
-                  ),
-                ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 14,
@@ -290,11 +201,7 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
       buttonColor: AppColors.primaryBlue,
       onConfirm: () {
         Get.back();
-        controller.reportRating(
-          ratingId,
-          selectedReason,
-          explanationController.text,
-        );
+        controller.reportRating(ratingId, selectedReason, explanationController.text);
       },
       textCancel: "Cancel",
       cancelTextColor: AppColors.gray,

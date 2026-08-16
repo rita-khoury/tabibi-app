@@ -189,7 +189,6 @@
 //   }
 // }
 
-
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -207,6 +206,8 @@ class PatientQueueController extends GetxController {
 
   var isLoading = true.obs;
   var queueStatus = <String, dynamic>{}.obs;
+  final RxList<Map<String, dynamic>> activeQueueStatuses =
+      <Map<String, dynamic>>[].obs;
   var isCheckedIn = false.obs;
   Timer? _timer;
 
@@ -224,34 +225,89 @@ class PatientQueueController extends GetxController {
     });
   }
 
-  void fetchLiveStatus({bool isSilent = false}) async {
+  Future<void> fetchLiveStatus({bool isSilent = false}) async {
+    if (!isSilent) isLoading.value = true;
     try {
-      if (!isSilent) isLoading.value = true;
+      final appointments = await _authRepository.getMyAppointments();
+      final confirmedAppointments = appointments
+          .where(
+            (appointment) => appointment.status.toLowerCase() == 'confirmed',
+          )
+          .toList();
 
-      final result = await _authRepository.getPatientLiveQueueStatus(
-        appointmentId,
+      final results = await Future.wait(
+        confirmedAppointments.map((appointment) async {
+          try {
+            final result = await _authRepository.getPatientLiveQueueStatus(
+              appointment.id,
+            );
+            if (_isNotCheckedInResponse(result)) {
+              return null;
+            }
+            final status = result['status']?.toString().toLowerCase() ?? '';
+            if (!_activeQueueStatuses.contains(status)) {
+              return null;
+            }
+            return <String, dynamic>{
+              ...result,
+              'appointmentId': appointment.id,
+              'doctorName': appointment.doctorName,
+              'specialty': appointment.specialty,
+              'date': appointment.date,
+              'startTime': appointment.startTime,
+              'endTime': appointment.endTime,
+            };
+          } catch (error) {
+            if (!_isNotCheckedInError(error)) {
+              debugPrint(
+                'Unable to load queue status for appointment ${appointment.id}: $error',
+              );
+            }
+            return null;
+          }
+        }),
       );
 
-      queueStatus.assignAll(result);
-      isCheckedIn.value = true;
-    } catch (e) {
-      debugPrint("❌ تفاصيل الخطأ الكاملة: $e");
-
-      if (e.toString().contains('not checked in') ||
-          e.toString().contains('404')) {
+      activeQueueStatuses.assignAll(results.whereType<Map<String, dynamic>>());
+      if (activeQueueStatuses.isEmpty) {
         isCheckedIn.value = false;
         queueStatus.clear();
       } else {
-        if (!isSilent) {
-          AppAlerts.showError(
-            title: AppMessages.errorTitle,
-            message: AppMessages.queueFetchError,
-          );
-        }
+        isCheckedIn.value = true;
+        queueStatus.assignAll(activeQueueStatuses.first);
+      }
+    } catch (error) {
+      debugPrint('Unable to load patient appointments for live queue: $error');
+      activeQueueStatuses.clear();
+      queueStatus.clear();
+      isCheckedIn.value = false;
+      if (!isSilent) {
+        AppAlerts.showError(
+          title: AppMessages.errorTitle,
+          message: AppMessages.queueFetchError,
+        );
       }
     } finally {
       if (!isSilent) isLoading.value = false;
     }
+  }
+
+  static const Set<String> _activeQueueStatuses = {
+    'waiting',
+    'calling',
+    'in_progress',
+    'skipped',
+  };
+
+  bool _isNotCheckedInResponse(Map<String, dynamic> response) {
+    final message = response['message']?.toString().toLowerCase() ?? '';
+    return response['statusCode'] == 404 &&
+        message.contains('has not checked in');
+  }
+
+  bool _isNotCheckedInError(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('has not checked in') || message.contains('404');
   }
 
   Future<void> performCheckIn() async {
@@ -271,7 +327,6 @@ class PatientQueueController extends GetxController {
 
       isCheckedIn.value = true;
       fetchLiveStatus();
-
     } on DioException catch (e) {
       debugPrint("❌ [DioException] Status Code: ${e.response?.statusCode}");
       debugPrint("❌ [DioException] Response Data: ${e.response?.data}");
@@ -287,7 +342,9 @@ class PatientQueueController extends GetxController {
 
       AppAlerts.showError(
         title: AppMessages.serverErrorTitle,
-        message: serverMessage.isNotEmpty ? serverMessage : AppMessages.unknownServerError,
+        message: serverMessage.isNotEmpty
+            ? serverMessage
+            : AppMessages.unknownServerError,
       );
     } catch (e) {
       debugPrint("❌ [Unexpected Error]: $e");

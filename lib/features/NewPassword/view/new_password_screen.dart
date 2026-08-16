@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 import '../controller/new_password_controller.dart';
 
-class NewPasswordScreen extends StatelessWidget {
-  final NewPasswordController controller = Get.put(NewPasswordController());
+class NewPasswordScreen extends GetView<NewPasswordController> {
 
   NewPasswordScreen({super.key});
 

@@ -4,7 +4,7 @@
 // import 'package:tabibi/core/constance/app_colors.dart';
 // import '../controller/otp_controller.dart';
 //
-// class OtpScreen extends StatelessWidget {
+// class OtpScreen extends GetView<OtpController> {
 //   const OtpScreen({super.key});
 //
 //   @override
@@ -123,7 +123,7 @@
 // import 'package:tabibi/core/constance/app_colors.dart';
 // import '../controller/otp_controller.dart';
 //
-// class OtpScreen extends StatelessWidget {
+// class OtpScreen extends GetView<OtpController> {
 //   const OtpScreen({super.key});
 //
 //   @override
@@ -144,7 +144,7 @@
 //           child: Column(
 //             crossAxisAlignment: CrossAxisAlignment.start,
 //             children: [
-//               // زر السهم للرجوع للخلف في أعلى الصفحة
+//               // Ø²Ø± Ø§Ù„Ø³Ù‡Ù… Ù„Ù„Ø±Ø¬ÙˆØ¹ Ù„Ù„Ø®Ù„Ù ÙÙŠ Ø£Ø¹Ù„Ù‰ Ø§Ù„ØµÙØ­Ø©
 //               Padding(
 //                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
 //                 child: IconButton(
@@ -256,12 +256,11 @@ import 'package:pinput/pinput.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 import '../controller/otp_controller.dart';
 
-class OtpScreen extends StatelessWidget {
+class OtpScreen extends GetView<OtpController> {
   const OtpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final OtpController controller = Get.put(OtpController());
 
     return Scaffold(
       body: Container(
@@ -277,7 +276,7 @@ class OtpScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // زر السهم للرجوع للخلف في أعلى الصفحة
+              // Ø²Ø± Ø§Ù„Ø³Ù‡Ù… Ù„Ù„Ø±Ø¬ÙˆØ¹ Ù„Ù„Ø®Ù„Ù ÙÙŠ Ø£Ø¹Ù„Ù‰ Ø§Ù„ØµÙØ­Ø©
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: IconButton(

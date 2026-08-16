@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../auth/data/models/ResetPasswordModel.dart';
+import '../../auth/repository/AuthController.dart';
 import '../../auth/repository/auth_repository.dart';
 
 class NewPasswordController extends GetxController {
   final AuthRepository _authRepository = Get.find<AuthRepository>();
+  final AuthController _authController = Get.find<AuthController>();
 
   final newPasswordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
+  final _storage = GetStorage();
   var isLoading = false.obs;
 
   String? identifier;
@@ -35,7 +40,10 @@ class NewPasswordController extends GetxController {
       return;
     }
 
-    if (newPasswordController.text.length < 8) {
+    final newPassword = newPasswordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
+
+    if (newPassword.length < 8) {
       Get.snackbar(
         "خطأ",
         "كلمة المرور يجب ألا تقل عن 8 خانات",
@@ -45,7 +53,7 @@ class NewPasswordController extends GetxController {
       return;
     }
 
-    if (newPasswordController.text != confirmPasswordController.text) {
+    if (newPassword != confirmPassword) {
       Get.snackbar(
         "خطأ",
         "كلمات المرور غير متطابقة",
@@ -61,10 +69,23 @@ class NewPasswordController extends GetxController {
         email: identifier!.contains('@') ? identifier : null,
         phone: !identifier!.contains('@') ? identifier : null,
         code: otp!,
-        newPassword: newPasswordController.text,
+        newPassword: newPassword,
       );
 
       await _authRepository.resetPassword(model);
+
+      final authResponse = await _authRepository.login(identifier!, newPassword);
+
+      await _authController.loginSuccess(
+        authResponse.user,
+        authResponse.accessToken,
+        authResponse.refreshToken,
+      );
+
+      final status = await _authRepository.getCompletionStatus();
+      final bool isCompleted = status.completed;
+      await _storage.write('profileCompleted', isCompleted);
+      await _authController.updateProfileCompletionStatus(isCompleted);
 
       Get.snackbar(
         "نجاح",
@@ -74,11 +95,18 @@ class NewPasswordController extends GetxController {
       );
 
       FocusManager.instance.primaryFocus?.unfocus();
-      isLoading.value = false;
 
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      Get.offAllNamed('/home');
+      if (isCompleted) {
+        Get.offAllNamed(AppRoutes.home);
+      } else {
+        Get.offAllNamed(
+          '/medical-profile',
+          arguments: {
+            'completionPercentage': status.completionPercentage,
+            'missingFields': status.missingFields,
+          },
+        );
+      }
     } catch (e) {
       Get.snackbar(
         "خطأ من السيرفر",
@@ -86,6 +114,7 @@ class NewPasswordController extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } finally {
       if (!isClosed) isLoading.value = false;
     }
   }

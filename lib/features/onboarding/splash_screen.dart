@@ -30,17 +30,15 @@ class _SplashScreenState extends State<SplashScreen> {
       final box = GetStorage();
       final prefs = await SharedPreferences.getInstance();
 
-      final prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('auth_token');
-      bool isProfileCompleted = box.read('profileCompleted') ?? false;
+      // مؤقتًا: مسح جلسة تسجيل الدخول عند كل تشغيل
+      await prefs.remove('auth_token');
+      await prefs.remove('refresh_token');
+      await box.remove('isLoggedIn');
+      await box.remove('userData');
+      await box.remove('profileCompleted');
 
-      if (token == null || box.read('isLoggedIn') != true) {
-        Get.offAllNamed(AppRoutes.onboarding);
-      } else if (!isProfileCompleted) {
-        Get.offAllNamed('/medical-profile');
-      } else {
-        Get.offAllNamed(AppRoutes.home);
-      }
+      // بعد المسح نذهب مباشرة إلى الـ Onboarding
+      Get.offAllNamed(AppRoutes.onboarding);
     });
   }
 

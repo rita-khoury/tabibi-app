@@ -1,6 +1,7 @@
 // import 'package:get/get.dart';
 // import '../../auth/repository/auth_repository.dart';
 // import '../../../features/NewPassword/view/new_password_screen.dart';
+import 'package:tabibi/features/NewPassword/binding/new_password_binding.dart';
 //
 // class OtpController extends GetxController {
 //   final AuthRepository _authRepository = AuthRepository();
@@ -29,7 +30,7 @@
 //
 //   Future<void> verifyOtp() async {
 //     if (otp.value.length < 6) {
-//       Get.snackbar("تنبيه", "يرجى إدخال رمز التحقق");
+//       Get.snackbar("ØªÙ†Ø¨ÙŠÙ‡", "ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø±Ù…Ø² Ø§Ù„ØªØ­Ù‚Ù‚");
 //       return;
 //     }
 //
@@ -46,7 +47,7 @@
 //
 //       await _authRepository.verifyOtp(data);
 //
-//       Get.snackbar("نجاح", "تم التحقق بنجاح");
+//       Get.snackbar("Ù†Ø¬Ø§Ø­", "ØªÙ… Ø§Ù„ØªØ­Ù‚Ù‚ Ø¨Ù†Ø¬Ø§Ø­");
 //
 //       if (purpose == 'reset-password') {
 //         Get.to(
@@ -57,7 +58,7 @@
 //         Get.offAllNamed('/home');
 //       }
 //     } catch (e) {
-//       Get.snackbar("خطأ", e.toString());
+//       Get.snackbar("Ø®Ø·Ø£", e.toString());
 //     } finally {
 //       isLoading.value = false;
 //     }
@@ -96,43 +97,41 @@ class OtpController extends GetxController {
 
   Future<void> verifyOtp() async {
     if (otp.value.length < 6) {
-      Get.snackbar("تنبيه", "يرجى إدخال رمز التحقق");
+      Get.snackbar('Notice', 'Enter the verification code.');
+      return;
+    }
+
+    if (purpose == 'reset-password') {
+      // The reset endpoint validates this code and changes the password.
+      // Account verification would clear the code before the reset request.
+      Get.to(
+        () => NewPasswordScreen(),
+        binding: NewPasswordBinding(),
+        arguments: {'identifier': identifier, 'otp': otp.value.trim()},
+      );
       return;
     }
 
     try {
       isLoading.value = true;
-
-      final Map<String, dynamic> data = {"code": otp.value.trim()};
-
-      if (identifier.contains("@")) {
-        data["email"] = identifier.trim();
+      final Map<String, dynamic> data = {'code': otp.value.trim()};
+      if (identifier.contains('@')) {
+        data['email'] = identifier.trim();
       } else {
-        data["phone"] = identifier.trim();
+        data['phone'] = identifier.trim();
       }
-
       await _authRepository.verifyOtp(data);
-
-      Get.snackbar("نجاح", "تم التحقق بنجاح");
-
-      if (purpose == 'reset-password') {
-        Get.to(
-              () => NewPasswordScreen(),
-          arguments: {'identifier': identifier, 'otp': otp.value.trim()},
-        );
-      } else {
-        Get.offAllNamed('/home');
-      }
+      Get.snackbar('Success', 'Account verified successfully.');
+      Get.offAllNamed('/home');
     } catch (e) {
-      Get.snackbar("خطأ", e.toString().replaceAll('Exception: ', ''));
+      Get.snackbar('Error', e.toString().replaceAll('Exception: ', ''));
     } finally {
       isLoading.value = false;
     }
   }
-
   Future<void> resendOtp() async {
     if (identifier.isEmpty) {
-      Get.snackbar("خطأ", "المعرف غير متوفر، يرجى المحاولة لاحقاً");
+      Get.snackbar("Ø®Ø·Ø£", "Ø§Ù„Ù…Ø¹Ø±Ù ØºÙŠØ± Ù…ØªÙˆÙØ±ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù„Ø§Ø­Ù‚Ø§Ù‹");
       return;
     }
 
@@ -141,9 +140,9 @@ class OtpController extends GetxController {
 
       await _authRepository.resendVerification(identifier);
 
-      Get.snackbar("نجاح", "تم إرسال رمز تحقق جديد بنجاح");
+      Get.snackbar("Ù†Ø¬Ø§Ø­", "ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ù…Ø² ØªØ­Ù‚Ù‚ Ø¬Ø¯ÙŠØ¯ Ø¨Ù†Ø¬Ø§Ø­");
     } catch (e) {
-      Get.snackbar("خطأ", e.toString().replaceAll('Exception: ', ''));
+      Get.snackbar("Ø®Ø·Ø£", e.toString().replaceAll('Exception: ', ''));
     } finally {
       isLoading.value = false;
     }

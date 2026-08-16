@@ -4,16 +4,100 @@ import 'package:tabibi/core/constance/app_colors.dart';
 import '../../auth/repository/AuthController.dart';
 import '../controller/login_controller.dart';
 import '../../../features/RegisterScreen/view/register_screen.dart';
+import 'package:tabibi/features/OTP/view/otp_screen.dart';
+import 'package:tabibi/features/OTP/binding/otp_binding.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends GetView<LoginController> {
   final AuthController authController = Get.put(
     AuthController(),
     permanent: true,
   );
 
-  final LoginController controller = Get.put(LoginController());
 
   LoginScreen({super.key});
+  Future<void> _showForgotPasswordDialog() async {
+    controller.forgotPasswordController.clear();
+    final identifierController = controller.forgotPasswordController;
+
+    await Get.dialog<void>(
+      AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Forgot Password?'),
+        content: TextField(
+          controller: identifierController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Email or Phone',
+            hintText: 'Enter your email or phone number',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          Obx(
+            () => ElevatedButton(
+              onPressed: controller.isLoading.value
+                  ? null
+                  : () async {
+                      final identifier = identifierController.text.trim();
+                      final isEmail = RegExp(
+                        r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                      ).hasMatch(identifier);
+                      final isPhone = RegExp(r'^\+?[0-9]{7,15}$').hasMatch(
+                        identifier,
+                      );
+                      if (!isEmail && !isPhone) {
+                        Get.snackbar(
+                          'Invalid identifier',
+                          'Enter a valid email address or phone number.',
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                        );
+                        return;
+                      }
+                      final sent = await controller.handleForgotPassword(identifier);
+                      if (sent) {
+                        if (Get.isDialogOpen == true) {
+                          Get.back();
+                        }
+                        await Future<void>.delayed(Duration.zero);
+                        Get.to(
+                          () => const OtpScreen(),
+                          binding: OtpBinding(),
+                          arguments: {
+                            'identifier': identifier,
+                            'purpose': 'reset-password',
+                          },
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+              ),
+              child: controller.isLoading.value
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Send Code',
+                      style: TextStyle(color: Colors.white),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,8 +187,7 @@ class LoginScreen extends StatelessWidget {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: () =>
-                                        controller.handleForgotPassword(),
+                                    onPressed: _showForgotPasswordDialog,
                                     child: const Text(
                                       "Forgot Password?",
                                       style: TextStyle(

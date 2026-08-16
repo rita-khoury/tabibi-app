@@ -121,25 +121,29 @@ class AppointmentView extends GetView<AppointmentController> {
                       children: [
                         _dateCard(context),
                         const SizedBox(height: 25),
-                        _sectionTitle("Select Period", Icons.access_time),
-                        const SizedBox(height: 12),
-                        _periodRow(),
-                        const SizedBox(height: 16),
-                        _sectionTitle('Available Time', Icons.schedule),
-                        const SizedBox(height: 12),
-                        _timeSlotRow(),
-                        const SizedBox(height: 25),
-                        _sectionTitle(
-                          "Appointment Type",
-                          Icons.medical_services,
-                        ),
-                        const SizedBox(height: 12),
-                        _typeRow(),
+                        if (controller.isSelectedDayFull)
+                          _periodRow()
+                        else ...[
+                          _sectionTitle("Select Period", Icons.access_time),
+                          const SizedBox(height: 12),
+                          _periodRow(),
+                          const SizedBox(height: 16),
+                          _sectionTitle('Available Time', Icons.schedule),
+                          const SizedBox(height: 12),
+                          _timeSlotRow(),
+                          const SizedBox(height: 25),
+                          _sectionTitle(
+                            "Appointment Type",
+                            Icons.medical_services,
+                          ),
+                          const SizedBox(height: 12),
+                          _typeRow(),
+                        ],
                       ],
                     ),
                   ),
                 ),
-                _confirmButton(),
+                if (!controller.isSelectedDayFull) _confirmButton(),
               ],
             ),
           );
@@ -228,6 +232,7 @@ class AppointmentView extends GetView<AppointmentController> {
                     controller.selectedDate.day == date.day &&
                     controller.selectedDate.month == date.month &&
                     controller.selectedDate.year == date.year;
+                final isFull = controller.isFullDate(date);
 
                 return Padding(
                   padding: const EdgeInsets.only(right: 8.0),
@@ -240,11 +245,15 @@ class AppointmentView extends GetView<AppointmentController> {
                       decoration: BoxDecoration(
                         color: selected
                             ? AppColors.primaryBlue
+                            : isFull
+                            ? Colors.red.shade50
                             : Colors.blue.withOpacity(0.08),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: selected
                               ? Colors.transparent
+                              : isFull
+                              ? Colors.red.shade300
                               : AppColors.primaryBlue.withOpacity(0.4),
                           width: 1.5,
                         ),
@@ -257,6 +266,8 @@ class AppointmentView extends GetView<AppointmentController> {
                             style: TextStyle(
                               color: selected
                                   ? Colors.white
+                                  : isFull
+                                  ? Colors.red.shade700
                                   : AppColors.primaryBlue,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -267,7 +278,11 @@ class AppointmentView extends GetView<AppointmentController> {
                             date.day.toString(),
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: selected ? Colors.white : Colors.black87,
+                              color: selected
+                                  ? Colors.white
+                                  : isFull
+                                  ? Colors.red.shade700
+                                  : Colors.black87,
                               fontSize: 14,
                             ),
                           ),
@@ -336,15 +351,64 @@ class AppointmentView extends GetView<AppointmentController> {
       spacing: 8,
       runSpacing: 8,
       children: controller.availablePeriodsForSelectedDay.map((period) {
+        final unavailable = controller.isScheduleUnavailable(period);
+        final selected = !unavailable && controller.selectedPeriod == period;
         return SizedBox(
           width: 150,
-          child: _chip(
+          child: _scheduleChip(
             period,
-            controller.selectedPeriod,
-            (value) => controller.selectPeriod(value, doctorId: doctorId),
+            unavailable: unavailable,
+            selected: selected,
+            onTap: unavailable
+                ? null
+                : () => controller.selectPeriod(period, doctorId: doctorId),
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _scheduleChip(
+    String text, {
+    required bool unavailable,
+    required bool selected,
+    required VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: unavailable
+              ? Colors.red.shade50
+              : selected
+              ? AppColors.primaryBlue
+              : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: unavailable
+                ? Colors.red.shade300
+                : selected
+                ? Colors.transparent
+                : Colors.grey.shade300,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            unavailable ? '$text (Full)' : text,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: unavailable
+                  ? Colors.red.shade700
+                  : selected
+                  ? Colors.white
+                  : Colors.black,
+              fontSize: 12,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -426,7 +490,8 @@ class AppointmentView extends GetView<AppointmentController> {
               borderRadius: BorderRadius.circular(30),
             ),
           ),
-          onPressed: controller.isLoading.value
+          onPressed:
+              controller.isLoading.value || !controller.hasSelectedFinalTime
               ? null
               : () {
                   if (controller.selectedPeriod.isEmpty ||

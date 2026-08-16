@@ -1219,6 +1219,27 @@ class AuthRepository {
     return _refreshFuture!;
   }
 
+  Future<void> rateDoctor({
+    required int appointmentId,
+    required double rating,
+    String? comment,
+  }) async {
+    try {
+      await _dio.post(
+        '/ratings',
+        data: {
+          'appointmentId': appointmentId,
+          'score': rating.toInt(),
+          if (comment != null && comment.isNotEmpty) 'comment': comment,
+        },
+      );
+    } on DioException catch (e) {
+      debugPrint(
+        "خطأ في إرسال التقييم: ${e.response?.data}",
+      );
+      throw Exception(_handleDioError(e));
+    }
+  }
   Future<String?> refreshToken() async {
     debugPrint("🔄 [Interceptor]: جاري محاولة تجديد التوكن...");
     final prefs = await SharedPreferences.getInstance();

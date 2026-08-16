@@ -11,6 +11,7 @@
 //
 // import '../../../core/routes/app_routes.dart';
 // import '../../appointments/controller/appointments_controller.dart';
+import '../../appointments/view/appointments_view.dart';
 //
 // class AppointmentController extends GetxController {
 //   final AuthRepository _repo = Get.find<AuthRepository>();
@@ -532,6 +533,9 @@ class AppointmentController extends GetxController {
   final RxnInt selectedClinicId = RxnInt();
   final RxList<Map<String, dynamic>> _availableDayRecords =
       <Map<String, dynamic>>[].obs;
+  final RxMap<String, String> dayStatuses = <String, String>{}.obs;
+  final RxSet<String> _unavailableSchedulePeriods = <String>{}.obs;
+
   final RxList<Map<String, dynamic>> selectedDateSchedules =
       <Map<String, dynamic>>[].obs;
   final RxList<String> availablePeriodsForSelectedDay = <String>[].obs;
@@ -557,7 +561,10 @@ class AppointmentController extends GetxController {
   bool get isSelectedDayFull => selectedDayStatus.value == 'full';
   bool get canJoinWaitlist =>
       isSelectedDayFull && selectedClinicId.value != null;
-  bool get hasSelectedFinalTime => selectedTimeSlot.value != null;
+  bool get hasSelectedFinalTime =>
+      selectedTimeSlot.value != null &&
+      selectedPeriod.isNotEmpty &&
+      !_unavailableSchedulePeriods.contains(selectedPeriod);
 
   @override
   void onInit() {
@@ -625,6 +632,7 @@ class AppointmentController extends GetxController {
     try {
       final days = await _repo.getAvailableDays(doctorId, clinicId);
       _availableDayRecords.assignAll(days);
+      await _loadDayStatuses(doctorId, clinicId, days);
 
       if (doctorAvailableDays.isEmpty) {
         AppAlerts.showError(
@@ -646,6 +654,41 @@ class AppointmentController extends GetxController {
       update();
     }
   }
+
+  Future<void> _loadDayStatuses(
+    int doctorId,
+    int clinicId,
+    List<Map<String, dynamic>> days,
+  ) async {
+    dayStatuses.clear();
+    final statuses = await Future.wait(
+      days.map((record) async {
+        final requestedDate = record['date']?.toString();
+        if (requestedDate == null || requestedDate.isEmpty) {
+          return const MapEntry('', 'unknown');
+        }
+        try {
+          final status = await _repo.getAppointmentDayStatus(
+            doctorId: doctorId,
+            clinicId: clinicId,
+            requestedDate: requestedDate,
+          );
+          return MapEntry(requestedDate, status);
+        } catch (_) {
+          return MapEntry(requestedDate, 'unknown');
+        }
+      }),
+    );
+    dayStatuses.addAll(
+      Map.fromEntries(statuses.where((entry) => entry.key.isNotEmpty)),
+    );
+  }
+
+  String dayStatusForDate(DateTime date) {
+    return dayStatuses[DateFormat('yyyy-MM-dd').format(date)] ?? 'unknown';
+  }
+
+  bool isFullDate(DateTime date) => dayStatusForDate(date) == 'full';
 
   bool isAvailableDay(DateTime date) {
     final value = DateFormat('yyyy-MM-dd').format(date);
@@ -680,6 +723,7 @@ class AppointmentController extends GetxController {
         requestedDate: requestedDate,
       );
       selectedDayStatus.value = status;
+      dayStatuses[requestedDate] = status;
 
       if (status != 'available') {
         update();
@@ -706,6 +750,7 @@ class AppointmentController extends GetxController {
         _schedulesByLabel[label] = schedule;
       }
       availablePeriodsForSelectedDay.assignAll(_schedulesByLabel.keys);
+      await _loadScheduleAvailability(doctorId, clinicId, normalSchedules);
 
       if (normalSchedules.isEmpty) {
         selectedDayStatus.value = 'full';
@@ -722,10 +767,52 @@ class AppointmentController extends GetxController {
     }
   }
 
+  Future<void> _loadScheduleAvailability(
+    int doctorId,
+    int clinicId,
+    List<Map<String, dynamic>> schedules,
+  ) async {
+    final requestedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+    final unavailablePeriods = await Future.wait(
+      schedules.map((schedule) async {
+        final label = _scheduleLabel(schedule);
+        final scheduleId = _asInt(schedule['id']);
+        if (scheduleId == 0) {
+          return label;
+        }
+        try {
+          final slot = await _repo.getNextAvailableTime(
+            doctorId,
+            clinicId,
+            scheduleId,
+            requestedDate,
+            selectedType,
+          );
+          final startTime = slot['startTime']?.toString();
+          final endTime = slot['endTime']?.toString();
+          return startTime == null ||
+                  endTime == null ||
+                  startTime.isEmpty ||
+                  endTime.isEmpty
+              ? label
+              : null;
+        } catch (_) {
+          return label;
+        }
+      }),
+    );
+    _unavailableSchedulePeriods
+      ..clear()
+      ..addAll(unavailablePeriods.whereType<String>());
+  }
+
   Future<void> selectPeriod(String period, {required int doctorId}) async {
     final schedule = _schedulesByLabel[period];
     final clinicId = selectedClinicId.value;
-    if (schedule == null || clinicId == null || isSelectedDayFull) {
+    if (schedule == null ||
+        clinicId == null ||
+        isSelectedDayFull ||
+        isScheduleUnavailable(period)) {
       return;
     }
 
@@ -743,9 +830,17 @@ class AppointmentController extends GetxController {
     }
 
     selectedType = type;
+    _unavailableSchedulePeriods.clear();
     availableTimeSlots.clear();
     selectedTimeSlot.value = null;
     final clinicId = selectedClinicId.value;
+    if (clinicId != null && selectedDateSchedules.isNotEmpty) {
+      await _loadScheduleAvailability(
+        doctorId,
+        clinicId,
+        selectedDateSchedules,
+      );
+    }
     if (selectedScheduleId.value != null && clinicId != null) {
       await _loadAvailableAppointmentTime(doctorId, clinicId);
     }
@@ -756,6 +851,9 @@ class AppointmentController extends GetxController {
     selectedTimeSlot.value = slot;
     update();
   }
+
+  bool isScheduleUnavailable(String period) =>
+      _unavailableSchedulePeriods.contains(period);
 
   void selectReferral(dynamic referral) {
     selectedReferral.value = referral;
@@ -779,13 +877,18 @@ class AppointmentController extends GetxController {
       );
       final startTime = slot['startTime']?.toString();
       final endTime = slot['endTime']?.toString();
-      if (startTime == null || endTime == null) {
+      if (startTime == null ||
+          endTime == null ||
+          startTime.isEmpty ||
+          endTime.isEmpty) {
         throw const FormatException('Invalid available-time response.');
       }
+      _unavailableSchedulePeriods.remove(selectedPeriod);
       availableTimeSlots.assignAll([
         {'startTime': startTime, 'endTime': endTime},
       ]);
     } catch (error) {
+      _unavailableSchedulePeriods.add(selectedPeriod);
       availableTimeSlots.clear();
       selectedTimeSlot.value = null;
       AppAlerts.showError(
@@ -871,11 +974,12 @@ class AppointmentController extends GetxController {
         return;
       }
 
-      if (Get.isRegistered<AppointmentsController>()) {
-        Get.find<AppointmentsController>().fetchAppointments();
-      }
+      final appointmentsController = Get.isRegistered<AppointmentsController>()
+          ? Get.find<AppointmentsController>()
+          : Get.put(AppointmentsController());
+      await appointmentsController.fetchAppointments();
       await playSuccessEffect();
-      Get.back();
+      Get.offAll(() => const AppointmentsView());
     } on DioException catch (error) {
       await _refreshAfterBookingConflict(doctorId, error);
     } catch (error) {
@@ -913,6 +1017,7 @@ class AppointmentController extends GetxController {
 
   void _clearBookingSelection() {
     selectedClinicId.value = null;
+    dayStatuses.clear();
     _availableDayRecords.clear();
     _clearDateDependentSelection();
   }
@@ -924,6 +1029,7 @@ class AppointmentController extends GetxController {
 
   void _clearScheduleAndSlotSelection() {
     selectedDateSchedules.clear();
+    _unavailableSchedulePeriods.clear();
     availablePeriodsForSelectedDay.clear();
     _schedulesByLabel.clear();
     selectedPeriod = '';

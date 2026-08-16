@@ -105,6 +105,7 @@ import 'dart:io';
 import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../core/constance/api_constants.dart';
 import '../../OTP/controller/otp_controller.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../OTP/view/otp_screen.dart';
@@ -205,7 +206,7 @@ class RegisterController extends GetxController {
             : errorMessage;
       } else {
         errorMessage =
-        "تعذر الاتصال بالسيرفر. تأكد أن السيرفر يعمل على localhost:3000";
+        "تعذر الاتصال بالسيرفر. تأكد أن السيرفر يعمل على ${ApiConstants.baseUrl}";
       }
       Get.snackbar("خطأ", errorMessage);
     } catch (e) {

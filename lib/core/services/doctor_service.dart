@@ -1,30 +1,14 @@
-// import 'package:dio/dio.dart';
-//
-// class DoctorService {
-//   final Dio _dio = Dio(BaseOptions(baseUrl: 'http://localhost:3000'));
-//
-//
-//   Future<List<dynamic>> getAll() async {
-//     try {
-//       final response = await _dio.get('/doctors');
-//       return response.data;
-//     } catch (e) {
-//       throw Exception('Failed to load doctors: $e');
-//     }
-//   }
-//
-//
-//   Future<List<dynamic>> search(String query) async {
-//     final response = await _dio.get('/doctor-profiles/search', queryParameters: {'q': query});
-//     return response.data;
-//   }
-// }
-
 import 'package:dio/dio.dart';
+import '../constance/api_constants.dart';
 
 class DoctorService {
-  final Dio _dio = Dio(BaseOptions(      baseUrl: 'http://localhost:3000',
-      ));
+  final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: ApiConstants.baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  );
 
   Future<List<dynamic>> getAll() async {
     try {
@@ -64,10 +48,14 @@ class DoctorService {
   }
 
   Future<List<dynamic>> search(String query) async {
-    final response = await _dio.get(
-      '/doctor-profiles/search',
-      queryParameters: {'q': query},
-    );
-    return response.data;
+    try {
+      final response = await _dio.get(
+        '/doctor-profiles/search',
+        queryParameters: {'q': query},
+      );
+      return response.data;
+    } catch (e) {
+      throw Exception('Error searching doctors: $e');
+    }
   }
 }

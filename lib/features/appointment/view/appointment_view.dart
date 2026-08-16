@@ -7,8 +7,10 @@ import 'package:tabibi/core/constance/app_colors.dart';
 class AppointmentView extends GetView<AppointmentController> {
   final int doctorId;
   final int? clinicId;
+  final int? referralId;
+  final String? referralSourceName;
 
-  const AppointmentView({super.key, required this.doctorId, this.clinicId});
+  const AppointmentView({super.key, required this.doctorId, this.clinicId, this.referralId, this.referralSourceName});
 
   void _showFinalBookingDialog() {
     Get.dialog(
@@ -83,7 +85,11 @@ class AppointmentView extends GetView<AppointmentController> {
     if (!Get.isRegistered<AppointmentController>()) {
       Get.put(AppointmentController());
     }
-    controller.fetchClinics(doctorId);
+    controller.setReferralContext(
+      referralId: referralId,
+      sourceDoctorName: referralSourceName,
+    );
+    controller.fetchClinics(doctorId, preferredClinicId: clinicId);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -114,6 +120,11 @@ class AppointmentView extends GetView<AppointmentController> {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
+                if (referralId != null)
+                  _referralBookingBanner(
+                    sourceDoctorName: referralSourceName,
+                  ),
+                if (referralId != null) const SizedBox(height: 12),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -169,6 +180,35 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
+  Widget _referralBookingBanner({String? sourceDoctorName}) {
+    final source = sourceDoctorName?.trim().isNotEmpty == true
+        ? sourceDoctorName!.trim()
+        : 'your doctor';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.assignment_turned_in_outlined,
+              color: AppColors.primaryBlue),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Booking via referral from $source',
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _dateCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -177,7 +217,7 @@ class AppointmentView extends GetView<AppointmentController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -247,14 +287,14 @@ class AppointmentView extends GetView<AppointmentController> {
                             ? AppColors.primaryBlue
                             : isFull
                             ? Colors.red.shade50
-                            : Colors.blue.withOpacity(0.08),
+                            : Colors.blue.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: selected
                               ? Colors.transparent
                               : isFull
                               ? Colors.red.shade300
-                              : AppColors.primaryBlue.withOpacity(0.4),
+                              : AppColors.primaryBlue.withValues(alpha: 0.4),
                           width: 1.5,
                         ),
                       ),

@@ -6,7 +6,7 @@
 // import 'package:shared_preferences/shared_preferences.dart';
 //
 // import '../../appointments/model/appointment_model.dart';
-// import '../data/models/CreateAppointmentModel.dart' hide AppointmentModel;
+// import '../data/models/CreateAppointmentModel.dart';
 // import '../data/models/DoctorModel.dart';
 // import '../data/models/ProfileCompletionModel.dart';
 // import '../data/models/ResetPasswordModel.dart';
@@ -1138,10 +1138,10 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/constance/api_config.dart';
+import '../../../core/constance/api_constants.dart';
 
 import '../../appointments/model/appointment_model.dart';
-import '../data/models/CreateAppointmentModel.dart' hide AppointmentModel;
+import '../data/models/CreateAppointmentModel.dart';
 import '../data/models/DoctorModel.dart';
 import '../data/models/ProfileCompletionModel.dart';
 import '../data/models/ResetPasswordModel.dart';
@@ -1154,8 +1154,7 @@ class AuthRepository {
   final Dio _dio = Dio(
     BaseOptions(
 
-
-      baseUrl: ApiConfig.baseUrl,
+  baseUrl: ApiConstants.baseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       headers: {
@@ -1354,10 +1353,10 @@ class AuthRepository {
       final response = await _dio.post('/auth/login', data: data);
       final auth = AuthResponseModel.fromJson(response.data);
       final prefs = await SharedPreferences.getInstance();
-      if (auth.accessToken != null)
-        await prefs.setString('auth_token', auth.accessToken!);
-      if (auth.refreshToken != null)
-        await prefs.setString('refresh_token', auth.refreshToken!);
+      await prefs.setString('auth_token', auth.accessToken);
+      if (auth.refreshToken.isNotEmpty) {
+        await prefs.setString('refresh_token', auth.refreshToken);
+      }
       return auth;
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
@@ -1437,25 +1436,27 @@ class AuthRepository {
   Future<List<AppointmentModel>> getMyAppointments() async {
     try {
       final response = await _dio.get('/appointments/my');
-
-      if (kDebugMode) {
-        print("🔍 استجابة المواعيد الخام: ${response.data}");
+      final raw = response.data;
+      final List<dynamic> items;
+      if (raw is List) {
+        items = raw;
+      } else if (raw is Map) {
+        final candidates = <dynamic>[raw['data'], raw['appointments'], raw['items']];
+        final list = candidates.firstWhere((value) => value is List, orElse: () => const <dynamic>[]);
+        items = List<dynamic>.from(list as List);
+      } else {
+        items = const <dynamic>[];
       }
-
-      final List<dynamic> data = response.data;
-      return data.map((json) => AppointmentModel.fromJson(json)).toList();
+      return items.whereType<Map>().map((json) => AppointmentModel.fromJson(Map<String, dynamic>.from(json))).toList();
     } on DioException catch (e) {
-      debugPrint("❌ خطأ API المواعيد: ${e.response?.data}");
+      if (e.response?.statusCode == 404) return <AppointmentModel>[];
       throw Exception(_handleDioError(e));
     }
   }
 
   Future<void> cancelAppointment(int appointmentId, String reason) async {
     try {
-      await _dio.patch(
-        '/appointments/$appointmentId/cancel',
-        data: {'cancellationReason': reason},
-      );
+      await _dio.patch('/appointments/$appointmentId/cancel', data: {'cancellationReason': reason});
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -1470,20 +1471,11 @@ class AuthRepository {
   }
 
   Future<bool> createAppointment(CreateAppointmentModel appointmentData) async {
-    final Map<String, dynamic> body = appointmentData.toJson();
-
-    debugPrint("🚀 APPOINTMENT REQUEST:");
-    debugPrint(body.toString());
-
     try {
-      final response = await _dio.post('/appointments', data: body);
-
-      return response.statusCode == 201;
+      final response = await _dio.post('/appointments', data: appointmentData.toJson());
+      return response.statusCode == 200 || response.statusCode == 201;
     } on DioException catch (e) {
-      debugPrint("❌ SERVER ERROR:");
-      debugPrint(e.response?.data.toString());
-
-      rethrow;
+      throw Exception(_handleDioError(e));
     }
   }
 
@@ -1616,6 +1608,40 @@ class AuthRepository {
       return [];
     } on DioException catch (e) {
       debugPrint("❌ Error fetching my waitlists: ${e.response?.data}");
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<List<dynamic>> getMyReferrals({int limit = 50}) async {
+    try {
+      final response = await _dio.get(
+        '/referrals/my-referrals',
+        queryParameters: {'page': 1, 'limit': limit},
+      );
+      final payload = response.data;
+      if (payload is List) return List<dynamic>.from(payload);
+      if (payload is Map) {
+        final data = payload['data'];
+        if (data is List) return List<dynamic>.from(data);
+      }
+      return <dynamic>[];
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getDoctorsInClinic(int clinicId) async {
+    try {
+      final response = await _dio.get(
+        '/doctor-clinics/clinics/$clinicId/doctors',
+      );
+      final payload = response.data;
+      if (payload is! List) return <Map<String, dynamic>>[];
+      return payload
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
   }

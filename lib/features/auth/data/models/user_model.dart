@@ -60,8 +60,16 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    final first = json['firstName']?.toString() ?? '';
-    final last = json['lastName']?.toString() ?? '';
+    final backendFullName = json['fullName']?.toString().trim() ?? '';
+    final nameParts = backendFullName.isEmpty
+        ? const <String>[]
+        : backendFullName.split(RegExp(r'\s+'));
+    final first =
+        json['firstName']?.toString() ??
+        (nameParts.isNotEmpty ? nameParts.first : '');
+    final last =
+        json['lastName']?.toString() ??
+        (nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '');
 
     return UserModel(
       id: json['id']?.toString() ?? "",
@@ -69,7 +77,9 @@ class UserModel {
       phone: json['phone']?.toString(),
       firstName: first,
       lastName: last,
-      fullName: "$first $last".trim(),
+      fullName: backendFullName.isNotEmpty
+          ? backendFullName
+          : "$first $last".trim(),
       avatarUrl: json['avatarUrl']?.toString(), // قراءتها من الـ JSON
     );
   }
@@ -81,6 +91,7 @@ class UserModel {
       "phone": phone,
       "firstName": firstName,
       "lastName": lastName,
+      "fullName": fullName,
       "avatarUrl": avatarUrl,
     };
   }
@@ -126,11 +137,11 @@ class UserModel {
   @override
   int get hashCode {
     return id.hashCode ^
-    email.hashCode ^
-    phone.hashCode ^
-    firstName.hashCode ^
-    lastName.hashCode ^
-    fullName.hashCode ^
-    avatarUrl.hashCode;
+        email.hashCode ^
+        phone.hashCode ^
+        firstName.hashCode ^
+        lastName.hashCode ^
+        fullName.hashCode ^
+        avatarUrl.hashCode;
   }
 }

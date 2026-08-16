@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabibi/core/routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -25,13 +26,14 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    Future.delayed(const Duration(seconds: 4), () {
+    Future.delayed(const Duration(seconds: 4), () async {
       final box = GetStorage();
 
-      String? token = box.read('accessToken');
+      final prefs = await SharedPreferences.getInstance();
+      final String? token = prefs.getString('auth_token');
       bool isProfileCompleted = box.read('profileCompleted') ?? false;
 
-      if (token == null) {
+      if (token == null || box.read('isLoggedIn') != true) {
         Get.offAllNamed(AppRoutes.onboarding);
       } else if (!isProfileCompleted) {
         Get.offAllNamed('/medical-profile');

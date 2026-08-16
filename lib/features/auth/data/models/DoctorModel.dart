@@ -25,6 +25,7 @@ class DoctorModel {
   final String? subSpecialization;
   final String? bio;
   final String? initialVisitFee;
+  final String? returnVisitFee;
   final List<String> languagesSpoken;
   final bool isApproved;
   final int experienceYears;
@@ -44,6 +45,7 @@ class DoctorModel {
     this.subSpecialization,
     this.bio,
     this.initialVisitFee,
+    this.returnVisitFee,
     required this.languagesSpoken,
     required this.isApproved,
     required this.experienceYears,
@@ -118,6 +120,7 @@ class DoctorModel {
         subSpecialization: json['subSpecialization']?.toString(),
         bio: json['bio']?.toString(),
         initialVisitFee: json['initialVisitFee']?.toString(),
+        returnVisitFee: json['returnVisitFee']?.toString(),
         languagesSpoken: List<String>.from(json['languagesSpoken'] ?? []),
         isApproved: json['isApproved'] == true || json['isApproved'] == 'true',
         experienceYears:

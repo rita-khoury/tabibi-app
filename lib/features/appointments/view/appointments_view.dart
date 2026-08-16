@@ -475,7 +475,6 @@
 //   }
 // }
 
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
@@ -489,150 +488,157 @@ class AppointmentsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        backgroundColor: AppColors.lightGray,
-        body: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.only(
-                top: 40,
-                bottom: 15,
-                left: 20,
-                right: 20,
-              ),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF33A9F1), Color(0xFF007BFF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+    final appointmentsController = Get.isRegistered<AppointmentsController>()
+        ? Get.find<AppointmentsController>()
+        : Get.put(AppointmentsController());
+    return Obx(
+      () => DefaultTabController(
+        key: ValueKey(appointmentsController.upcomingTabRevision.value),
+        length: 3,
+        child: Scaffold(
+          backgroundColor: AppColors.lightGray,
+          body: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.only(
+                  top: 40,
+                  bottom: 15,
+                  left: 20,
+                  right: 20,
                 ),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const SizedBox(width: 40),
-                      const Text(
-                        "My Appointments",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.list_alt, color: Colors.white),
-                        tooltip: "Waitlist",
-                        onPressed: () {
-                          if (Get.isRegistered<AppointmentsController>()) {
-                            Get.find<AppointmentsController>().fetchWaitlist();
-                          }
-                          Get.to(() => const WaitlistBottomSheetView());
-                        },
-                      ),
-                    ],
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF33A9F1), Color(0xFF007BFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: const TabBar(
-                      dividerColor: Colors.transparent,
-                      indicator: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
-                      ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      labelColor: Color(0xFF007BFF),
-                      unselectedLabelColor: Colors.white,
-                      labelStyle: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      tabs: [
-                        Tab(
-                          child: Text(
-                            "Upcoming",
-                            overflow: TextOverflow.ellipsis,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const SizedBox(width: 40),
+                        const Text(
+                          "My Appointments",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        Tab(
-                          child: Text(
-                            "Completed",
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Tab(
-                          child: Text(
-                            "Canceled",
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.list_alt, color: Colors.white),
+                          tooltip: "Waitlist",
+                          onPressed: () {
+                            if (Get.isRegistered<AppointmentsController>()) {
+                              Get.find<AppointmentsController>()
+                                  .fetchWaitlist();
+                            }
+                            Get.to(() => const WaitlistBottomSheetView());
+                          },
                         ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: const TabBar(
+                        dividerColor: Colors.transparent,
+                        indicator: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        labelColor: Color(0xFF007BFF),
+                        unselectedLabelColor: Colors.white,
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                        tabs: [
+                          Tab(
+                            child: Text(
+                              "Upcoming",
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Tab(
+                            child: Text(
+                              "Completed",
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Tab(
+                            child: Text(
+                              "Canceled",
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: GetBuilder<AppointmentsController>(
-                init: AppointmentsController(),
-                builder: (controller) {
-                  if (controller.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              Expanded(
+                child: GetBuilder<AppointmentsController>(
+                  init: AppointmentsController(),
+                  builder: (controller) {
+                    if (controller.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                  return TabBarView(
-                    children: [
-                      _buildAppointmentList(
-                        controller,
-                        controller.upcomingAppointments,
-                        "assets/images/photo8.png",
-                        "No Upcoming Appointments",
-                        isCompletedTab: false,
-                      ),
-                      _buildAppointmentList(
-                        controller,
-                        controller.completedAppointments,
-                        "assets/images/photo7.png",
-                        "No Completed Appointments",
-                        isCompletedTab: true,
-                      ),
-                      _buildAppointmentList(
-                        controller,
-                        controller.canceledAppointments,
-                        "assets/images/photo6.png",
-                        "No Canceled Appointments",
-                        isCompletedTab: false,
-                      ),
-                    ],
-                  );
-                },
+                    return TabBarView(
+                      children: [
+                        _buildAppointmentList(
+                          controller,
+                          controller.upcomingAppointments,
+                          "assets/images/photo8.png",
+                          "No Upcoming Appointments",
+                          isCompletedTab: false,
+                        ),
+                        _buildAppointmentList(
+                          controller,
+                          controller.completedAppointments,
+                          "assets/images/photo7.png",
+                          "No Completed Appointments",
+                          isCompletedTab: true,
+                        ),
+                        _buildAppointmentList(
+                          controller,
+                          controller.canceledAppointments,
+                          "assets/images/photo6.png",
+                          "No Canceled Appointments",
+                          isCompletedTab: false,
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildAppointmentList(
-      AppointmentsController controller,
-      List<AppointmentModel> list,
-      String img,
-      String title, {
-        required bool isCompletedTab,
-      }) {
+    AppointmentsController controller,
+    List<AppointmentModel> list,
+    String img,
+    String title, {
+    required bool isCompletedTab,
+  }) {
     if (list.isEmpty) {
       return EmptyAppointmentState(
         imagePath: img,
@@ -683,11 +689,15 @@ class AppointmentsView extends StatelessWidget {
   void _showRatingDialog(BuildContext context, AppointmentModel appointment) {
     double selectedRating = 5.0;
     final TextEditingController commentController = TextEditingController();
-    final AppointmentsController controller = Get.find<AppointmentsController>();
+    final AppointmentsController controller =
+        Get.find<AppointmentsController>();
 
     Get.defaultDialog(
       title: "Rate Doctor",
-      titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+      titleStyle: const TextStyle(
+        fontWeight: FontWeight.bold,
+        color: AppColors.primaryBlue,
+      ),
       content: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Column(
@@ -720,7 +730,10 @@ class AppointmentsView extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () => Get.back(),
-                  child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -731,8 +744,13 @@ class AppointmentsView extends StatelessWidget {
                       comment: commentController.text,
                     );
                   },
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue),
-                  child: const Text("Submit", style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                  ),
+                  child: const Text(
+                    "Submit",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
@@ -768,7 +786,10 @@ class WaitlistBottomSheetView extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primaryBlue),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.primaryBlue,
+          ),
           onPressed: () => Get.back(),
         ),
       ),
@@ -810,17 +831,20 @@ class WaitlistBottomSheetView extends StatelessWidget {
               final dynamic doctorData = waitlistItem.doctor;
 
               if (doctorData != null && doctorData is Map) {
-                specialization = doctorData['specialization']?.toString() ?? 'Specialist';
+                specialization =
+                    doctorData['specialization']?.toString() ?? 'Specialist';
 
                 final userData = doctorData['user'];
                 if (userData != null && userData is Map) {
-                  doctorName = userData['full_name']?.toString() ??
+                  doctorName =
+                      userData['full_name']?.toString() ??
                       userData['fullName']?.toString() ??
                       userData['name']?.toString() ??
                       'Doctor';
                   avatarUrl = userData['avatarUrl']?.toString();
                 } else {
-                  doctorName = doctorData['full_name']?.toString() ??
+                  doctorName =
+                      doctorData['full_name']?.toString() ??
                       doctorData['fullName']?.toString() ??
                       doctorData['name']?.toString() ??
                       'Doctor';
@@ -831,7 +855,8 @@ class WaitlistBottomSheetView extends StatelessWidget {
 
               int doctorId = 0;
               if (doctorData != null && doctorData is Map) {
-                doctorId = int.tryParse(doctorData['id']?.toString() ?? '0') ?? 0;
+                doctorId =
+                    int.tryParse(doctorData['id']?.toString() ?? '0') ?? 0;
               }
 
               final int clinicId = waitlistItem.clinicId ?? 0;
@@ -861,11 +886,12 @@ class WaitlistBottomSheetView extends StatelessWidget {
                             height: 60,
                             child: avatarUrl != null && avatarUrl.isNotEmpty
                                 ? Image.network(
-                              avatarUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildDefaultAvatar(),
-                            )
+                                    avatarUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            _buildDefaultAvatar(),
+                                  )
                                 : _buildDefaultAvatar(),
                           ),
                         ),
@@ -894,7 +920,11 @@ class WaitlistBottomSheetView extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 24),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 24,
+                          ),
                           tooltip: "Leave List",
                           onPressed: () {
                             controller.leaveWaitlist(
@@ -940,11 +970,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
   Widget _buildDefaultAvatar() {
     return Container(
       color: AppColors.primaryBlue.withValues(alpha: 0.1),
-      child: const Icon(
-        Icons.person,
-        color: AppColors.primaryBlue,
-        size: 30,
-      ),
+      child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 30),
     );
   }
 }

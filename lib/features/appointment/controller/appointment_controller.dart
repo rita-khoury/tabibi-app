@@ -7,11 +7,12 @@
 // import 'package:intl/intl.dart';
 // import 'package:tabibi/core/constance/app_colors.dart';
 // import 'package:tabibi/features/auth/data/models/CreateAppointmentModel.dart';
+import 'package:tabibi/features/auth/data/models/DoctorModel.dart';
 // import 'package:tabibi/features/auth/repository/auth_repository.dart';
 //
 // import '../../../core/routes/app_routes.dart';
 // import '../../appointments/controller/appointments_controller.dart';
-import '../../appointments/view/appointments_view.dart';
+import '../../navigation/controller/navigation_controller.dart';
 //
 // class AppointmentController extends GetxController {
 //   final AuthRepository _repo = Get.find<AuthRepository>();
@@ -519,6 +520,8 @@ import '../../appointments/controller/appointments_controller.dart';
 class AppointmentController extends GetxController {
   final AuthRepository _repo = Get.find<AuthRepository>();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final Rxn<DoctorModel> bookingSummaryDoctor = Rxn<DoctorModel>();
+  final RxBool isBookingSummaryLoading = false.obs;
   final GetStorage _box = GetStorage();
 
   final RxBool isLoading = false.obs;
@@ -546,6 +549,8 @@ class AppointmentController extends GetxController {
       <Map<String, String>>[].obs;
   final Rxn<Map<String, String>> selectedTimeSlot = Rxn<Map<String, String>>();
   final RxString selectedDayStatus = ''.obs;
+  final RxString waitlistMembershipState = 'idle'.obs;
+  int _waitlistMembershipRequest = 0;
 
   final List<String> appointmentTypes = const ['Initial Visit', 'Return Visit'];
 
@@ -559,12 +564,60 @@ class AppointmentController extends GetxController {
       .toList();
 
   bool get isSelectedDayFull => selectedDayStatus.value == 'full';
+  bool get isCheckingWaitlistMembership =>
+      waitlistMembershipState.value == 'loading';
+  bool get isAlreadyOnWaitlist => waitlistMembershipState.value == 'joined';
+  bool get hasWaitlistMembershipCheckFailed =>
+      waitlistMembershipState.value == 'error';
   bool get canJoinWaitlist =>
-      isSelectedDayFull && selectedClinicId.value != null;
+      isSelectedDayFull &&
+      selectedClinicId.value != null &&
+      waitlistMembershipState.value == 'not_joined';
   bool get hasSelectedFinalTime =>
       selectedTimeSlot.value != null &&
       selectedPeriod.isNotEmpty &&
       !_unavailableSchedulePeriods.contains(selectedPeriod);
+
+  Future<void> loadBookingSummaryDoctor(int doctorId) async {
+    isBookingSummaryLoading.value = true;
+    bookingSummaryDoctor.value = null;
+    try {
+      bookingSummaryDoctor.value = await _repo.getDoctorById(doctorId);
+    } catch (_) {
+      bookingSummaryDoctor.value = null;
+    } finally {
+      isBookingSummaryLoading.value = false;
+      update();
+    }
+  }
+
+  String get bookingSummaryRequestedDate =>
+      DateFormat('yyyy-MM-dd').format(selectedDate);
+
+  String get bookingSummaryTime {
+    final slot = selectedTimeSlot.value;
+    final startTime = slot?['startTime']?.trim() ?? '';
+    final endTime = slot?['endTime']?.trim() ?? '';
+    if (startTime.isEmpty || endTime.isEmpty) {
+      return 'Time unavailable';
+    }
+    return '$startTime - $endTime';
+  }
+
+  String get bookingSummaryFee {
+    final doctor = bookingSummaryDoctor.value;
+    final fee = selectedType == 'Initial Visit'
+        ? doctor?.initialVisitFee
+        : doctor?.returnVisitFee;
+    if (fee == null || fee.trim().isEmpty) {
+      return 'Fee unavailable';
+    }
+    final amount = num.tryParse(fee);
+    if (amount == null) {
+      return '$fee S.P';
+    }
+    return '${NumberFormat('#,##0.##').format(amount)} S.P';
+  }
 
   @override
   void onInit() {
@@ -713,6 +766,7 @@ class AppointmentController extends GetxController {
     }
 
     selectedDate = normalizedDate;
+    _clearWaitlistMembershipState();
     _clearScheduleAndSlotSelection();
     isLoading.value = true;
     try {
@@ -726,6 +780,13 @@ class AppointmentController extends GetxController {
       dayStatuses[requestedDate] = status;
 
       if (status != 'available') {
+        if (isSelectedDayFull) {
+          await _loadWaitlistMembership(
+            doctorId: doctorId,
+            clinicId: clinicId,
+            requestedDate: requestedDate,
+          );
+        }
         update();
         return;
       }
@@ -754,6 +815,11 @@ class AppointmentController extends GetxController {
 
       if (normalSchedules.isEmpty) {
         selectedDayStatus.value = 'full';
+        await _loadWaitlistMembership(
+          doctorId: doctorId,
+          clinicId: clinicId,
+          requestedDate: requestedDate,
+        );
       }
     } catch (error) {
       selectedDayStatus.value = '';
@@ -902,20 +968,90 @@ class AppointmentController extends GetxController {
     }
   }
 
+  Future<void> _loadWaitlistMembership({
+    required int doctorId,
+    required int clinicId,
+    required String requestedDate,
+  }) async {
+    final request = ++_waitlistMembershipRequest;
+    waitlistMembershipState.value = 'loading';
+    try {
+      final entries = await _repo.getMyWaitlists();
+      if (!_isCurrentWaitlistTarget(
+        request: request,
+        doctorId: doctorId,
+        clinicId: clinicId,
+        requestedDate: requestedDate,
+      )) {
+        return;
+      }
+
+      final joined = entries.whereType<Map>().any((entry) {
+        final value = Map<String, dynamic>.from(entry);
+        return _asInt(value['doctorProfileId']) == doctorId &&
+            _asInt(value['clinicId']) == clinicId &&
+            _dateOnly(value['requestedDate']) == requestedDate;
+      });
+      waitlistMembershipState.value = joined ? 'joined' : 'not_joined';
+    } catch (_) {
+      if (_isCurrentWaitlistTarget(
+        request: request,
+        doctorId: doctorId,
+        clinicId: clinicId,
+        requestedDate: requestedDate,
+      )) {
+        waitlistMembershipState.value = 'error';
+      }
+    } finally {
+      if (request == _waitlistMembershipRequest) {
+        update();
+      }
+    }
+  }
+
+  bool _isCurrentWaitlistTarget({
+    required int request,
+    required int doctorId,
+    required int clinicId,
+    required String requestedDate,
+  }) {
+    return request == _waitlistMembershipRequest &&
+        isSelectedDayFull &&
+        selectedClinicId.value == clinicId &&
+        DateFormat('yyyy-MM-dd').format(selectedDate) == requestedDate &&
+        _loadedDoctorId == doctorId;
+  }
+
+  String _dateOnly(dynamic value) {
+    return value?.toString().split('T').first ?? '';
+  }
+
+  void _clearWaitlistMembershipState() {
+    _waitlistMembershipRequest++;
+    waitlistMembershipState.value = 'idle';
+  }
+
   Future<void> joinSelectedDayWaitlist(int doctorId) async {
     final clinicId = selectedClinicId.value;
     if (!canJoinWaitlist || clinicId == null) {
       return;
     }
 
+    final requestedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     isLoading.value = true;
     try {
       final joined = await _repo.joinWaitlist(
         doctorId: doctorId,
         clinicId: clinicId,
-        requestedDate: DateFormat('yyyy-MM-dd').format(selectedDate),
+        requestedDate: requestedDate,
       );
       if (joined) {
+        if (isSelectedDayFull &&
+            selectedClinicId.value == clinicId &&
+            DateFormat('yyyy-MM-dd').format(selectedDate) == requestedDate) {
+          waitlistMembershipState.value = 'joined';
+          update();
+        }
         AppAlerts.showSuccess(
           title: AppMessages.waitlistSuccessTitle,
           message: AppMessages.waitlistSuccessBody,
@@ -978,8 +1114,10 @@ class AppointmentController extends GetxController {
           ? Get.find<AppointmentsController>()
           : Get.put(AppointmentsController());
       await appointmentsController.fetchAppointments();
+      appointmentsController.selectUpcomingTab();
       await playSuccessEffect();
-      Get.offAll(() => const AppointmentsView());
+      Get.find<NavigationController>().changeTab(1);
+      Get.until((route) => route.settings.name == AppRoutes.home);
     } on DioException catch (error) {
       await _refreshAfterBookingConflict(doctorId, error);
     } catch (error) {
@@ -1024,6 +1162,7 @@ class AppointmentController extends GetxController {
 
   void _clearDateDependentSelection() {
     selectedDayStatus.value = '';
+    _clearWaitlistMembershipState();
     _clearScheduleAndSlotSelection();
   }
 

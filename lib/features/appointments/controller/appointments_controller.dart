@@ -5,7 +5,6 @@ import '../../auth/repository/auth_repository.dart';
 import '../model/appointment_model.dart';
 import '../model/waitlist_model.dart';
 
-
 import '../../../core/constance/app_messages.dart';
 import '../../../core/constance/app_alerts.dart';
 
@@ -20,6 +19,11 @@ class AppointmentsController extends GetxController {
   List<WaitlistModel> waitlistAppointments = [];
 
   bool isLoading = true;
+  final RxInt upcomingTabRevision = 0.obs;
+
+  void selectUpcomingTab() {
+    upcomingTabRevision.value++;
+  }
 
   @override
   void onInit() {
@@ -35,9 +39,12 @@ class AppointmentsController extends GetxController {
 
       List<AppointmentModel> result = await _repo.getMyAppointments();
 
-
       upcomingAppointments = result
-          .where((a) => a.status.toLowerCase() == 'pending' || a.status.toLowerCase() == 'confirmed')
+          .where(
+            (a) =>
+                a.status.toLowerCase() == 'pending' ||
+                a.status.toLowerCase() == 'confirmed',
+          )
           .toList();
 
       completedAppointments = result
@@ -45,13 +52,16 @@ class AppointmentsController extends GetxController {
           .toList();
 
       canceledAppointments = result
-          .where((a) => a.status.toLowerCase() == 'cancelled' || a.status.toLowerCase() == 'canceled')
+          .where(
+            (a) =>
+                a.status.toLowerCase() == 'cancelled' ||
+                a.status.toLowerCase() == 'canceled',
+          )
           .toList();
 
       noShowAppointments = result
           .where((a) => a.status.toLowerCase() == 'no_show')
           .toList();
-
     } catch (e) {
       debugPrint("❌ خطأ في جلب المواعيد: $e");
     } finally {
@@ -66,7 +76,6 @@ class AppointmentsController extends GetxController {
     String? comment,
   }) async {
     try {
-
       await _repo.rateDoctor(
         appointmentId: appointmentId,
         rating: rating,
@@ -80,13 +89,17 @@ class AppointmentsController extends GetxController {
 
       await fetchAppointments();
     } catch (e) {
-      String errorMessage = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+      String errorMessage = e.toString().replaceFirst(
+        RegExp(r'^Exception:\s*'),
+        '',
+      );
       AppAlerts.showError(
         title: AppMessages.errorTitle,
         message: errorMessage.isNotEmpty ? errorMessage : "فشل إرسال التقييم",
       );
     }
   }
+
   Future<void> fetchWaitlist() async {
     try {
       var result = await _repo.getMyWaitlists();
@@ -101,7 +114,6 @@ class AppointmentsController extends GetxController {
       debugPrint("❌ خطأ في جلب الويت ليست: $e");
     }
   }
-
 
   Future<void> joinWaitlist({
     required int doctorId,
@@ -123,9 +135,10 @@ class AppointmentsController extends GetxController {
         await fetchWaitlist();
       }
     } catch (e) {
-
-      String errorMessage =
-      e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+      String errorMessage = e.toString().replaceFirst(
+        RegExp(r'^Exception:\s*'),
+        '',
+      );
 
       AppAlerts.showError(
         title: AppMessages.waitlistErrorTitle,
@@ -162,7 +175,7 @@ class AppointmentsController extends GetxController {
 
   Future<void> cancelAppointmentById(int id) async {
     var appointmentToCancel = upcomingAppointments.firstWhereOrNull(
-          (a) => a.id == id,
+      (a) => a.id == id,
     );
     if (appointmentToCancel == null) return;
 

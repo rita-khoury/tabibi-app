@@ -128,16 +128,16 @@ class AppointmentView extends GetView<AppointmentController> {
                           const SizedBox(height: 12),
                           _periodRow(),
                           const SizedBox(height: 16),
-                          _sectionTitle('Available Time', Icons.schedule),
-                          const SizedBox(height: 12),
-                          _timeSlotRow(),
-                          const SizedBox(height: 25),
                           _sectionTitle(
                             "Appointment Type",
                             Icons.medical_services,
                           ),
                           const SizedBox(height: 12),
                           _typeRow(),
+                          const SizedBox(height: 25),
+                          _sectionTitle('Available Time', Icons.schedule),
+                          const SizedBox(height: 12),
+                          _timeSlotRow(),
                         ],
                       ],
                     ),
@@ -327,11 +327,62 @@ class AppointmentView extends GetView<AppointmentController> {
               style: TextStyle(color: Colors.red, fontSize: 13),
             ),
           ),
-          if (controller.canJoinWaitlist)
+          if (controller.isCheckingWaitlistMembership)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 8),
+                  Text('Checking waitlist status...'),
+                ],
+              ),
+            )
+          else if (controller.isAlreadyOnWaitlist)
+            Container(
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                border: Border.all(color: Colors.green.shade200),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 18,
+                    color: Colors.green.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Already on waitlist',
+                    style: TextStyle(
+                      color: Colors.green.shade800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (controller.canJoinWaitlist)
             TextButton.icon(
               onPressed: () => controller.joinSelectedDayWaitlist(doctorId),
               icon: const Icon(Icons.notifications_active_outlined),
               label: const Text('Join waitlist'),
+            )
+          else if (controller.hasWaitlistMembershipCheckFailed)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                'Unable to verify waitlist status. Please try again.',
+                style: TextStyle(color: Colors.orange, fontSize: 13),
+              ),
             ),
         ],
       );
@@ -527,7 +578,8 @@ class AppointmentView extends GetView<AppointmentController> {
     );
   }
 
-  void _showTermsDialog() {
+  Future<void> _showTermsDialog() async {
+    await controller.loadBookingSummaryDoctor(doctorId);
     Get.dialog(
       AlertDialog(
         backgroundColor: Colors.white,
@@ -535,10 +587,10 @@ class AppointmentView extends GetView<AppointmentController> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Column(
           children: [
-            Icon(Icons.info_outline, size: 48, color: AppColors.primaryBlue),
+            Icon(Icons.calendar_month, size: 48, color: AppColors.primaryBlue),
             SizedBox(height: 16),
             Text(
-              "Booking Terms & Violations",
+              "Booking Summary & Terms",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ],
@@ -548,22 +600,57 @@ class AppointmentView extends GetView<AppointmentController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildRichText(
-                "Checkup Fee:",
-                " 100 S.P deducted.",
-                Icons.attach_money,
+                "Appointment:",
+                ' ${controller.bookingSummaryDoctor.value?.name ?? 'Doctor details unavailable'}',
+                Icons.person_outline,
+                AppColors.primaryBlue,
+              ),
+              const SizedBox(height: 10),
+              _buildRichText(
+                "Specialization:",
+                ' ${controller.bookingSummaryDoctor.value?.specialization ?? 'Specialization unavailable'}',
+                Icons.medical_services_outlined,
+                AppColors.primaryBlue,
+              ),
+              const SizedBox(height: 10),
+              _buildRichText(
+                "Date:",
+                ' ${controller.bookingSummaryRequestedDate}',
+                Icons.calendar_today_outlined,
+                AppColors.primaryBlue,
+              ),
+              const SizedBox(height: 10),
+              _buildRichText(
+                "Time:",
+                ' ${controller.bookingSummaryTime}',
+                Icons.access_time_outlined,
+                AppColors.primaryBlue,
+              ),
+              const SizedBox(height: 10),
+              _buildRichText(
+                "Visit type:",
+                ' ${controller.selectedType}',
+                Icons.assignment_outlined,
+                AppColors.primaryBlue,
+              ),
+              const SizedBox(height: 14),
+              _buildRichText(
+                "Consultation fee:",
+                ' ${controller.bookingSummaryFee}',
+                Icons.payments_outlined,
                 Colors.green,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               _buildRichText(
                 "Cancellation:",
-                " Refund available.",
+                " Refundable according to the cancellation policy.",
                 Icons.check_circle_outline,
                 Colors.blue,
               ),
               const SizedBox(height: 12),
               _buildRichText(
-                "No-Show Policy:",
-                " Repeated no-shows may lead to patient violations restrictions based on your record.",
+                "No-show:",
+                " Repeated no-shows may result in restrictions according to your violation record.",
                 Icons.warning_amber_rounded,
                 Colors.orange,
               ),

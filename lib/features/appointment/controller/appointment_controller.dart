@@ -627,6 +627,7 @@ class AppointmentController extends GetxController {
 
   @override
   void onClose() {
+    clearReferralContext();
     _audioPlayer.dispose();
     super.onClose();
   }
@@ -635,7 +636,7 @@ class AppointmentController extends GetxController {
     _box.write('hideTerms', dontShowAgain.value);
   }
 
-  Future<void> fetchClinics(int doctorId) async {
+  Future<void> fetchClinics(int doctorId, {int? preferredClinicId}) async {
     if (_isInitializing ||
         (_loadedDoctorId == doctorId && selectedClinicId.value != null)) {
       return;
@@ -657,7 +658,17 @@ class AppointmentController extends GetxController {
         return;
       }
 
-      await selectClinic(doctorId, _asInt(clinics.first.id));
+      dynamic selectedClinic;
+      for (final clinic in clinics) {
+        if (_asInt(clinic.id) == preferredClinicId) {
+          selectedClinic = clinic;
+          break;
+        }
+      }
+      await selectClinic(
+        doctorId,
+        _asInt(selectedClinic?.id ?? clinics.first.id),
+      );
     } catch (error) {
       _clearBookingSelection();
       AppAlerts.showError(
@@ -921,6 +932,23 @@ class AppointmentController extends GetxController {
   bool isScheduleUnavailable(String period) =>
       _unavailableSchedulePeriods.contains(period);
 
+  void setReferralContext({int? referralId, String? sourceDoctorName}) {
+    final existingId = _referralId(selectedReferral.value);
+    if (existingId == referralId) return;
+    selectedReferral.value = referralId == null
+        ? null
+        : <String, dynamic>{
+            'id': referralId,
+            'fromDoctorName': sourceDoctorName,
+          };
+    update();
+  }
+
+  void clearReferralContext() {
+    if (selectedReferral.value == null) return;
+    selectedReferral.value = null;
+    update();
+  }
   void selectReferral(dynamic referral) {
     selectedReferral.value = referral;
     update();
@@ -1110,6 +1138,7 @@ class AppointmentController extends GetxController {
         return;
       }
 
+      clearReferralContext();
       final appointmentsController = Get.isRegistered<AppointmentsController>()
           ? Get.find<AppointmentsController>()
           : Get.put(AppointmentsController());

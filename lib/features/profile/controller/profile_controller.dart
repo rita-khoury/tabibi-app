@@ -112,7 +112,7 @@
 
 
 import 'package:dio/dio.dart';
-import '../../../core/constance/api_config.dart';
+import '../../../core/constance/api_constants.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/features/profile/model/profile_model.dart';
 
@@ -185,9 +185,9 @@ class ProfileController extends GetxController {
       if (extractedAvatar != null && extractedAvatar.toString().isNotEmpty) {
         String avatarPath = extractedAvatar.toString();
 
-        // إذا كان السيرفر يعيد مساراً نسبياً، يتم دمجه مع localhost للديسكتوب
+        // إذا كان السيرفر يعيد مساراً نسبياً، يتم دمجه مع الرابط الأساسي المركزي
         if (!avatarPath.startsWith('http')) {
-          String baseUrl = ApiConfig.baseUrl; // مخصص للديسكتوب
+          String baseUrl = ApiConstants.baseUrl;
 
           if (avatarPath.startsWith('/')) {
             avatarPath = avatarPath.substring(1);

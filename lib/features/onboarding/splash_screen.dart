@@ -28,6 +28,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     Future.delayed(const Duration(seconds: 4), () async {
       final box = GetStorage();
+      final prefs = await SharedPreferences.getInstance();
 
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('auth_token');
@@ -52,7 +53,10 @@ class _SplashScreenState extends State<SplashScreen> {
           opacity: opacity,
           duration: const Duration(seconds: 2),
           curve: Curves.easeInOut,
-          child: Image.asset("assets/images/logo2.png", fit: BoxFit.cover),
+          child: Image.asset(
+            "assets/images/logo2.png",
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );

@@ -227,14 +227,7 @@ class DoctorProfileView extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       onPressed: () {
-        final clinicIdValue = doc.clinic?.id;
-        final int validClinicId = int.tryParse(clinicIdValue.toString()) ?? 10;
-
-        print("سأقوم الآن بإرسال الـ ID كـ رقم صحيح: $validClinicId");
-
-        Get.to(
-          () => AppointmentView(doctorId: doc.id, clinicId: validClinicId),
-        );
+        Get.to(() => AppointmentView(doctorId: doc.id));
       },
       child: const Text(
         'Book Appointment',

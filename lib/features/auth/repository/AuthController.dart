@@ -104,7 +104,7 @@ class AuthController extends GetxController {
 
       _loggingOut = false;
 
-      Get.offAllNamed('/home');
+      Get.offAllNamed('/login');
     }
   }
 

@@ -18,7 +18,7 @@
 // class AuthRepository {
 //   final Dio _dio = Dio(
 //     BaseOptions(
-//       baseUrl: 'http://localhost:3000',
+//       baseUrl: ApiConfig.baseUrl,
 //       connectTimeout: const Duration(seconds: 15),
 //       receiveTimeout: const Duration(seconds: 15),
 //       headers: {
@@ -1138,6 +1138,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/constance/api_config.dart';
 
 import '../../appointments/model/appointment_model.dart';
 import '../data/models/CreateAppointmentModel.dart' hide AppointmentModel;
@@ -1152,7 +1153,9 @@ import '../data/models/user_model.dart';
 class AuthRepository {
   final Dio _dio = Dio(
     BaseOptions(
-      baseUrl: 'http://localhost:3000',
+
+
+      baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       headers: {
@@ -1171,7 +1174,7 @@ class AuthRepository {
         onRequest: (options, handler) async {
           final prefs = await SharedPreferences.getInstance();
           final token = prefs.getString('auth_token');
-          if (token != null) {
+          if (token != null && options.path != '/auth/refresh') {
             options.headers['Authorization'] = 'Bearer $token';
           }
           handler.next(options);
@@ -1180,7 +1183,8 @@ class AuthRepository {
         onError: (error, handler) async {
           final request = error.requestOptions;
 
-          if (request.path == '/auth/refresh' ||
+          if (request.extra['retriedAfterRefresh'] == true ||
+              request.path.startsWith('/auth/') ||
               error.type == DioExceptionType.connectionError) {
             return handler.next(error);
           }
@@ -1189,6 +1193,7 @@ class AuthRepository {
             try {
               final newToken = await _refreshWithLock();
               if (newToken != null) {
+                request.extra['retriedAfterRefresh'] = true;
                 request.headers['Authorization'] = 'Bearer $newToken';
                 final retry = await _dio.fetch(request);
                 return handler.resolve(retry);
@@ -2185,7 +2190,7 @@ class AuthRepository {
         "file": await MultipartFile.fromFile(filePath, filename: fileName),
       });
 
-      final response = await _dio.patch('/users/avatar', data: formData);
+      final response = await _dio.patch('/users/me/avatar', data: formData);
 
       // إرجاع رابط الصورة القادم من السيرفر
       if (response.data is Map) {

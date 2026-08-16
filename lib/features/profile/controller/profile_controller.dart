@@ -112,6 +112,7 @@
 
 
 import 'package:dio/dio.dart';
+import '../../../core/constance/api_config.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/features/profile/model/profile_model.dart';
 
@@ -186,7 +187,7 @@ class ProfileController extends GetxController {
 
         // إذا كان السيرفر يعيد مساراً نسبياً، يتم دمجه مع localhost للديسكتوب
         if (!avatarPath.startsWith('http')) {
-          String baseUrl = "http://10.231.129.19:3000/"; // مخصص للديسكتوب
+          String baseUrl = ApiConfig.baseUrl; // مخصص للديسكتوب
 
           if (avatarPath.startsWith('/')) {
             avatarPath = avatarPath.substring(1);

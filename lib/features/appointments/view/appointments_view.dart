@@ -209,7 +209,7 @@
 //   void _showRatingDialog(BuildContext context, AppointmentModel appointment) {
 //     double selectedRating = 5.0;
 //     final TextEditingController commentController = TextEditingController();
-//     final AppointmentsController controller = Get.find<AppointmentsController>();
+//     final AppointmentsController controller = _ensureController();
 //
 //     Get.defaultDialog(
 //       title: "تقييم الطبيب",
@@ -487,6 +487,13 @@ import '../widgets/appointment_card.dart';
 class AppointmentsView extends StatelessWidget {
   const AppointmentsView({super.key});
 
+  AppointmentsController _ensureController() {
+    if (!Get.isRegistered<AppointmentsController>()) {
+      return Get.put(AppointmentsController());
+    }
+    return Get.find<AppointmentsController>();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -586,7 +593,7 @@ class AppointmentsView extends StatelessWidget {
             ),
             Expanded(
               child: GetBuilder<AppointmentsController>(
-                init: AppointmentsController(),
+                init: _ensureController(),
                 builder: (controller) {
                   if (controller.isLoading) {
                     return const Center(child: CircularProgressIndicator());
@@ -683,7 +690,7 @@ class AppointmentsView extends StatelessWidget {
   void _showRatingDialog(BuildContext context, AppointmentModel appointment) {
     double selectedRating = 5.0;
     final TextEditingController commentController = TextEditingController();
-    final AppointmentsController controller = Get.find<AppointmentsController>();
+    final AppointmentsController controller = _ensureController();
 
     Get.defaultDialog(
       title: "Rate Doctor",

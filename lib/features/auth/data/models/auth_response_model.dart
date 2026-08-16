@@ -1,28 +1,24 @@
 import 'user_model.dart';
-import 'ProfileCompletionModel.dart';
 
 class AuthResponseModel {
   final String accessToken;
   final String refreshToken;
   final UserModel user;
-  final ProfileCompletionModel profileCompletion;
+  final bool profileCompleted;
 
   AuthResponseModel({
     required this.accessToken,
     required this.refreshToken,
     required this.user,
-    required this.profileCompletion,
+    required this.profileCompleted,
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
     return AuthResponseModel(
-      accessToken: json['accessToken'] ?? '',
-      refreshToken: json['refreshToken'] ?? '',
-      user: UserModel.fromJson(json['user'] ?? {}),
-
-      profileCompletion: ProfileCompletionModel.fromJson(
-        json['profileCompletion'] ?? {},
-      ),
+      accessToken: json['accessToken']?.toString() ?? '',
+      refreshToken: json['refreshToken']?.toString() ?? '',
+      user: UserModel.fromJson(json['user'] as Map<String, dynamic>? ?? {}),
+      profileCompleted: json['profileCompleted'] == true,
     );
   }
 }

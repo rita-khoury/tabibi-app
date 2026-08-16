@@ -71,7 +71,7 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.favorites,
-      page: () => const FavoritesDoctorsView(),
+      page: () =>  FavoritesDoctorsView(),
       binding: FavoritesDoctorsBinding(),
     ),
     GetPage(name: AppRoutes.violationsView,

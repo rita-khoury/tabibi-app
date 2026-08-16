@@ -1133,8 +1133,6 @@
 //     return e.message ?? 'تعذر الاتصال بالسيرفر';
 //   }}
 
-
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -1154,8 +1152,6 @@ import '../data/models/user_model.dart';
 class AuthRepository {
   final Dio _dio = Dio(
     BaseOptions(
-
-
       baseUrl: 'http://localhost:3000',
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
@@ -1223,6 +1219,27 @@ class AuthRepository {
     return _refreshFuture!;
   }
 
+  Future<void> rateDoctor({
+    required int appointmentId,
+    required double rating,
+    String? comment,
+  }) async {
+    try {
+      await _dio.post(
+        '/ratings',
+        data: {
+          'appointmentId': appointmentId,
+          'score': rating.toInt(),
+          if (comment != null && comment.isNotEmpty) 'comment': comment,
+        },
+      );
+    } on DioException catch (e) {
+      debugPrint(
+        "خطأ في إرسال التقييم: ${e.response?.data}",
+      );
+      throw Exception(_handleDioError(e));
+    }
+  }
   Future<String?> refreshToken() async {
     debugPrint("🔄 [Interceptor]: جاري محاولة تجديد التوكن...");
     final prefs = await SharedPreferences.getInstance();
@@ -1276,8 +1293,8 @@ class AuthRepository {
   }
 
   Future<List<Map<String, dynamic>>> getLookupsByCategory(
-      String category,
-      ) async {
+    String category,
+  ) async {
     try {
       final response = await _dio.get(
         '/lookups',
@@ -1291,9 +1308,9 @@ class AuthRepository {
   }
 
   Future<List<Map<String, dynamic>>> getDoctorScheduleForPatient(
-      int doctorId,
-      int clinicId,
-      ) async {
+    int doctorId,
+    int clinicId,
+  ) async {
     try {
       final response = await _dio.get(
         '/doctor-schedules/patient/doctor/$doctorId/clinic/$clinicId',
@@ -1381,6 +1398,7 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
+
   Future<void> resendVerification(String identifier) async {
     final isEmail = identifier.contains('@');
     try {
@@ -1393,6 +1411,7 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
+
   Future<void> resetPassword(ResetPasswordModel model) async {
     try {
       await _dio.post(
@@ -1519,19 +1538,10 @@ class AuthRepository {
   }
 
   Future<List<Map<String, dynamic>>> getDoctorAvailableDays(
-      int doctorId,
-      int clinicId,
-      String month,
-      ) async {
-    try {
-      final response = await _dio.get(
-        '/doctors/$doctorId/availability',
-        queryParameters: {'clinicId': clinicId, 'month': month},
-      );
-      return List<Map<String, dynamic>>.from(response.data);
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
+    int doctorId,
+    int clinicId,
+  ) {
+    return getAvailableDays(doctorId, clinicId);
   }
 
   Future<List<String>> getDoctorLeaves(int doctorId, String month) async {
@@ -1615,11 +1625,11 @@ class AuthRepository {
   }
 
   Future<bool> checkSlotAvailability(
-      int doctorId,
-      int clinicId,
-      String startTime,
-      String endTime,
-      ) async {
+    int doctorId,
+    int clinicId,
+    String startTime,
+    String endTime,
+  ) async {
     try {
       final response = await _dio.post(
         '/appointments/check-availability',
@@ -1649,12 +1659,12 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> getNextAvailableTime(
-      int doctorId,
-      int clinicId,
-      int scheduleId,
-      String date,
-      String type,
-      ) async {
+    int doctorId,
+    int clinicId,
+    int scheduleId,
+    String date,
+    String type,
+  ) async {
     try {
       final response = await _dio.post(
         '/appointments/next-time',
@@ -1672,23 +1682,40 @@ class AuthRepository {
     }
   }
 
-  Future<List<dynamic>> getAvailableDays(
-      int doctorId,
-      int clinicId,
-      int scheduleId,
-      String month,
-      ) async {
+  Future<List<Map<String, dynamic>>> getAvailableDays(
+    int doctorId,
+    int clinicId,
+  ) async {
     try {
       final response = await _dio.post(
         '/appointments/available-days',
-        data: {
+        data: {'doctorId': doctorId, 'clinicId': clinicId},
+      );
+      return List<Map<String, dynamic>>.from(response.data as List);
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<String> getAppointmentDayStatus({
+    required int doctorId,
+    required int clinicId,
+    required String requestedDate,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/appointments/day-status',
+        queryParameters: {
           'doctorId': doctorId,
           'clinicId': clinicId,
-          'scheduleId': scheduleId,
-          'month': month,
+          'requestedDate': requestedDate,
         },
       );
-      return response.data;
+      final data = response.data;
+      if (data is Map && data['status'] != null) {
+        return data['status'].toString();
+      }
+      throw const FormatException('Invalid appointment day-status response.');
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -1784,7 +1811,10 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
-  Future<Map<String, dynamic>> getPatientLiveQueueStatus(int appointmentId) async {
+
+  Future<Map<String, dynamic>> getPatientLiveQueueStatus(
+    int appointmentId,
+  ) async {
     try {
       final response = await _dio.get(
         '/queues/patient/live-status/$appointmentId',
@@ -1795,6 +1825,7 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
+
   Future<Map<String, dynamic>?> getActiveCheckedInAppointment() async {
     try {
       final response = await _dio.get(
@@ -1851,7 +1882,6 @@ class AuthRepository {
   // NOW()
   // );
 
-
   Future<List<dynamic>> getMyViolations() async {
     try {
       final response = await _dio.get('/patient-violations/me');
@@ -1877,9 +1907,9 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> updateRating(
-      int ratingId,
-      Map<String, dynamic> data,
-      ) async {
+    int ratingId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.patch('/ratings/$ratingId', data: data);
       return response.data;
@@ -1897,9 +1927,9 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> reportRating(
-      int ratingId,
-      Map<String, dynamic> data,
-      ) async {
+    int ratingId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final response = await _dio.post('/ratings/$ratingId/report', data: data);
       return response.data;
@@ -1909,10 +1939,10 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> getDoctorRatings(
-      int doctorId, {
-        int page = 1,
-        int limit = 10,
-      }) async {
+    int doctorId, {
+    int page = 1,
+    int limit = 10,
+  }) async {
     try {
       final response = await _dio.get(
         '/ratings/doctor/$doctorId',
@@ -1964,9 +1994,9 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> adminUpdateRatingStatus(
-      int ratingId,
-      String status,
-      ) async {
+    int ratingId,
+    String status,
+  ) async {
     try {
       final response = await _dio.patch(
         '/ratings/admin/$ratingId/status',
@@ -2126,9 +2156,9 @@ class AuthRepository {
   }
 
   Future<Map<String, dynamic>> adminResolveReport(
-      int reportId,
-      String action,
-      ) async {
+    int reportId,
+    String action,
+  ) async {
     try {
       final response = await _dio.patch(
         '/ratings/admin/reports/$reportId/resolve',
@@ -2147,6 +2177,7 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
+
   Future<String?> uploadAvatar(String filePath) async {
     try {
       String fileName = filePath.split('/').last;
@@ -2166,7 +2197,6 @@ class AuthRepository {
       throw Exception(_handleDioError(e));
     }
   }
-
 
   Future<void> removeFavorite(int doctorId) async {
     try {

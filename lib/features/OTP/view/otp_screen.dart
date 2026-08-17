@@ -361,15 +361,25 @@ class OtpScreen extends GetView<OtpController> {
                       ),
                       const SizedBox(height: 20),
                       Obx(
-                            () => TextButton(
-                          onPressed: controller.isLoading.value
-                              ? null
-                              : () => controller.resendOtp(),
-                          child: const Text(
-                            "Didn't receive the code? Resend",
-                            style: TextStyle(color: AppColors.primaryBlue),
-                          ),
-                        ),
+                        () {
+                          final isCoolingDown =
+                              controller.resendCountdownSeconds.value > 0;
+                          return TextButton(
+                            onPressed: controller.canResend
+                                ? controller.resendOtp
+                                : null,
+                            child: Text(
+                              isCoolingDown
+                                  ? 'Resend code in ${controller.resendCountdownLabel}'
+                                  : 'Didn''t receive the code? Resend',
+                              style: TextStyle(
+                                color: isCoolingDown
+                                    ? AppColors.gray
+                                    : AppColors.primaryBlue,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

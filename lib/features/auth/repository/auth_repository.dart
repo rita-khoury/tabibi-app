@@ -15,7 +15,8 @@
 // import '../data/models/notifications_model.dart';
 // import '../data/models/user_model.dart';
 //
-// class AuthRepository {
+// class RegistrationConflictException implements Exception {
+
 //   final Dio _dio = Dio(
 //     BaseOptions(
 //       baseUrl: ApiConfig.baseUrl,
@@ -1150,6 +1151,10 @@ import '../data/models/auth_response_model.dart';
 import '../data/models/notifications_model.dart';
 import '../data/models/user_model.dart';
 
+class RegistrationConflictException implements Exception {
+  const RegistrationConflictException();
+}
+
 class AuthRepository {
   final Dio _dio = Dio(
     BaseOptions(
@@ -1368,6 +1373,9 @@ class AuthRepository {
           response.data['user'] ?? response.data['data'] ?? response.data;
       return UserModel.fromJson(userJson);
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        throw const RegistrationConflictException();
+      }
       throw Exception(_handleDioError(e));
     }
   }

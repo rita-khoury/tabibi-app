@@ -967,7 +967,8 @@ import 'package:dio/dio.dart';
 import 'package:file_selector/file_selector.dart';
 
 import '../../auth/repository/auth_repository.dart';
-import '../model/medical_record_model.dart' show MedicalProfileModel;
+import '../model/medical_record_model.dart'
+    show MedicalProfileLookupOption, MedicalProfileModel;
 // استدعي الموديل الجديد هنا إن لزم الأمر
 // import '../models/medical_profile_model.dart';
 
@@ -984,17 +985,24 @@ class MedicalRecordController extends GetxController
 
   // نموذج الملف الطبي الشامل
   Rxn<MedicalProfileModel> medicalProfile = Rxn<MedicalProfileModel>();
+  final isProfileLookupsLoading = false.obs;
+  final isProfileSaving = false.obs;
+  final lastProfileSaveError = RxnString();
 
-  // الحقول المعروضة في الواجهة
-  var bloodType = "غير محدد".obs;
-  var height = "غير محدد".obs;
-  var weight = "غير محدد".obs;
-  var chronicDiseases = "لا يوجد".obs;
-  var allergies = "لا يوجد".obs;
-  var surgeries = "لا يوجد".obs;
-  var pregnancyStatus = "غير محدد".obs;
-  var disabilityInfo = "لا يوجد".obs;
-  var currentSymptoms = "لا يوجد".obs;
+  static const bloodTypeLookupCategory = 'BLOOD_TYPE';
+  static const disabilityTypesLookupCategory = 'DISABILITY_TYPES';
+  static const allergyLookupCategory = 'ALLERGY';
+  static const chronicConditionLookupCategory = 'CHRONIC_CONDITION';
+  static const commonSurgeriesLookupCategory = 'COMMON_SURGERIES';
+  static const lifestyleHabitsLookupCategory = 'LIFESTYLE_HABITS';
+
+  final RxMap<String, List<MedicalProfileLookupOption>> _medicalProfileLookups =
+      <String, List<MedicalProfileLookupOption>>{}.obs;
+
+  List<MedicalProfileLookupOption> lookupOptionsFor(String category) {
+    return _medicalProfileLookups[category] ??
+        const <MedicalProfileLookupOption>[];
+  }
 
   // ==================== Medical History ====================
 
@@ -1023,10 +1031,7 @@ class MedicalRecordController extends GetxController
   void onInit() {
     super.onInit();
 
-    tabController = TabController(
-      length: 3,
-      vsync: this,
-    );
+    tabController = TabController(length: 3, vsync: this);
 
     historyScrollController.addListener(() {
       if (historyScrollController.position.pixels >=
@@ -1046,70 +1051,95 @@ class MedicalRecordController extends GetxController
   Future<void> fetchMedicalProfile() async {
     try {
       isProfileLoading.value = true;
-
       final data = await _authRepo.getMedicalProfileDetails();
-
-      if (data != null && data is Map<String, dynamic>) {
-        // ربط البيانات مع الموديل الشامل الجديد
+      if (data is Map<String, dynamic>) {
         medicalProfile.value = MedicalProfileModel.fromJson(data);
-
-        bloodType.value = medicalProfile.value?.bloodType ?? "غير محدد";
-        height.value = data['height']?.toString() ?? "غير محدد";
-        weight.value = data['weight']?.toString() ?? "غير محدد";
-
-        pregnancyStatus.value = medicalProfile.value?.pregnancyStatus ?? "غير محدد";
-        disabilityInfo.value = medicalProfile.value?.disabilityInfo ?? "لا يوجد";
-        currentSymptoms.value = medicalProfile.value?.currentSymptoms ?? "لا يوجد";
-
-        // معالجة القوائم بدقة وتحويلها لنصوص مفصولة بفواصل
-        chronicDiseases.value = _parseListToString(
-          medicalProfile.value?.chronicConditions,
-          "لا يوجد",
-        );
-
-        allergies.value = _parseListToString(
-          medicalProfile.value?.allergies,
-          "لا يوجد",
-        );
-
-        surgeries.value = _parseListToString(
-          medicalProfile.value?.pastSurgeries,
-          "لا يوجد",
-        );
+        try {
+          final completion = await _authRepo
+              .getMedicalProfileCompletionStatus();
+          final rawPercentage = completion['completionPercentage'];
+          final percentage = rawPercentage is num
+              ? rawPercentage.toDouble()
+              : 0.0;
+          completionRate.value = percentage > 1.0
+              ? percentage / 100.0
+              : percentage;
+        } catch (_) {
+          completionRate.value = 0.0;
+        }
       } else {
         medicalProfile.value = null;
-        _resetProfileValues();
+        completionRate.value = 0.0;
       }
-
-      final completion = await _authRepo.getProfileCompletionPercentage();
-      completionRate.value = completion;
     } catch (e) {
-      _showErrorSnackbar(
-        "فشل جلب الملف الطبي",
-        e.toString(),
-      );
+      medicalProfile.value = null;
+      completionRate.value = 0.0;
+      _showErrorSnackbar('Failed to load medical profile', e.toString());
     } finally {
       isProfileLoading.value = false;
     }
   }
 
-  void _resetProfileValues() {
-    bloodType.value = "غير محدد";
-    height.value = "غير محدد";
-    weight.value = "غير محدد";
-    chronicDiseases.value = "لا يوجد";
-    allergies.value = "لا يوجد";
-    surgeries.value = "لا يوجد";
-    pregnancyStatus.value = "غير محدد";
-    disabilityInfo.value = "لا يوجد";
-    currentSymptoms.value = "لا يوجد";
+  Future<void> loadMedicalProfileLookups() async {
+    if (isProfileLookupsLoading.value) return;
+    const categories = <String>[
+      bloodTypeLookupCategory,
+      disabilityTypesLookupCategory,
+      allergyLookupCategory,
+      chronicConditionLookupCategory,
+      commonSurgeriesLookupCategory,
+      lifestyleHabitsLookupCategory,
+    ];
+
+    try {
+      isProfileLookupsLoading.value = true;
+      final loaded = await Future.wait(
+        categories.map((category) => _authRepo.getLookupsByCategory(category)),
+      );
+      final options = <String, List<MedicalProfileLookupOption>>{};
+      for (var index = 0; index < categories.length; index++) {
+        options[categories[index]] = loaded[index]
+            .map(MedicalProfileLookupOption.fromJson)
+            .where((option) => option.value.isNotEmpty)
+            .toList();
+      }
+      _medicalProfileLookups.assignAll(options);
+    } catch (e) {
+      _medicalProfileLookups.clear();
+      _showErrorSnackbar(
+        'Failed to load medical profile options',
+        e.toString(),
+      );
+    } finally {
+      isProfileLookupsLoading.value = false;
+    }
   }
 
-  String _parseListToString(List<dynamic>? list, String defaultValue) {
-    if (list == null || list.isEmpty) {
-      return defaultValue;
+  Future<bool> saveMedicalProfile(Map<String, dynamic> profileData) async {
+    final wasCreating = medicalProfile.value == null;
+    lastProfileSaveError.value = null;
+
+    try {
+      isProfileSaving.value = true;
+      if (wasCreating) {
+        await _authRepo.createMedicalProfileMe(profileData);
+      } else {
+        await _authRepo.updateMedicalProfileMe(profileData);
+      }
+
+      await fetchMedicalProfile();
+      return true;
+    } catch (e) {
+      lastProfileSaveError.value = _profileSaveErrorMessage(e);
+      return false;
+    } finally {
+      isProfileSaving.value = false;
     }
-    return list.map((e) => e.toString()).join(', ');
+  }
+
+  String _profileSaveErrorMessage(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '').trim();
+    return message.isEmpty ? 'Unable to save medical profile.' : message;
   }
 
   // ==================== Medical History ====================
@@ -1134,10 +1164,7 @@ class MedicalRecordController extends GetxController
     } catch (e) {
       medicalHistories.clear();
       hasMoreHistories.value = false;
-      _showErrorSnackbar(
-        "فشل جلب السجل المرضي",
-        e.toString(),
-      );
+      _showErrorSnackbar("فشل جلب السجل المرضي", e.toString());
     } finally {
       isHistoryLoading.value = false;
     }
@@ -1167,10 +1194,7 @@ class MedicalRecordController extends GetxController
       }
     } catch (e) {
       currentPage--;
-      _showErrorSnackbar(
-        "فشل تحميل المزيد من الزيارات",
-        e.toString(),
-      );
+      _showErrorSnackbar("فشل تحميل المزيد من الزيارات", e.toString());
     } finally {
       isHistoryLoading.value = false;
     }
@@ -1236,7 +1260,7 @@ class MedicalRecordController extends GetxController
     try {
       await _authRepo.deleteMedicalAttachment(attachmentId);
       attachments.removeWhere(
-            (item) => int.tryParse(item['id']?.toString() ?? '0') == attachmentId,
+        (item) => int.tryParse(item['id']?.toString() ?? '0') == attachmentId,
       );
 
       Get.snackbar(
@@ -1271,24 +1295,7 @@ class MedicalRecordController extends GetxController
   // ==================== Update Profile ====================
 
   Future<void> updateProfileData(Map<String, dynamic> updatedData) async {
-    try {
-      isProfileLoading.value = true;
-      await _authRepo.updateMedicalProfileMe(updatedData);
-
-      await fetchMedicalProfile();
-
-      Get.snackbar(
-        "نجاح",
-        "تم تحديث الملف الطبي بنجاح",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.withValues(alpha: 0.1),
-        colorText: Colors.green,
-      );
-    } catch (e) {
-      _showErrorSnackbar("فشل التحديث", e.toString());
-    } finally {
-      isProfileLoading.value = false;
-    }
+    await saveMedicalProfile(updatedData);
   }
 
   // ==================== Error Snackbar ====================

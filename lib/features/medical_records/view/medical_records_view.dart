@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
 import 'package:tabibi/features/medicines/view/medicines_view.dart';
+import 'package:tabibi/features/profile_updates/view/profile_updates_view.dart';
 import 'package:tabibi/features/medical_records/controller/medical_records_controller.dart';
 import 'package:tabibi/features/medical_records/view/medical_profile_editor_view.dart';
 import 'package:tabibi/features/medical_records/widgets/medical_attachments_tab.dart';
@@ -181,11 +182,7 @@ class _MedicalRecordDestinationPage extends StatelessWidget {
       return const MedicinesView();
     }
     if (section == _MedicalRecordSection.profileUpdates) {
-      return const _MedicalRecordPlaceholderPage(
-        title: 'Profile Updates',
-        icon: Icons.article_outlined,
-        message: 'Changes to your medical profile will be available here.',
-      );
+      return const ProfileUpdatesView();
     }
 
     final controller = Get.isRegistered<MedicalRecordController>()
@@ -288,65 +285,5 @@ class _ProfileActionButton extends StatelessWidget {
         ),
       );
     });
-  }
-}
-
-class _MedicalRecordPlaceholderPage extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final String message;
-
-  const _MedicalRecordPlaceholderPage({
-    required this.title,
-    required this.icon,
-    required this.message,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.lightGray,
-      appBar: AppBar(
-        title: Text(title),
-        centerTitle: true,
-        backgroundColor: AppColors.primaryBlue,
-        foregroundColor: AppColors.white,
-        elevation: 0,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 86,
-                height: 86,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: AppColors.primaryBlue, size: 42),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.gray, fontSize: 14),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }

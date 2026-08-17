@@ -1142,6 +1142,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constance/api_constants.dart';
 
 import '../../appointments/model/appointment_model.dart';
+import '../../profile_updates/model/medical_profile_update_model.dart';
 import '../../medicines/model/prescribed_medicine_model.dart';
 import '../data/models/CreateAppointmentModel.dart';
 import '../data/models/DoctorModel.dart';
@@ -2188,6 +2189,24 @@ class AuthRepository {
         );
       }
       throw Exception('Unable to update medicine status.');
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<List<MedicalProfileUpdateModel>> getMedicalProfileUpdates() async {
+    try {
+      final response = await _dio.get('/medical-profile-logs/me');
+      final raw = response.data;
+      if (raw is! List) return <MedicalProfileUpdateModel>[];
+      return raw
+          .whereType<Map>()
+          .map(
+            (item) => MedicalProfileUpdateModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList();
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }

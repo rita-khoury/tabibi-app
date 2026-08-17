@@ -6,7 +6,7 @@ import 'package:tabibi/features/medical_records/widgets/medical_attachments_tab.
 import 'package:tabibi/features/medical_records/widgets/medical_history_tab.dart';
 import 'package:tabibi/features/medical_records/widgets/medical_profile_tab.dart';
 
-import '../../complete_profile/view/complete_profile_view.dart';
+import '../view/medical_profile_editor_view.dart';
 
 class MedicalRecordView extends GetView<MedicalRecordController> {
   const MedicalRecordView({super.key});
@@ -70,9 +70,19 @@ class MedicalRecordView extends GetView<MedicalRecordController> {
 
           return FloatingActionButton.extended(
             backgroundColor: hasProfile ? AppColors.primaryBlue : Colors.orange,
-            onPressed: () {
-              // فتح شاشة إنشاء أو تعديل السجل الطبي
-              Get.to(() => CompleteProfileView());
+            onPressed: () async {
+              final saved = await Get.to<bool>(
+                () => const MedicalProfileEditorView(),
+              );
+              if (saved == true && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Medical profile saved successfully'),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             icon: Icon(
               hasProfile ? Icons.edit : Icons.add_circle_outline,
@@ -86,10 +96,7 @@ class MedicalRecordView extends GetView<MedicalRecordController> {
               ),
             ),
           );
-        }
-
-
-        else if (currentTabIndex.value == 2) {
+        } else if (currentTabIndex.value == 2) {
           return FloatingActionButton(
             backgroundColor: AppColors.primaryBlue,
             onPressed: () => controller.uploadAttachment(),

@@ -928,7 +928,7 @@ String _appointmentDateTime(AppointmentModel appointment) {
   final end = _shortTime(appointment.endTime);
   final time = [start, end].where((value) => value.isNotEmpty).join(' - ');
   if (date.isEmpty) return time.isEmpty ? 'Visit details unavailable' : time;
-  return time.isEmpty ? date : '\$date · \$time';
+  return time.isEmpty ? date : '$date · $time';
 }
 
 String _shortTime(String value) {

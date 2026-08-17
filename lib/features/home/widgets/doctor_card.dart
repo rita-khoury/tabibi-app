@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../features/auth/data/models/DoctorModel.dart';
 import '../../doctor_profile/view/doctor_profile_view.dart';
+import '../../../core/widgets/app_network_image.dart';
 
 class DoctorCard extends StatelessWidget {
   final DoctorModel doc;
@@ -34,27 +35,13 @@ class DoctorCard extends StatelessWidget {
             child: Row(
               children: [
 
-                ClipRRect(
+                AppNetworkImage(
+                  imageUrl: doc.image,
+                  width: 65,
+                  height: 65,
                   borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: 65,
-                    height: 65,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue.shade50, Colors.blue.shade200],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: (doc.image.isEmpty)
-                        ? const Icon(Icons.person_rounded, size: 30, color: Colors.white)
-                        : Image.network(
-                      doc.image,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Icon(Icons.person_rounded, size: 30, color: Colors.white)),
-                    ),
-                  ),
+                  fallbackIcon: Icons.medical_services_rounded,
+                  fallbackColor: Colors.blue.shade50,
                 ),
                 const SizedBox(width: 14),
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tabibi/core/constance/app_colors.dart';
+import '/core/constance/api_constants.dart';
+import '/core/constance/app_colors.dart';
+import '/core/widgets/app_network_image.dart';
 import '../../appointment/view/appointment_view.dart';
 import '../binding/doctor_ratings_binding.dart';
 import '../controller/doctor_profile_controller.dart';
@@ -61,21 +63,22 @@ class DoctorProfileView extends StatelessWidget {
     );
   }
 
-  Widget _buildImageStack(String url) => Stack(
+  // --- تم تصحيح بناء الصورة هنا ---
+  Widget _buildImageStack(String? url) => Stack(
     children: [
-      Container(
+      AppNetworkImage(
+        imageUrl: url,
         height: 250,
         width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
-        ),
+        fit: BoxFit.cover,
+        borderRadius: BorderRadius.circular(24),
+        fallbackIcon: Icons.person,
       ),
       Positioned(
         top: 15,
         left: 15,
         child: Obx(
-          () => Material(
+              () => Material(
             color: Colors.transparent,
             child: IconButton(
               onPressed: controller.isFavoriteLoading.value
@@ -127,7 +130,7 @@ class DoctorProfileView extends StatelessWidget {
       InkWell(
         onTap: () {
           Get.to(
-            () => const DoctorRatingsView(),
+                () => const DoctorRatingsView(),
             binding: DoctorRatingsBinding(),
             arguments: doc.id,
           );
@@ -163,13 +166,29 @@ class DoctorProfileView extends StatelessWidget {
     ],
   );
 
-  Widget _buildStatsRow(DoctorModel doc) => Row(
-    children: [
-      _statItem('Exp', '${doc.experienceYears}y'),
-      _statItem('Clinics', doc.clinic != null ? '1' : '0'),
-      _statItem('Fee', '\$${doc.initialVisitFee ?? '0'}'),
-    ],
-  );
+  // --- تم تصحيح احتساب عدد العيادات هنا ---
+  Widget _buildStatsRow(DoctorModel doc) {
+    String clinicsCount = '0';
+    try {
+      // فحص ديناميكي حسب الحقول المتاحة في موديل الطبيب
+      final dynamic clinicsList = (doc as dynamic).doctorClinics ?? (doc as dynamic).clinics;
+      if (clinicsList != null && clinicsList is List) {
+        clinicsCount = clinicsList.length.toString();
+      } else if (doc.clinic != null) {
+        clinicsCount = '1';
+      }
+    } catch (_) {
+      clinicsCount = doc.clinic != null ? '1' : '0';
+    }
+
+    return Row(
+      children: [
+        _statItem('Exp', '${doc.experienceYears}y'),
+        _statItem('Clinics', clinicsCount),
+        _statItem('Fee', '\$${doc.initialVisitFee ?? '0'}'),
+      ],
+    );
+  }
 
   Widget _statItem(String title, String val) => Expanded(
     child: Container(

@@ -113,9 +113,11 @@ class DoctorModel {
       return DoctorModel(
         id: parsedId,
         name: _parseDoctorName(json['user']),
-        image:
-            json['user']?['avatarUrl']?.toString() ??
-            'https://via.placeholder.com/150',
+        image: json['user']?['avatarUrl']?.toString() ??
+            json['user']?['avatar']?.toString() ??
+            json['avatarUrl']?.toString() ??
+            json['avatar']?.toString() ??
+            '',
         specialization: json['specialization']?.toString() ?? 'General',
         subSpecialization: json['subSpecialization']?.toString(),
         bio: json['bio']?.toString(),

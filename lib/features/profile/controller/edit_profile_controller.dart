@@ -243,6 +243,7 @@
 // }
 
 
+import '../../../core/constance/api_constants.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -306,7 +307,7 @@ class EditProfileController extends GetxController {
         emailController.text = userProfile.email;
         phoneController.text = userProfile.phone ?? "";
         addressController.text = userProfile.address;
-        currentAvatarUrl.value = userProfile.avatarUrl ?? "";
+        currentAvatarUrl.value = ApiConstants.getFullImageUrl(userProfile.avatarUrl);
 
         if (userProfile.patientProfile != null) {
           final patient = userProfile.patientProfile!;
@@ -347,6 +348,17 @@ class EditProfileController extends GetxController {
         Get.back();
 
         if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseBody = response.data;
+        final avatarPayload = responseBody is Map && responseBody['data'] is Map
+            ? responseBody['data'] as Map
+            : responseBody;
+        final uploadedAvatar = avatarPayload is Map
+            ? (avatarPayload['avatarUrl'] ?? avatarPayload['avatar'] ?? avatarPayload['image'])
+            : null;
+        if (uploadedAvatar != null) {
+          currentAvatarUrl.value =
+              ApiConstants.getFullImageUrl(uploadedAvatar.toString());
+        }
           if (Get.isRegistered<ProfileController>()) {
             // تحديث بيانات البروفايل تلقائياً بعد تغيير الصورة
             String userId = Get.find<ProfileController>().profile.value?.id.toString() ?? "1";

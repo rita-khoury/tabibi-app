@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_network_image.dart';
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 // import 'package:tabibi/core/constance/app_colors.dart';
@@ -420,30 +421,15 @@ class EditProfileView extends GetView<EditProfileController> {
                 children: [
                   Stack(
                     children: [
-                      Obx(() {
-                        final localFile = controller.profileImage.value;
-                        final remoteUrl = controller.currentAvatarUrl.value;
-
-                        ImageProvider? imageProvider;
-                        if (localFile != null) {
-                          imageProvider = FileImage(localFile);
-                        } else if (remoteUrl.isNotEmpty) {
-                          imageProvider = NetworkImage(remoteUrl);
-                        }
-
-                        return CircleAvatar(
-                          radius: 60,
-                          backgroundColor: AppColors.lightGray,
-                          backgroundImage: imageProvider,
-                          child: imageProvider == null
-                              ? const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: AppColors.primaryBlue,
-                          )
-                              : null,
-                        );
-                      }),
+                  Obx(
+                    () => AppAvatar(
+                      imageUrl: controller.currentAvatarUrl.value,
+                      localFile: controller.profileImage.value,
+                      radius: 60,
+                      fallbackIcon: Icons.person,
+                      backgroundColor: AppColors.lightGray,
+                    ),
+                  ),
                       Positioned(
                         bottom: 0,
                         right: 4,

@@ -1,6 +1,6 @@
 // import 'package:dio/dio.dart' as dio;
 // import 'package:get/get.dart';
-// import '../../OTP/controller/otp_controller.dart';
+// import '../../OTP/binding/otp_binding.dart';
 // import '../../auth/repository/auth_repository.dart';
 // import '../../OTP/view/otp_screen.dart';
 //
@@ -106,7 +106,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/constance/api_constants.dart';
-import '../../OTP/controller/otp_controller.dart';
+import '../../OTP/binding/otp_binding.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../OTP/view/otp_screen.dart';
 
@@ -188,14 +188,17 @@ class RegisterController extends GetxController {
       } else {
         mapData["phone"] = _formatPhone(input);
       }
-
-      print("Sending Register Data: $mapData");
       // عاد كما كان تماماً يقبل Map بدون أي أخطاء
       await _authRepository.registerUser(mapData);
 
       Get.to(
-            () => const OtpScreen(),
-        arguments: {'identifier': emailOrPhone.value.trim()},
+        () => const OtpScreen(),
+        binding: OtpBinding(),
+        arguments: {
+          'identifier': input.contains('@') ? input : _formatPhone(input),
+          'purpose': 'register',
+          'password': password.value.trim(),
+        },
       );
     } on dio.DioException catch (e) {
       String errorMessage = "حدث خطأ غير معروف";
@@ -210,7 +213,6 @@ class RegisterController extends GetxController {
       }
       Get.snackbar("خطأ", errorMessage);
     } catch (e) {
-      print("UNKNOWN ERROR => $e");
       Get.snackbar("خطأ", "حدث خطأ داخلي");
     } finally {
       isLoading.value = false;

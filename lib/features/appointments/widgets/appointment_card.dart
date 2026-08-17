@@ -292,12 +292,14 @@ class AppointmentCard extends StatelessWidget {
   final AppointmentModel appointment;
   final VoidCallback? onCancel;
   final VoidCallback? onRate;
+  final bool showCancellationAction;
 
   const AppointmentCard({
     super.key,
     required this.appointment,
     this.onCancel,
     this.onRate,
+    this.showCancellationAction = true,
   });
 
   @override
@@ -464,7 +466,8 @@ class AppointmentCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (appointment.status.toLowerCase() == 'confirmed') ...[
+                if (showCancellationAction &&
+                    appointment.status.toLowerCase() == 'confirmed') ...[
                   const SizedBox(height: 14),
                   SizedBox(
                     width: double.infinity,

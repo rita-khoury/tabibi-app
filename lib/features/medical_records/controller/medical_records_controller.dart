@@ -970,6 +970,8 @@ import 'package:file_selector/file_selector.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../appointments/model/appointment_model.dart';
+import '../../auth/data/models/DoctorModel.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../model/medical_record_model.dart'
     show MedicalProfileLookupOption, MedicalProfileModel;
@@ -1012,6 +1014,11 @@ class MedicalRecordController extends GetxController
 
   var isHistoryLoading = false.obs;
   var medicalHistories = [].obs;
+  final RxMap<int, DoctorModel> _visitDoctors = <int, DoctorModel>{}.obs;
+  final RxMap<int, AppointmentModel> _visitAppointments =
+      <int, AppointmentModel>{}.obs;
+  final Map<int, Future<DoctorModel?>> _doctorRequests = {};
+  final Map<int, Future<AppointmentModel?>> _appointmentRequests = {};
 
   var currentPage = 1;
   final int limit = 20;
@@ -1150,28 +1157,119 @@ class MedicalRecordController extends GetxController
   }
 
   // ==================== Medical History ====================
+  DoctorModel? doctorForVisit(int doctorProfileId) =>
+      _visitDoctors[doctorProfileId];
+
+  AppointmentModel? appointmentForVisit(int appointmentId) =>
+      _visitAppointments[appointmentId];
+
+  Future<DoctorModel?> getDoctorForVisit(int doctorProfileId) {
+    if (doctorProfileId <= 0) return Future.value(null);
+    final cached = _visitDoctors[doctorProfileId];
+    if (cached != null) return Future.value(cached);
+
+    final pending = _doctorRequests[doctorProfileId];
+    if (pending != null) return pending;
+
+    late final Future<DoctorModel?> request;
+    request = _loadDoctorForVisit(doctorProfileId).whenComplete(() {
+      _doctorRequests.remove(doctorProfileId);
+    });
+    _doctorRequests[doctorProfileId] = request;
+    return request;
+  }
+
+  Future<DoctorModel?> _loadDoctorForVisit(int doctorProfileId) async {
+    try {
+      final doctor = await _authRepo.getDoctorById(doctorProfileId);
+      if (doctor != null) {
+        _visitDoctors[doctorProfileId] = doctor;
+      }
+      return doctor;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<AppointmentModel?> getAppointmentForVisit(int appointmentId) {
+    if (appointmentId <= 0) return Future.value(null);
+    final cached = _visitAppointments[appointmentId];
+    if (cached != null) return Future.value(cached);
+
+    final pending = _appointmentRequests[appointmentId];
+    if (pending != null) return pending;
+
+    late final Future<AppointmentModel?> request;
+    request = _loadAppointmentForVisit(appointmentId).whenComplete(() {
+      _appointmentRequests.remove(appointmentId);
+    });
+    _appointmentRequests[appointmentId] = request;
+    return request;
+  }
+
+  Future<AppointmentModel?> _loadAppointmentForVisit(int appointmentId) async {
+    try {
+      final data = await _authRepo.getAppointmentById(appointmentId);
+      if (data == null) return null;
+      final appointment = AppointmentModel.fromJson(data);
+      _visitAppointments[appointmentId] = appointment;
+      return appointment;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _preloadVisitReferences(Iterable<dynamic> histories) async {
+    final doctorIds = <int>{};
+    final appointmentIds = <int>{};
+
+    for (final history in histories) {
+      if (history is! Map) continue;
+      final doctorId = int.tryParse(
+        history['doctorProfileId']?.toString() ?? '',
+      );
+      final appointmentId = int.tryParse(
+        history['appointmentId']?.toString() ?? '',
+      );
+      if (doctorId != null && doctorId > 0) doctorIds.add(doctorId);
+      if (appointmentId != null && appointmentId > 0) {
+        appointmentIds.add(appointmentId);
+      }
+    }
+
+    await Future.wait<void>([
+      ...doctorIds.map((id) async {
+        await getDoctorForVisit(id);
+      }),
+      ...appointmentIds.map((id) async {
+        await getAppointmentForVisit(id);
+      }),
+    ]);
+  }
 
   Future<void> fetchMedicalHistories() async {
     try {
       isHistoryLoading.value = true;
-
       currentPage = 1;
       hasMoreHistories.value = true;
+      _visitDoctors.clear();
+      _visitAppointments.clear();
+      _doctorRequests.clear();
+      _appointmentRequests.clear();
 
       final data = await _authRepo.getMedicalHistories(
         page: currentPage,
         limit: limit,
       );
-
       medicalHistories.assignAll(data);
-
       if (data.length < limit) {
         hasMoreHistories.value = false;
       }
+      await _preloadVisitReferences(data);
     } catch (e) {
       medicalHistories.clear();
       hasMoreHistories.value = false;
-      _showErrorSnackbar("فشل جلب السجل المرضي", e.toString());
+      _showErrorSnackbar('Failed to load medical visits', e.toString());
     } finally {
       isHistoryLoading.value = false;
     }
@@ -1181,16 +1279,13 @@ class MedicalRecordController extends GetxController
     if (!hasMoreHistories.value || isHistoryLoading.value) {
       return;
     }
-
     try {
       isHistoryLoading.value = true;
       currentPage++;
-
       final data = await _authRepo.getMedicalHistories(
         page: currentPage,
         limit: limit,
       );
-
       if (data.isEmpty) {
         hasMoreHistories.value = false;
       } else {
@@ -1198,15 +1293,15 @@ class MedicalRecordController extends GetxController
         if (data.length < limit) {
           hasMoreHistories.value = false;
         }
+        await _preloadVisitReferences(data);
       }
     } catch (e) {
       currentPage--;
-      _showErrorSnackbar("فشل تحميل المزيد من الزيارات", e.toString());
+      _showErrorSnackbar('Failed to load more visits', e.toString());
     } finally {
       isHistoryLoading.value = false;
     }
   }
-
   // ==================== Attachments ====================
 
   Future<void> fetchAttachments() async {

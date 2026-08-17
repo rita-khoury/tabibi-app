@@ -1467,6 +1467,19 @@ class AuthRepository {
     }
   }
 
+  Future<Map<String, dynamic>?> getAppointmentById(int appointmentId) async {
+    try {
+      final response = await _dio.get('/appointments/$appointmentId');
+      if (response.data is Map) {
+        return Map<String, dynamic>.from(response.data as Map);
+      }
+      return null;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      throw Exception(_handleDioError(e));
+    }
+  }
+
   Future<void> cancelAppointment(int appointmentId, String reason) async {
     try {
       await _dio.patch(
@@ -2305,7 +2318,11 @@ class AuthRepository {
       for (final key in <String>['message', 'error']) {
         final value = data[key];
         if (value is List) {
-          final message = value.whereType<Object>().map((item) => item.toString()).where((item) => item.trim().isNotEmpty).join('\n');
+          final message = value
+              .whereType<Object>()
+              .map((item) => item.toString())
+              .where((item) => item.trim().isNotEmpty)
+              .join('\n');
           if (message.isNotEmpty) return message;
         } else if (value != null && value.toString().trim().isNotEmpty) {
           return value.toString();

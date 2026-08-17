@@ -1142,6 +1142,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constance/api_constants.dart';
 
 import '../../appointments/model/appointment_model.dart';
+import '../../medicines/model/prescribed_medicine_model.dart';
 import '../data/models/CreateAppointmentModel.dart';
 import '../data/models/DoctorModel.dart';
 import '../data/models/ProfileCompletionModel.dart';
@@ -2120,6 +2121,73 @@ class AuthRepository {
         return percentage > 1.0 ? percentage / 100.0 : percentage;
       }
       return 0.0;
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<Map<String, List<PrescribedMedicineModel>>>
+  getMyMedicinesGrouped() async {
+    try {
+      final response = await _dio.get('/prescribed-medicines/me');
+      final raw = response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : <String, dynamic>{};
+      List<PrescribedMedicineModel> parseList(dynamic value) {
+        if (value is! List) return <PrescribedMedicineModel>[];
+        return value
+            .whereType<Map>()
+            .map(
+              (item) => PrescribedMedicineModel.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
+            .toList();
+      }
+
+      return {
+        'profileMedicines': parseList(raw['profileMedicines']),
+        'historyMedicines': parseList(raw['historyMedicines']),
+      };
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<PrescribedMedicineModel> createMyProfileMedicineForPatient(
+    Map<String, dynamic> payload,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/prescribed-medicines/profile/me',
+        data: payload,
+      );
+      if (response.data is Map) {
+        return PrescribedMedicineModel.fromJson(
+          Map<String, dynamic>.from(response.data as Map),
+        );
+      }
+      throw Exception('Unable to create medicine.');
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<PrescribedMedicineModel> updatePatientMedicineStatus(
+    int medicineId,
+    String status,
+  ) async {
+    try {
+      final response = await _dio.patch(
+        '/prescribed-medicines/$medicineId/status',
+        data: {'status': status},
+      );
+      if (response.data is Map) {
+        return PrescribedMedicineModel.fromJson(
+          Map<String, dynamic>.from(response.data as Map),
+        );
+      }
+      throw Exception('Unable to update medicine status.');
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }

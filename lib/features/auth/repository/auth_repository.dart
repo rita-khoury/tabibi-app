@@ -2144,6 +2144,22 @@ class AuthRepository {
     }
   }
 
+  Future<List<int>> getMyAttachmentFile(int attachmentId) async {
+    try {
+      final response = await _dio.get<List<int>>(
+        '/medical-attachments/me/$attachmentId',
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final bytes = response.data;
+      if (bytes == null || bytes.isEmpty) {
+        throw Exception('Attachment could not be loaded.');
+      }
+      return bytes;
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
   Future<void> deleteMedicalAttachment(int id) async {
     try {
       await _dio.delete('/medical-attachments/$id');

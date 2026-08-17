@@ -961,10 +961,14 @@
 // }
 // }
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../auth/repository/auth_repository.dart';
 import '../model/medical_record_model.dart'
@@ -1019,6 +1023,9 @@ class MedicalRecordController extends GetxController
 
   var isAttachmentsLoading = false.obs;
   var attachments = [].obs;
+  final profileAttachments = <dynamic>[].obs;
+  final historyAttachments = <dynamic>[].obs;
+  final viewingAttachmentIds = <int>{}.obs;
 
   // ==================== Medicines ====================
 
@@ -1205,26 +1212,113 @@ class MedicalRecordController extends GetxController
   Future<void> fetchAttachments() async {
     try {
       isAttachmentsLoading.value = true;
-
       final dynamic response = await _authRepo.getMedicalAttachments();
-      List<dynamic> allAttachments = [];
+      final profileItems = <dynamic>[];
+      final historyItems = <dynamic>[];
 
       if (response is Map<String, dynamic>) {
         if (response['profileAttachments'] is List) {
-          allAttachments.addAll(response['profileAttachments']);
+          profileItems.addAll(response['profileAttachments'] as List);
         }
         if (response['historyAttachments'] is List) {
-          allAttachments.addAll(response['historyAttachments']);
+          historyItems.addAll(response['historyAttachments'] as List);
         }
       } else if (response is List) {
-        allAttachments = response;
+        // Backward-compatible fallback for an empty or legacy response only.
+        profileItems.addAll(response);
       }
 
-      attachments.assignAll(allAttachments);
+      profileAttachments.assignAll(profileItems);
+      historyAttachments.assignAll(historyItems);
+      attachments.assignAll([...profileItems, ...historyItems]);
     } catch (e) {
       attachments.clear();
+      profileAttachments.clear();
+      historyAttachments.clear();
     } finally {
       isAttachmentsLoading.value = false;
+    }
+  }
+
+  Future<void> viewAttachment({
+    required int attachmentId,
+    required String originalName,
+    String? fileType,
+  }) async {
+    if (attachmentId <= 0 || viewingAttachmentIds.contains(attachmentId)) {
+      return;
+    }
+
+    viewingAttachmentIds.add(attachmentId);
+    try {
+      final bytes = await _authRepo.getMyAttachmentFile(attachmentId);
+      final directory = await getTemporaryDirectory();
+      final fileName = _attachmentFileName(
+        attachmentId: attachmentId,
+        originalName: originalName,
+        fileType: fileType,
+      );
+      final localFile = File(
+        '${directory.path}${Platform.pathSeparator}attachment_${attachmentId}_$fileName',
+      );
+      await localFile.writeAsBytes(bytes, flush: true);
+
+      final result = await OpenFilex.open(localFile.path);
+      if (result.type != ResultType.done) {
+        throw Exception(
+          result.message.isEmpty
+              ? 'No compatible application is available to open this attachment.'
+              : result.message,
+        );
+      }
+    } catch (e) {
+      final message = e.toString().replaceFirst('Exception: ', '').trim();
+      Get.snackbar(
+        'Unable to open attachment',
+        message.isEmpty ? 'Attachment could not be loaded.' : message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withValues(alpha: 0.1),
+        colorText: Colors.red,
+      );
+    } finally {
+      viewingAttachmentIds.remove(attachmentId);
+    }
+  }
+
+  String _attachmentFileName({
+    required int attachmentId,
+    required String originalName,
+    String? fileType,
+  }) {
+    final suppliedName = originalName.split(RegExp(r'[\/]+')).last.trim();
+    final baseName = suppliedName.isEmpty
+        ? 'medical_attachment_$attachmentId'
+        : suppliedName;
+    if (baseName.contains('.')) {
+      return baseName;
+    }
+
+    final extension = _extensionForFileType(fileType);
+    return extension.isEmpty ? baseName : '$baseName.$extension';
+  }
+
+  String _extensionForFileType(String? fileType) {
+    switch ((fileType ?? '').toLowerCase()) {
+      case 'application/pdf':
+        return 'pdf';
+      case 'image/jpeg':
+      case 'image/jpg':
+        return 'jpg';
+      case 'image/png':
+        return 'png';
+      case 'image/webp':
+        return 'webp';
+      case 'application/msword':
+        return 'doc';
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return 'docx';
+      default:
+        return '';
     }
   }
 
@@ -1259,9 +1353,12 @@ class MedicalRecordController extends GetxController
   Future<void> deleteAttachment(int attachmentId) async {
     try {
       await _authRepo.deleteMedicalAttachment(attachmentId);
-      attachments.removeWhere(
-        (item) => int.tryParse(item['id']?.toString() ?? '0') == attachmentId,
-      );
+      bool isDeletedAttachment(dynamic item) =>
+          item is Map &&
+          int.tryParse(item['id']?.toString() ?? '0') == attachmentId;
+      attachments.removeWhere(isDeletedAttachment);
+      profileAttachments.removeWhere(isDeletedAttachment);
+      historyAttachments.removeWhere(isDeletedAttachment);
 
       Get.snackbar(
         "نجاح",

@@ -1349,13 +1349,7 @@ class AuthRepository {
     };
     try {
       final response = await _dio.post('/auth/login', data: data);
-      final auth = AuthResponseModel.fromJson(response.data);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', auth.accessToken);
-      if (auth.refreshToken.isNotEmpty) {
-        await prefs.setString('refresh_token', auth.refreshToken);
-      }
-      return auth;
+      return AuthResponseModel.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }
@@ -2282,16 +2276,19 @@ class AuthRepository {
   }
 
   String _handleDioError(DioException e) {
-    if (e.response?.data != null) {
-      final data = e.response?.data;
-      if (data is Map && data['message'] != null) {
-        return data['message'] is List
-            ? (data['message'] as List).join('\n')
-            : data['message'].toString();
+    final data = e.response?.data;
+    if (data is Map) {
+      for (final key in <String>['message', 'error']) {
+        final value = data[key];
+        if (value is List) {
+          final message = value.whereType<Object>().map((item) => item.toString()).where((item) => item.trim().isNotEmpty).join('\n');
+          if (message.isNotEmpty) return message;
+        } else if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString();
+        }
       }
-      if (data is String) {
-        return data;
-      }
+    } else if (data is String && data.trim().isNotEmpty) {
+      return data;
     }
     return e.message ?? 'تعذر الاتصال بالسيرفر';
   }

@@ -57,6 +57,15 @@ class LoginController extends GetxController {
 
     try {
       final authResponse = await _authRepository.login(identifier, password);
+      if (!_isPatientRole(authResponse.role)) {
+        Get.snackbar(
+          AppMessages.errorTitle,
+          'Access denied. Only patient accounts are allowed to log in to this app.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
 
       await _authController.loginSuccess(
         authResponse.user,
@@ -87,20 +96,11 @@ class LoginController extends GetxController {
         debugPrint("Error checking profile status (New user likely): $e");
         Get.offAllNamed('/medical-profile');
       }
-    } on DioException catch (e) {
-      String errorMessage =
-          e.response?.data['message'] ?? AppMessages.loginInvalidCredentials;
-      Get.snackbar(
-        AppMessages.errorTitle,
-        errorMessage,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
     } catch (e) {
-      debugPrint("Login error: $e");
+      debugPrint('Login error: $e');
       Get.snackbar(
         AppMessages.errorTitle,
-        AppMessages.unexpectedError,
+        _messageFromError(e),
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
@@ -108,6 +108,44 @@ class LoginController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  String _messageFromError(Object error) {
+    if (error is DioException) {
+      final message = _messageFromPayload(error.response?.data);
+      if (message != null) return message;
+    }
+
+    final value = error
+        .toString()
+        .replaceFirst(RegExp(r'^Exception:\s*'), '')
+        .trim();
+    return value.isEmpty || value == 'null'
+        ? AppMessages.loginInvalidCredentials
+        : value;
+  }
+
+  String? _messageFromPayload(dynamic data) {
+    if (data is Map) {
+      for (final key in <String>['message', 'error']) {
+        final value = data[key];
+        if (value is List) {
+          final message = value
+              .whereType<Object>()
+              .map((item) => item.toString().trim())
+              .where((item) => item.isNotEmpty)
+              .join('\n');
+          if (message.isNotEmpty) return message;
+        } else if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString();
+        }
+      }
+    } else if (data is String && data.trim().isNotEmpty) {
+      return data;
+    }
+    return null;
+  }
+  bool _isPatientRole(String? role) =>
+      role?.trim().toUpperCase() == 'PATIENT';
 
   Future<void> _saveEmailToHistory() async {
     List<String> history = _getSavedEmails();

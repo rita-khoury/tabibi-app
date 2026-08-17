@@ -182,26 +182,9 @@ class ProfileController extends GetxController {
           data['image'] ??
           data['profile_image'];
 
-      if (extractedAvatar != null && extractedAvatar.toString().isNotEmpty) {
-        String avatarPath = extractedAvatar.toString();
-
-        // إذا كان السيرفر يعيد مساراً نسبياً، يتم دمجه مع الرابط الأساسي المركزي
-        if (!avatarPath.startsWith('http')) {
-          String baseUrl = ApiConstants.baseUrl;
-
-          if (avatarPath.startsWith('/')) {
-            avatarPath = avatarPath.substring(1);
-          }
-          profileAvatarUrl.value = baseUrl + avatarPath;
-        } else {
-          profileAvatarUrl.value = avatarPath;
-        }
-
-        print("✅ تم العثور على رابط الصورة بنجاح: ${profileAvatarUrl.value}");
-      } else {
-        profileAvatarUrl.value = '';
-        print("⚠️ السيرفر لم يرسل أي رابط للصورة في الاستجابة!");
-      }
+      profileAvatarUrl.value = ApiConstants.getFullImageUrl(
+        extractedAvatar?.toString(),
+      );
 
       if (data['violations'] != null) {
         violationsList.assignAll(data['violations']);

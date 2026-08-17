@@ -80,7 +80,10 @@ class UserModel {
       fullName: backendFullName.isNotEmpty
           ? backendFullName
           : "$first $last".trim(),
-      avatarUrl: json['avatarUrl']?.toString(), // قراءتها من الـ JSON
+      avatarUrl: json['avatarUrl']?.toString() ??
+          json['avatar']?.toString() ??
+          json['image']?.toString() ??
+          json['profile_image']?.toString(), // قراءتها من الـ JSON
     );
   }
 

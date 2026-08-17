@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_network_image.dart';
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 // import 'package:tabibi/core/constance/app_colors.dart';
@@ -341,17 +342,13 @@ class FavoritesDoctorsView extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-                Container(
-                  width: 55,
-                  height: 55,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(doctor.image),
-                      fit: BoxFit.cover,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
+              AppNetworkImage(
+                imageUrl: doctor.image,
+                width: 55,
+                height: 55,
+                borderRadius: BorderRadius.circular(16),
+                fallbackIcon: Icons.medical_services_rounded,
+              ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

@@ -408,14 +408,7 @@ class _PatientQueueViewState extends State<PatientQueueView>
         centerTitle: true,
         backgroundColor: AppColors.lightGray,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: AppColors.primaryBlue,
-          ),
-          onPressed: () => Get.back(),
-        ),
+        automaticallyImplyLeading: false,
       ),
       body: RefreshIndicator(
         onRefresh: () => controller.fetchLiveStatus(isSilent: true),

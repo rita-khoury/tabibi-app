@@ -98,7 +98,7 @@ class NavigationView extends GetView<NavigationController> {
          HomeView(),
         const AppointmentsView(),
          FavoritesDoctorsView(),
-        const PatientQueueView(),
+        if (isLoggedIn) const PatientQueueView(),
         if (isLoggedIn) const ProfileView(),
       ];
 
@@ -131,6 +131,7 @@ class NavigationView extends GetView<NavigationController> {
               icon: Icon(Icons.favorite),
               label: 'Favorites',
             ),
+            if (isLoggedIn)
             const BottomNavigationBarItem(
               icon: Icon(Icons.people_alt_rounded),
               label: 'Queue',

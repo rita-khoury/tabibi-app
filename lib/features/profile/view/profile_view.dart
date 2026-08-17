@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_network_image.dart';
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 // import '/core/constance/app_colors.dart';
@@ -265,23 +266,14 @@ class ProfileView extends GetView<ProfileController> {
                     const SizedBox(height: 20),
 
                     // --- جزء عرض الصورة الشخصية (Profile Avatar) ---
-                    Obx(() {
-                      final avatarUrl = controller.profileAvatarUrl.value;
-                      return CircleAvatar(
-                        radius: 45,
-                        backgroundColor: Colors.white,
-                        backgroundImage: avatarUrl.isNotEmpty
-                            ? NetworkImage(avatarUrl)
-                            : null,
-                        child: avatarUrl.isEmpty
-                            ? const Icon(
-                          Icons.person,
-                          size: 45,
-                          color: AppColors.primaryBlue,
-                        )
-                            : null,
-                      );
-                    }),
+                  Obx(
+                    () => AppAvatar(
+                      imageUrl: controller.profileAvatarUrl.value,
+                      radius: 45,
+                      fallbackIcon: Icons.person,
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
                     const SizedBox(height: 15),
                     // ----------------------------------------------
 

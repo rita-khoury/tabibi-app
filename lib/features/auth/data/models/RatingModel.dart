@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
+import 'package:tabibi/core/constance/api_constants.dart';
+
 class RatingModel {
-  const RatingModel({
+  RatingModel({
     required this.id,
     required this.appointmentId,
     required this.patientProfileId,
@@ -10,6 +13,7 @@ class RatingModel {
     required this.createdAt,
     this.patientProfile,
     this.doctorProfile,
+    this.user,
     this.isReportedByMe = false,
   });
 
@@ -23,10 +27,14 @@ class RatingModel {
   final String createdAt;
   final Map<String, dynamic>? patientProfile;
   final Map<String, dynamic>? doctorProfile;
-  final bool isReportedByMe;
+  final Map<String, dynamic>? user;
+
+  /// This intentionally stays mutable so a successful report can disable the
+  /// action immediately, before any subsequent server refresh completes.
+  bool isReportedByMe;
 
   factory RatingModel.fromJson(Map<String, dynamic> json) {
-    return RatingModel(
+    final rating = RatingModel(
       id: _asInt(json['id']),
       appointmentId: _asInt(json['appointmentId'] ?? json['appointment_id']),
       patientProfileId: _asInt(
@@ -42,67 +50,83 @@ class RatingModel {
           json['createdAt']?.toString() ?? json['created_at']?.toString() ?? '',
       patientProfile: _asMap(json['patientProfile'] ?? json['patient_profile']),
       doctorProfile: _asMap(json['doctorProfile'] ?? json['doctor_profile']),
+      user: _asMap(json['user'] ?? json['author'] ?? json['patient']),
       isReportedByMe: _asBool(
         json['isReportedByMe'] ??
             json['is_reported_by_me'] ??
+            json['isReported'] ??
+            json['is_reported'] ??
             json['reportedByMe'] ??
             json['reported_by_me'] ??
             (json['myReport'] != null ? true : null) ??
             (json['my_report'] != null ? true : null),
       ),
     );
+
+    // Debug-only trace requested for verifying backend avatar values and the
+    // resulting absolute URL. It is stripped from release behavior.
+    if (kDebugMode) {
+      debugPrint(
+        '[DoctorRatings] rating=${rating.id} avatarRaw="${rating.rawUserAvatarPath ?? ''}" '
+        'avatarUrl="${rating.userAvatarUrl ?? ''}"',
+      );
+    }
+    return rating;
   }
 
-  /// The account ID of the review author. It accepts both direct API fields and
-  /// the nested patient-profile shape used by the ratings endpoint.
-  int get authorUserId {
-    final profile = patientProfile;
-    final nestedUser = _asMap(profile?['user']);
-    return _asInt(
-      nestedUser?['id'] ??
-          nestedUser?['userId'] ??
-          profile?['userId'] ??
-          profile?['user_id'] ??
-          profile?['id'] ??
-          patientProfileId,
-    );
-  }
+  Map<String, dynamic>? get _profileUser => _asMap(patientProfile?['user']);
 
-  // Aliases for ownership-aware UI and backward-compatible consumers.
+  Map<String, dynamic>? get _author =>
+      _profileUser ?? _asMap(user?["user"]) ?? user;
+  int get authorUserId => _asInt(
+    _author?['id'] ??
+        _author?['userId'] ??
+        patientProfile?['userId'] ??
+        patientProfile?['user_id'] ??
+        patientProfile?['id'] ??
+        patientProfileId,
+  );
+
   int get userId => authorUserId;
   int get patientId => authorUserId;
 
   String get reviewerName {
-    final profile = patientProfile;
-    final user = _asMap(profile?['user']);
     final candidate =
-        user?['fullName'] ??
-        user?['full_name'] ??
-        user?['name'] ??
-        profile?['fullName'] ??
-        profile?['full_name'] ??
-        profile?['name'];
+        _author?['fullName'] ??
+        _author?['full_name'] ??
+        _author?['name'] ??
+        patientProfile?['fullName'] ??
+        patientProfile?['full_name'] ??
+        patientProfile?['name'];
     final name = candidate?.toString().trim() ?? '';
     return name.isEmpty ? 'Patient' : name;
   }
 
-  String? get userAvatarUrl {
-    final profile = patientProfile;
-    final user = _asMap(profile?['user']);
+  /// The raw API value is retained for diagnostics, while [userAvatarUrl]
+  /// always exposes an absolute URL when the backend provides a relative path.
+  String? get rawUserAvatarPath {
     final candidate =
-        user?['avatarUrl'] ??
-        user?['avatar'] ??
-        user?['image'] ??
-        user?['photo'] ??
-        user?['profileImage'] ??
-        profile?['avatarUrl'] ??
-        profile?['avatar'] ??
-        profile?['image'] ??
-        profile?['photo'] ??
-        profile?['patientPhoto'] ??
-        profile?['profileImage'];
+        _author?['avatarUrl'] ??
+        _author?['avatar'] ??
+        _author?['image'] ??
+        _author?['photo'] ??
+        _author?['profileImage'] ??
+        _author?['profile_image'] ??
+        patientProfile?['avatarUrl'] ??
+        patientProfile?['avatar'] ??
+        patientProfile?['image'] ??
+        patientProfile?['photo'] ??
+        patientProfile?['patientPhoto'] ??
+        patientProfile?['profileImage'];
     final value = candidate?.toString().trim() ?? '';
     return value.isEmpty ? null : value;
+  }
+
+  String? get userAvatarUrl {
+    final rawPath = rawUserAvatarPath;
+    if (rawPath == null) return null;
+    final normalized = ApiConstants.getFullImageUrl(rawPath);
+    return normalized.trim().isEmpty ? null : normalized;
   }
 
   String? get patientPhoto => userAvatarUrl;

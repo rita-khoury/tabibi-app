@@ -125,6 +125,11 @@ class HomeController extends GetxController {
 
     if (query.isEmpty) {
       _lastSearchQuery = '';
+      if (_doctorFilters.isActive) {
+        isSearching.value = true;
+        _runSearch('', requestId);
+        return;
+      }
       isSearching.value = false;
       isLoading.value = false;
       doctorsErrorMessage.value = null;
@@ -148,12 +153,18 @@ class HomeController extends GetxController {
       return;
     }
     _doctorFilters = filters;
-    if (_lastSearchQuery.isEmpty) {
+    _searchDebounce?.cancel();
+    final requestId = ++_searchRequestId;
+
+    if (_lastSearchQuery.isEmpty && !_doctorFilters.isActive) {
+      isSearching.value = false;
+      isLoading.value = false;
+      doctorsErrorMessage.value = null;
+      filteredDoctors.assignAll(topDoctors);
       return;
     }
 
-    _searchDebounce?.cancel();
-    final requestId = ++_searchRequestId;
+    isSearching.value = true;
     await _runSearch(_lastSearchQuery, requestId);
   }
 

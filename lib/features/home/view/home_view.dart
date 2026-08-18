@@ -169,21 +169,17 @@ class HomeView extends StatelessWidget {
             ),
           ),
           Obx(() {
-            final canFilter = controller.isSearching.value;
             final filtersActive =
-                canFilter && controller.hasActiveDoctorFilters;
+                controller.isSearching.value &&
+                controller.hasActiveDoctorFilters;
             return Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: canFilter
-                        ? 'Filter & Sort'
-                        : 'Enter a search term to filter results',
-                    onPressed: canFilter
-                        ? () => _openHomeFilters(context)
-                        : null,
+                    tooltip: 'Filter & Sort',
+                    onPressed: () => _openHomeFilters(context),
                     icon: Icon(
                       Icons.tune_rounded,
                       color: filtersActive

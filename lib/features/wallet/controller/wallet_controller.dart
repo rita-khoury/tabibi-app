@@ -70,7 +70,7 @@ class WalletController extends GetxController {
       if (response.statusCode == 200 || response.statusCode == 201) {
         Get.snackbar(
           "Success",
-          "Successfully topped up!",
+          "Wallet topped up successfully!",
           backgroundColor: Colors.green,
           colorText: Colors.white,
         );
@@ -98,8 +98,9 @@ class WalletController extends GetxController {
   String _handleDioError(DioException error) {
     if (error.response?.data != null) {
       final data = error.response?.data;
-      if (data is Map && data['message'] != null)
+      if (data is Map && data['message'] != null) {
         return data['message'].toString();
+      }
     }
     return "Connection to server failed";
   }

@@ -9,6 +9,9 @@ abstract class AppRoutes {
   static const helpSupport = '/help-support';
   static const editProfile = '/edit-profile';
   static const home = '/home';
+  static const financialHub = '/financial-hub';
+  static const payments = '/payments';
+  static const transactions = '/transactions';
   static const wallet = '/wallet';
   static const login = '/login';
   static const medicalProfile = '/medical-profile';

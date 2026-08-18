@@ -1,36 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
-import '../../auth/data/models/RatingModel.dart';
+import 'package:tabibi/features/auth/data/models/RatingModel.dart';
 
 class RatingCard extends StatelessWidget {
-  final RatingModel rating;
-  final VoidCallback onReportPressed;
-  final VoidCallback? onDeletePressed;
-
   const RatingCard({
-    Key? key,
+    super.key,
     required this.rating,
-    required this.onReportPressed,
+    this.onReportPressed,
     this.onDeletePressed,
-  }) : super(key: key);
+    this.showReportAction = false,
+    this.isReportDisabled = false,
+  });
+
+  final RatingModel rating;
+  final VoidCallback? onReportPressed;
+  final VoidCallback? onDeletePressed;
+  final bool showReportAction;
+  final bool isReportDisabled;
 
   @override
   Widget build(BuildContext context) {
-    final userJson = rating.patientProfile?['user'];
-    final patientName = userJson != null
-        ? "${userJson['firstName'] ?? ''} ${userJson['lastName'] ?? ''}"
-        : "مريض";
-
+    final hasComment = (rating.comment ?? '').trim().isNotEmpty;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE9EEF5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.045),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -40,122 +39,205 @@ class RatingCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      color: AppColors.primaryBlue,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    patientName.trim().isEmpty ? "مريض بالمنصة" : patientName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              _ReviewerAvatar(
+                imageUrl: rating.userAvatarUrl,
+                name: rating.reviewerName,
               ),
-
-              Row(
-                children: [
-                  if (onDeletePressed != null) ...[
-                    InkWell(
-                      onTap: onDeletePressed,
-                      borderRadius: BorderRadius.circular(25),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Icon(
-                          Icons.delete_outline_rounded,
-                          color: Colors.red,
-                          size: 24,
-                        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      rating.reviewerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      _formatDate(rating.createdAt),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
                       ),
                     ),
                   ],
-                  const SizedBox(width: 4),
-                  InkWell(
-                    onTap: onReportPressed,
-                    borderRadius: BorderRadius.circular(25),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.flag_outlined,
-                        color: AppColors.gray,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
+              if (onDeletePressed != null)
+                IconButton(
+                  onPressed: onDeletePressed,
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  color: Colors.red.shade500,
+                  tooltip: 'Delete review',
+                  splashRadius: 20,
+                )
+              else if (showReportAction)
+                IconButton(
+                  onPressed: isReportDisabled ? null : onReportPressed,
+                  icon: const Icon(Icons.flag_outlined),
+                  color: isReportDisabled
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade600,
+                  disabledColor: Colors.grey.shade400,
+                  tooltip: isReportDisabled
+                      ? 'You have already reported this review'
+                      : 'Report review',
+                  splashRadius: 20,
+                ),
             ],
           ),
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 15),
           Row(
             children: [
-              RatingBarIndicator(
-                rating: rating.score.toDouble(),
-                itemBuilder: (context, _) =>
-                const Icon(Icons.star, color: Colors.amber),
-                itemCount: 5,
-                itemSize: 16.0,
-                direction: Axis.horizontal,
-              ),
-              const SizedBox(width: 8),
+              Expanded(child: _StarRow(score: rating.score)),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
+                  color: const Color(0xFFFFF7E1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  rating.score.toString(),
+                  '${rating.score.clamp(0, 5)}.0',
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFB77900),
                     fontSize: 12,
-                    color: Colors.amber,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           ),
-          if (rating.comment != null && rating.comment!.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              rating.comment!,
-              style: const TextStyle(
-                fontSize: 13.5,
-                color: Colors.black54,
-                height: 1.4,
+          if (hasComment) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(9),
+              ),
+              child: Text(
+                rating.comment!.trim(),
+                textDirection: _textDirection(rating.comment!),
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
               ),
             ),
           ],
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              rating.createdAt.length >= 10
-                  ? rating.createdAt.substring(0, 10)
-                  : rating.createdAt,
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.gray.withOpacity(0.8),
+          const SizedBox(height: 13),
+          Row(
+            children: [
+              Icon(
+                Icons.schedule_outlined,
+                size: 14,
+                color: Colors.grey.shade400,
               ),
-            ),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  _formatDate(rating.createdAt),
+                  textAlign: TextAlign.end,
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  static TextDirection _textDirection(String value) {
+    final arabic = RegExp(r'[\u0600-\u06FF]').hasMatch(value);
+    return arabic ? TextDirection.rtl : TextDirection.ltr;
+  }
+
+  static String _formatDate(String raw) {
+    final date = DateTime.tryParse(raw)?.toLocal();
+    if (date == null) return raw.isEmpty ? 'Recently' : raw;
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    final hour = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final meridiem = date.hour >= 12 ? 'PM' : 'AM';
+    return '${date.day} ${months[date.month - 1]} ${date.year} · $hour:$minute $meridiem';
+  }
+}
+
+class _ReviewerAvatar extends StatelessWidget {
+  const _ReviewerAvatar({required this.imageUrl, required this.name});
+
+  final String? imageUrl;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl?.trim() ?? '';
+    final initials = name
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+
+    return CircleAvatar(
+      radius: 24,
+      backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
+      foregroundImage: url.isEmpty ? null : NetworkImage(url),
+      onForegroundImageError: url.isEmpty ? null : (exception, stackTrace) {},
+      child: url.isEmpty
+          ? Text(
+              initials.isEmpty ? 'P' : initials,
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
+            )
+          : const Icon(Icons.person_outline, color: AppColors.primaryBlue),
+    );
+  }
+}
+
+class _StarRow extends StatelessWidget {
+  const _StarRow({required this.score});
+
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = score.clamp(0, 5);
+    return Row(
+      children: List<Widget>.generate(
+        5,
+        (index) => Icon(
+          index < value ? Icons.star_rounded : Icons.star_border_rounded,
+          color: const Color(0xFFF59E0B),
+          size: 21,
+        ),
       ),
     );
   }

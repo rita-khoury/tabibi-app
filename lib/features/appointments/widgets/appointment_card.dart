@@ -493,27 +493,39 @@ class AppointmentCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (onRate != null) ...[
-                  const SizedBox(height: 14),
+                if (appointment.status.trim().toLowerCase() == 'completed' &&
+                    onRate != null) ...[
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 42,
-                    child: ElevatedButton.icon(
+                    height: 48,
+                    child: OutlinedButton.icon(
                       onPressed: onRate,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.withValues(alpha: 0.12),
-                        foregroundColor: Colors.amber.shade800,
-                        elevation: 0,
+                      icon: const Icon(
+                        Icons.star_rounded,
+                        size: 21,
+                        color: Color(0xFFF59E0B),
+                      ),
+                      label: const Text('Rate Doctor'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primaryBlue,
+                        backgroundColor: AppColors.primaryBlue.withValues(
+                          alpha: 0.04,
+                        ),
+                        side: BorderSide(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.35),
+                          width: 1.2,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 11,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      icon: const Icon(Icons.star_rounded, size: 18),
-                      label: const Text(
-                        "Rate Doctor",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),

@@ -1229,6 +1229,25 @@ class AuthRepository {
     return _refreshFuture!;
   }
 
+  Future<List<Map<String, dynamic>>> getMyReviews() async {
+    try {
+      final response = await _dio.get('/ratings/my-reviews');
+      final body = response.data;
+      final dynamic rawItems = body is List
+          ? body
+          : body is Map
+          ? body['data'] ?? body['reviews'] ?? body['ratings']
+          : null;
+      if (rawItems is! List) return const <Map<String, dynamic>>[];
+      return rawItems
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
   Future<void> rateDoctor({
     required int appointmentId,
     required double rating,
@@ -1239,7 +1258,7 @@ class AuthRepository {
         '/ratings',
         data: {
           'appointmentId': appointmentId,
-          'score': rating.toInt(),
+          'score': rating.round().clamp(1, 5).toInt(),
           if (comment != null && comment.isNotEmpty) 'comment': comment,
         },
       );

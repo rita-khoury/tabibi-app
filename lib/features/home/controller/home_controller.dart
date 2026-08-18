@@ -1,376 +1,41 @@
-// // import 'package:flutter/material.dart';
-// // import 'package:get/get.dart';
-// // import 'package:shared_preferences/shared_preferences.dart';
-// // import '../../../features/auth/data/models/DoctorModel.dart';
-// // import '../../../core/services/doctor_service.dart';
-// // import '../../../features/auth/repository/auth_repository.dart';
-// // import '../../auth/data/models/LookupModel.dart';
-// //
-// // class HomeController extends GetxController {
-// //   final DoctorService _service = DoctorService();
-// //   final AuthRepository _authRepository = Get.find<AuthRepository>();
-// //
-// //   List<DoctorModel> _allDoctorsCache = [];
-// //   var specialities = <LookupModel>[].obs;
-// //   var topDoctors = <DoctorModel>[].obs;
-// //   var filteredDoctors = <DoctorModel>[].obs;
-// //   var isSearching = false.obs;
-// //   var isLoading = true.obs;
-// //   var isLoggedIn = false.obs;
-// //
-// //   var activeAppointmentId = RxnInt();
-// //
-// //   var referralsCount = 0.obs;
-// //
-// //   @override
-// //   void onInit() {
-// //     super.onInit();
-// //     checkLoginStatus();
-// //     loadData();
-// //     loadSpecialities();
-// //     checkActiveQueueStatus();
-// //   }
-// //
-// //   Future<void> checkLoginStatus() async {
-// //     final prefs = await SharedPreferences.getInstance();
-// //     isLoggedIn.value = prefs.getString('auth_token') != null;
-// //     if (isLoggedIn.value) {
-// //       checkActiveQueueStatus();
-// //       //fetchReferralsCount();
-// //     } else {
-// //       activeAppointmentId.value = null;
-// //       referralsCount.value = 0;
-// //     }
-// //   }
-// //
-// //   // Future<void> fetchReferralsCount() async {
-// //   //   try {
-// //   //     final count = await _authRepository.getReferralsCount();
-// //   //     if (count != null) {
-// //   //       referralsCount.value = int.tryParse(count.toString()) ?? 0;
-// //   //     }
-// //   //   } catch (e) {
-// //   //     print("خطأ في جلب عدد التحويلات: $e");
-// //   //   }
-// //   // }
-// //
-// //   Future<void> handleAuthAction() async {
-// //     if (isLoggedIn.value) {
-// //       await _authRepository.logout();
-// //       isLoggedIn.value = false;
-// //       activeAppointmentId.value = null;
-// //       referralsCount.value = 0;
-// //       Get.snackbar(
-// //         "Logout",
-// //         "Logged out successfully",
-// //         backgroundColor: Colors.blue,
-// //         colorText: Colors.white,
-// //       );
-// //       Get.offAllNamed('/home');
-// //     } else {
-// //       await Get.toNamed('/login');
-// //       await checkLoginStatus();
-// //     }
-// //   }
-// //
-// //   Future<void> loadData() async {
-// //     try {
-// //       isLoading.value = true;
-// //       final rawData = await _service.getAll();
-// //       _allDoctorsCache = rawData.map((e) => DoctorModel.fromJson(e)).toList();
-// //       topDoctors.assignAll(
-// //         _allDoctorsCache.where((doc) => doc.averageRating >= 4.8).toList(),
-// //       );
-// //       filteredDoctors.assignAll(topDoctors);
-// //     } catch (e) {
-// //       Get.snackbar("Error", "Failed to load data: ${e.toString()}");
-// //     } finally {
-// //       isLoading.value = false;
-// //     }
-// //   }
-// //
-// //   Future<void> loadSpecialities() async {
-// //     try {
-// //       final data = await _authRepository.getLookupsByCategory(
-// //         'MEDICAL_SPECIALTY',
-// //       );
-// //       if (data != null) {
-// //         specialities.assignAll(
-// //           data.map((e) => LookupModel.fromJson(e)).toList(),
-// //         );
-// //       }
-// //     } catch (e) {
-// //       print("خطأ في جلب التخصصات: $e");
-// //       Get.snackbar("خطأ", "تعذر تحميل التخصصات");
-// //     }
-// //   }
-// //
-// //   Future<void> checkActiveQueueStatus() async {
-// //     try {
-// //       final response = await _authRepository.getActiveCheckedInAppointment();
-// //       print("API Response for Active Appointment: $response"); // طباعة الرد كاملاً للتاكد
-// //
-// //       if (response != null && response['appointmentId'] != null) {
-// //         activeAppointmentId.value = int.tryParse(
-// //           response['appointmentId'].toString(),
-// //         );
-// //         print("Active Appointment ID is set to: ${activeAppointmentId.value}");
-// //       } else {
-// //         activeAppointmentId.value = null;
-// //         print("No active appointment found, set to null");
-// //       }
-// //     } catch (e) {
-// //       print("Error checking active queue: $e");
-// //       activeAppointmentId.value = null;
-// //     }
-// //   }
-// //   void searchDoctor(String query) {
-// //     isSearching.value = query.isNotEmpty;
-// //     if (query.isEmpty) {
-// //       filteredDoctors.assignAll(topDoctors);
-// //     } else {
-// //       filteredDoctors.assignAll(
-// //         _allDoctorsCache
-// //             .where(
-// //               (doc) =>
-// //                   doc.name.toLowerCase().contains(query.toLowerCase()) ||
-// //                   doc.specialization.toLowerCase().contains(
-// //                     query.toLowerCase(),
-// //                   ),
-// //             )
-// //             .toList(),
-// //       );
-// //     }
-// //   }
-// //
-// //   void filterDoctorsBySpeciality(String specialityName) {
-// //     isSearching.value = true;
-// //     filteredDoctors.assignAll(
-// //       _allDoctorsCache
-// //           .where(
-// //             (doc) =>
-// //                 doc.specialization.toLowerCase() ==
-// //                 specialityName.toLowerCase(),
-// //           )
-// //           .toList(),
-// //     );
-// //   }
-// // }
-//
-//
-//
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../../../features/auth/data/models/DoctorModel.dart';
-// import '../../../core/services/doctor_service.dart';
-// import '../../../features/auth/repository/auth_repository.dart';
-// import '../../auth/data/models/LookupModel.dart';
-//
-// // استيراد ملفات الرسائل والتنبيهات المركزية
-// import '../../../core/constance/app_messages.dart';
-// import '../../../core/constance/app_alerts.dart';
-//
-// class HomeController extends GetxController {
-//   final DoctorService _service = DoctorService();
-//   final AuthRepository _authRepository = Get.find<AuthRepository>();
-//
-//   List<DoctorModel> _allDoctorsCache = [];
-//   var specialities = <LookupModel>[].obs;
-//   var topDoctors = <DoctorModel>[].obs;
-//   var filteredDoctors = <DoctorModel>[].obs;
-//   var isSearching = false.obs;
-//   var isLoading = true.obs;
-//   var isLoggedIn = false.obs;
-//
-//   var activeAppointmentId = RxnInt();
-//
-//   var referralsCount = 0.obs;
-//
-//   @override
-//   void onInit() {
-//     super.onInit();
-//     checkLoginStatus();
-//     loadData();
-//     loadSpecialities();
-//     checkActiveQueueStatus();
-//   }
-//
-//   Future<void> checkLoginStatus() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     isLoggedIn.value = prefs.getString('auth_token') != null;
-//     if (isLoggedIn.value) {
-//       checkActiveQueueStatus();
-//       //fetchReferralsCount();
-//     } else {
-//       activeAppointmentId.value = null;
-//       referralsCount.value = 0;
-//     }
-//   }
-//
-//   // Future<void> fetchReferralsCount() async {
-//   //   try {
-//   //     final count = await _authRepository.getReferralsCount();
-//   //     if (count != null) {
-//   //       referralsCount.value = int.tryParse(count.toString()) ?? 0;
-//   //     }
-//   //   } catch (e) {
-//   //     print("خطأ في جلب عدد التحويلات: $e");
-//   //   }
-//   // }
-//
-//   Future<void> handleAuthAction() async {
-//     if (isLoggedIn.value) {
-//       await _authRepository.logout();
-//       isLoggedIn.value = false;
-//       activeAppointmentId.value = null;
-//       referralsCount.value = 0;
-//       AppAlerts.showSuccess(
-//         title: AppMessages.logoutTitle,
-//         message: AppMessages.logoutSuccess,
-//       );
-//       Get.offAllNamed('/home');
-//     } else {
-//       await Get.toNamed('/login');
-//       await checkLoginStatus();
-//     }
-//   }
-//
-//   Future<void> loadData() async {
-//     try {
-//       isLoading.value = true;
-//       final rawData = await _service.getAll();
-//       _allDoctorsCache = rawData.map((e) => DoctorModel.fromJson(e)).toList();
-//       topDoctors.assignAll(
-//         _allDoctorsCache.where((doc) => doc.averageRating >= 4.8).toList(),
-//       );
-//       filteredDoctors.assignAll(topDoctors);
-//     } catch (e) {
-//       AppAlerts.showError(
-//         title: AppMessages.homeErrorTitle,
-//         message: "${AppMessages.loadDataError}${e.toString()}",
-//       );
-//     } finally {
-//       isLoading.value = false;
-//     }
-//   }
-//
-//   Future<void> loadSpecialities() async {
-//     try {
-//       final data = await _authRepository.getLookupsByCategory(
-//         'MEDICAL_SPECIALTY',
-//       );
-//       if (data != null) {
-//         specialities.assignAll(
-//           data.map((e) => LookupModel.fromJson(e)).toList(),
-//         );
-//       }
-//     } catch (e) {
-//       print("خطأ في جلب التخصصات: $e");
-//       AppAlerts.showError(
-//         title: AppMessages.specialitiesErrorTitle,
-//         message: AppMessages.loadSpecialitiesError,
-//       );
-//     }
-//   }
-//   Future<void> checkActiveQueueStatus() async {
-//     try {
-//       final response = await _authRepository.getActiveCheckedInAppointment();
-//       print("API Response for Active Appointment: $response");
-//
-//       if (response != null && response['appointmentId'] != null) {
-//         activeAppointmentId.value = int.tryParse(
-//           response['appointmentId'].toString(),
-//         );
-//         print("Active Appointment ID is set to: ${activeAppointmentId.value}");
-//       } else {
-//         activeAppointmentId.value = null;
-//         print("No active appointment found, set to null");
-//       }
-//     } catch (e) {
-//       print("Error checking active queue: $e");
-//       activeAppointmentId.value = null;
-//     }
-//   }
-//   void searchDoctor(String query) {
-//     isSearching.value = query.isNotEmpty;
-//     if (query.isEmpty) {
-//       filteredDoctors.assignAll(topDoctors);
-//     } else {
-//       filteredDoctors.assignAll(
-//         _allDoctorsCache
-//             .where(
-//               (doc) =>
-//           doc.name.toLowerCase().contains(query.toLowerCase()) ||
-//               doc.specialization.toLowerCase().contains(
-//                 query.toLowerCase(),
-//               ),
-//         )
-//             .toList(),
-//       );
-//     }
-//   }
-// // دالة لتنفيذ الـ Check-in للموعد الحالي
-//   Future<void> performCheckIn(int appointmentId) async {
-//     try {
-//       isLoading.value = true;
-//       bool success = await _authRepository.checkInPatient(appointmentId);
-//
-//       if (success) {
-//         AppAlerts.showSuccess(
-//           title: "نجاح",
-//           message: "تم تسجيل الحضور بنجاح وانضممت إلى الطابور!",
-//         );
-//         // إعادة فحص حالة الطابور النشط لتحديث الواجهة فوراً
-//         await checkActiveQueueStatus();
-//       }
-//     } catch (e) {
-//       AppAlerts.showError(
-//         title: "خطأ",
-//         message: e.toString().replaceAll("Exception: ", ""),
-//       );
-//     } finally {
-//       isLoading.value = false;
-//     }
-//   }
-//   void filterDoctorsBySpeciality(String specialityName) {
-//     isSearching.value = true;
-//     filteredDoctors.assignAll(
-//       _allDoctorsCache
-//           .where(
-//             (doc) =>
-//         doc.specialization.toLowerCase() ==
-//             specialityName.toLowerCase(),
-//       )
-//           .toList(),
-//     );
-//   }
-// }
-import 'package:flutter/material.dart';
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../features/auth/data/models/DoctorModel.dart';
-import '../../../core/services/doctor_service.dart';
-import '../../../features/auth/repository/auth_repository.dart';
-import '../../auth/data/models/LookupModel.dart';
 
-// استيراد ملفات الرسائل والتنبيهات المركزية
-import '../../../core/constance/app_messages.dart';
 import '../../../core/constance/app_alerts.dart';
+import '../../../core/constance/app_messages.dart';
+import '../../../core/services/doctor_service.dart';
+import '../../../features/auth/data/models/DoctorModel.dart';
+import '../../../features/auth/data/models/LookupModel.dart';
+import '../../../features/auth/repository/auth_repository.dart';
+import '../model/doctor_filter_options.dart';
 
 class HomeController extends GetxController {
-  final DoctorService _service = DoctorService();
+  HomeController({DoctorService? doctorService})
+    : _service = doctorService ?? DoctorService();
+
+  final DoctorService _service;
   final AuthRepository _authRepository = Get.find<AuthRepository>();
+  Timer? _searchDebounce;
+  int _searchRequestId = 0;
+  String _lastSearchQuery = '';
+  DoctorFilterOptions _doctorFilters = const DoctorFilterOptions.empty();
 
-  List<DoctorModel> _allDoctorsCache = [];
-  var specialities = <LookupModel>[].obs;
-  var topDoctors = <DoctorModel>[].obs;
-  var filteredDoctors = <DoctorModel>[].obs;
-  var isSearching = false.obs;
-  var isLoading = true.obs;
-  var isLoggedIn = false.obs;
+  final specialities = <LookupModel>[].obs;
+  final topDoctors = <DoctorModel>[].obs;
+  final filteredDoctors = <DoctorModel>[].obs;
+  final availableDoctorLanguages = <String>[].obs;
+  final isSearching = false.obs;
+  final isLoading = true.obs;
+  final isSpecialitiesLoading = true.obs;
+  final isLoggedIn = false.obs;
+  final referralsCount = 0.obs;
+  final doctorsErrorMessage = RxnString();
+  final specialitiesErrorMessage = RxnString();
 
-  var referralsCount = 0.obs;
+  DoctorFilterOptions get doctorFilters => _doctorFilters;
+  bool get hasActiveDoctorFilters => _doctorFilters.isActive;
 
   @override
   void onInit() {
@@ -380,6 +45,12 @@ class HomeController extends GetxController {
     loadSpecialities();
   }
 
+  @override
+  void onClose() {
+    _searchDebounce?.cancel();
+    super.onClose();
+  }
+
   Future<void> checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     isLoggedIn.value = prefs.getString('auth_token') != null;
@@ -387,17 +58,6 @@ class HomeController extends GetxController {
       referralsCount.value = 0;
     }
   }
-
-  // Future<void> fetchReferralsCount() async {
-  //   try {
-  //     final count = await _authRepository.getReferralsCount();
-  //     if (count != null) {
-  //       referralsCount.value = int.tryParse(count.toString()) ?? 0;
-  //     }
-  //   } catch (e) {
-  //     print("خطأ في جلب عدد التحويلات: $e");
-  //   }
-  // }
 
   Future<void> handleAuthAction() async {
     if (isLoggedIn.value) {
@@ -409,26 +69,35 @@ class HomeController extends GetxController {
         message: AppMessages.logoutSuccess,
       );
       Get.offAllNamed('/home');
-    } else {
-      await Get.toNamed('/login');
-      await checkLoginStatus();
+      return;
     }
+
+    await Get.toNamed('/login');
+    await checkLoginStatus();
   }
 
   Future<void> loadData() async {
     try {
       isLoading.value = true;
+      doctorsErrorMessage.value = null;
       final rawData = await _service.getAll();
-      _allDoctorsCache = rawData.map((e) => DoctorModel.fromJson(e)).toList();
-      topDoctors.assignAll(
-        _allDoctorsCache.where((doc) => doc.averageRating >= 4.8).toList(),
+      final doctors = rawData
+          .map(
+            (entry) =>
+                DoctorModel.fromJson(Map<String, dynamic>.from(entry as Map)),
+          )
+          .toList();
+      doctors.sort(
+        (first, second) => second.averageRating.compareTo(first.averageRating),
       );
-      filteredDoctors.assignAll(topDoctors);
-    } catch (e) {
-      AppAlerts.showError(
-        title: AppMessages.homeErrorTitle,
-        message: "${AppMessages.loadDataError}${e.toString()}",
-      );
+      topDoctors.assignAll(doctors);
+      availableDoctorLanguages.assignAll(_languagesFrom(doctors));
+
+      if (!isSearching.value) {
+        filteredDoctors.assignAll(topDoctors);
+      }
+    } catch (_) {
+      doctorsErrorMessage.value = 'Unable to load doctors right now.';
     } finally {
       isLoading.value = false;
     }
@@ -436,52 +105,106 @@ class HomeController extends GetxController {
 
   Future<void> loadSpecialities() async {
     try {
+      isSpecialitiesLoading.value = true;
+      specialitiesErrorMessage.value = null;
       final data = await _authRepository.getLookupsByCategory(
         'MEDICAL_SPECIALTY',
       );
-      if (data != null) {
-        specialities.assignAll(
-          data.map((e) => LookupModel.fromJson(e)).toList(),
-        );
-      }
-    } catch (e) {
-      print("خطأ في جلب التخصصات: $e");
-      AppAlerts.showError(
-        title: AppMessages.specialitiesErrorTitle,
-        message: AppMessages.loadSpecialitiesError,
-      );
+      specialities.assignAll(data.map(LookupModel.fromJson));
+    } catch (_) {
+      specialitiesErrorMessage.value = 'Unable to load specialities right now.';
+    } finally {
+      isSpecialitiesLoading.value = false;
     }
   }
 
-  void searchDoctor(String query) {
-    isSearching.value = query.isNotEmpty;
+  void searchDoctor(String rawQuery) {
+    final query = rawQuery.trim();
+    _searchDebounce?.cancel();
+    final requestId = ++_searchRequestId;
+
     if (query.isEmpty) {
+      _lastSearchQuery = '';
+      isSearching.value = false;
+      isLoading.value = false;
+      doctorsErrorMessage.value = null;
       filteredDoctors.assignAll(topDoctors);
-    } else {
-      filteredDoctors.assignAll(
-        _allDoctorsCache
-            .where(
-              (doc) =>
-          doc.name.toLowerCase().contains(query.toLowerCase()) ||
-              doc.specialization.toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-        )
-            .toList(),
+      return;
+    }
+
+    if (query == _lastSearchQuery) {
+      return;
+    }
+
+    _lastSearchQuery = query;
+    isSearching.value = true;
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () {
+      _runSearch(query, requestId);
+    });
+  }
+
+  Future<void> applyDoctorFilters(DoctorFilterOptions filters) async {
+    if (_doctorFilters.matches(filters)) {
+      return;
+    }
+    _doctorFilters = filters;
+    if (_lastSearchQuery.isEmpty) {
+      return;
+    }
+
+    _searchDebounce?.cancel();
+    final requestId = ++_searchRequestId;
+    await _runSearch(_lastSearchQuery, requestId);
+  }
+
+  Future<void> _runSearch(String query, int requestId) async {
+    try {
+      isLoading.value = true;
+      doctorsErrorMessage.value = null;
+      final rawData = await _service.getAll(
+        search: query,
+        language: _doctorFilters.language,
+        sortBy: _doctorFilters.sortBy,
+        sortOrder: _doctorFilters.sortOrder,
       );
+      if (requestId != _searchRequestId) {
+        return;
+      }
+      filteredDoctors.assignAll(
+        rawData.map(
+          (entry) =>
+              DoctorModel.fromJson(Map<String, dynamic>.from(entry as Map)),
+        ),
+      );
+    } catch (_) {
+      if (requestId == _searchRequestId) {
+        doctorsErrorMessage.value = 'Unable to search doctors right now.';
+      }
+    } finally {
+      if (requestId == _searchRequestId) {
+        isLoading.value = false;
+      }
     }
   }
 
-  void filterDoctorsBySpeciality(String specialityName) {
-    isSearching.value = true;
-    filteredDoctors.assignAll(
-      _allDoctorsCache
-          .where(
-            (doc) =>
-        doc.specialization.toLowerCase() ==
-            specialityName.toLowerCase(),
-      )
-          .toList(),
-    );
+  Future<void> retryDoctors() async {
+    if (isSearching.value && _lastSearchQuery.isNotEmpty) {
+      final requestId = ++_searchRequestId;
+      await _runSearch(_lastSearchQuery, requestId);
+      return;
+    }
+    await loadData();
+  }
+
+  List<String> _languagesFrom(Iterable<DoctorModel> doctors) {
+    final languages = <String>[];
+    for (final doctor in doctors) {
+      for (final language in doctor.languagesSpoken) {
+        if (language.isNotEmpty && !languages.contains(language)) {
+          languages.add(language);
+        }
+      }
+    }
+    return languages;
   }
 }

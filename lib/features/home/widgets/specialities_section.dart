@@ -1,103 +1,166 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../auth/data/models/LookupModel.dart';
 import '../widgets/DoctorsPage.dart';
-import '../../../core/services/doctor_service.dart';
-import '../../../features/auth/data/models/DoctorModel.dart';
+
+class SpecialtyIconMapper {
+  const SpecialtyIconMapper._();
+
+  static IconData iconForValue(String value) {
+    switch (value) {
+      case 'CARDIOLOGY':
+        return Icons.favorite_rounded;
+      case 'DERMATOLOGY':
+        return Icons.spa_rounded;
+      case 'PEDIATRICS':
+        return Icons.child_care_rounded;
+      case 'ORTHOPEDICS':
+      case 'Orthopedics':
+        return Icons.accessibility_new_rounded;
+      case 'OPHTHALMOLOGY':
+      case 'OPTOMETRY':
+        return Icons.visibility_rounded;
+      case 'DENTISTRY':
+        return Icons.medical_services_rounded;
+      case 'OBSTETRICS_GYNECOLOGY':
+      case 'OBSTETRICS_AND_GYNECOLOGY':
+      case 'GYNECOLOGY':
+        return Icons.pregnant_woman_rounded;
+      case 'ENT':
+      case 'OTORHINOLARYNGOLOGY':
+        return Icons.hearing_rounded;
+      case 'NEUROLOGY':
+      case 'BRAIN_AND_NERVES':
+        return Icons.psychology_rounded;
+      case 'PSYCHIATRY':
+        return Icons.psychology_alt_rounded;
+      case 'PHYSICAL_MEDICINE_REHABILITATION':
+        return Icons.accessible_forward_rounded;
+      case 'UROLOGY':
+        return Icons.water_drop_rounded;
+      case 'ONCOLOGY':
+        return Icons.biotech_rounded;
+      case 'RADIOLOGY':
+        return Icons.document_scanner_rounded;
+      case 'GENERAL_SURGERY':
+        return Icons.content_cut_rounded;
+      case 'INTERNAL_MEDICINE':
+        return Icons.medical_services_rounded;
+      case 'FAMILY_MEDICINE':
+        return Icons.family_restroom_rounded;
+      default:
+        return Icons.local_hospital_rounded;
+    }
+  }
+}
 
 class SpecialitiesSection extends StatelessWidget {
   final bool isGrid;
   final List<LookupModel> specialities;
-  final DoctorService _service = DoctorService();
 
-  SpecialitiesSection({
+  const SpecialitiesSection({
     super.key,
     this.isGrid = false,
     required this.specialities,
   });
 
-  IconData _getIconForSpeciality(String name) {
-    switch (name.toLowerCase()) {
-      case 'cardiology':
-        return Icons.favorite_sharp;
-      case 'dermatology':
-        return Icons.face_sharp;
-      case 'optometry':
-        return Icons.visibility_sharp;
-      case 'dentistry':
-        return Icons.medical_services_sharp;
-      case 'brain & nerves':
-        return Icons.psychology_sharp;
-      case 'orthopedics':
-        return Icons.accessible_sharp;
-      case 'pediatrics':
-        return Icons.child_care_sharp;
-      case 'ent':
-        return Icons.hearing_sharp;
-      case 'gynecology':
-        return Icons.pregnant_woman_sharp;
-      default:
-        return Icons.medical_information_sharp;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (isGrid) {
+          final crossAxisCount = constraints.maxWidth >= 600
+              ? 4
+              : constraints.maxWidth >= 430
+              ? 3
+              : 2;
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: specialities.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 14,
+              childAspectRatio: 0.95,
+            ),
+            itemBuilder: (context, index) => _SpecialtyCard(
+              item: specialities[index],
+              icon: SpecialtyIconMapper.iconForValue(specialities[index].value),
+              isPreview: false,
+            ),
+          );
+        }
+
+        final cardWidth = (constraints.maxWidth * 0.30)
+            .clamp(112.0, 140.0)
+            .toDouble();
+        final cardHeight = (cardWidth * 0.90).clamp(104.0, 124.0).toDouble();
+        return SizedBox(
+          height: cardHeight + 8,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(right: 4),
+            itemCount: specialities.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) => SizedBox(
+              width: cardWidth,
+              child: _SpecialtyCard(
+                item: specialities[index],
+                icon: SpecialtyIconMapper.iconForValue(
+                  specialities[index].value,
+                ),
+                isPreview: true,
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
+}
+
+class _SpecialtyCard extends StatelessWidget {
+  final LookupModel item;
+  final IconData icon;
+  final bool isPreview;
+
+  const _SpecialtyCard({
+    required this.item,
+    required this.icon,
+    required this.isPreview,
+  });
 
   @override
   Widget build(BuildContext context) {
-    Widget buildItem(int index) {
-      final item = specialities[index];
-
-      return InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: () async {
-          Get.dialog(const Center(child: CircularProgressIndicator()));
-          try {
-            final rawData = await _service.getAll();
-
-            debugPrint("DEBUG: Searching for speciality: ${item.value}");
-
-            final List<DoctorModel> doctorsList = [];
-            for (var e in rawData) {
-              final doc = DoctorModel.fromJson(e);
-
-              debugPrint(
-                "DEBUG: Comparing '${doc.specialization}' with '${item.value}'",
-              );
-
-              if (doc.specialization.trim().toLowerCase() ==
-                  item.value.trim().toLowerCase()) {
-                doctorsList.add(doc);
-              }
-            }
-
-            Get.back();
-
-            if (doctorsList.isEmpty) {
-              Get.snackbar("تنبيه", "لا يوجد أطباء في هذا التخصص حالياً");
-            } else {
-              Get.to(
-                () =>
-                    DoctorsPage(speciality: item.labelEn, doctors: doctorsList),
-              );
-            }
-          } catch (e) {
-            Get.back();
-            Get.snackbar("خطأ", "تعذر جلب البيانات: ${e.toString()}");
-          }
-        },
-        child: Container(
-          width: 90,
-          height: 85,
-          padding: const EdgeInsets.all(8),
+    final radius = BorderRadius.circular(isPreview ? 18 : 16);
+    return Material(
+      color: Colors.transparent,
+      borderRadius: radius,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: () => Get.to(
+          () => DoctorsPage(
+            specialityLabel: item.labelEn,
+            specializationValue: item.value,
+          ),
+        ),
+        child: Ink(
+          padding: EdgeInsets.symmetric(
+            horizontal: isPreview ? 10 : 12,
+            vertical: isPreview ? 10 : 12,
+          ),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xff2F80ED), Color(0xff56CCF2)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: radius,
             boxShadow: [
               BoxShadow(
-                color: const Color(0xff2F80ED).withValues(alpha: 0.3),
+                color: const Color(0xff2F80ED).withValues(alpha: 0.22),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -106,52 +169,39 @@ class SpecialitiesSection extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                _getIconForSpeciality(item.value),
-                color: Colors.white,
-                size: 26,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                item.labelEn,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+              Container(
+                width: isPreview ? 38 : 42,
+                height: isPreview ? 38 : 42,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(13),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  icon,
                   color: Colors.white,
-                  height: 1.1,
+                  size: isPreview ? 22 : 24,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Tooltip(
+                message: item.labelEn,
+                child: Text(
+                  item.labelEn,
+                  textAlign: TextAlign.center,
+                  maxLines: isPreview ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isPreview ? 11 : 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    height: 1.18,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-      );
-    }
-
-    if (isGrid) {
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: specialities.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 15,
-          childAspectRatio: 1.1,
-        ),
-        itemBuilder: (context, index) => buildItem(index),
-      );
-    }
-
-    return SizedBox(
-      height: 95,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: specialities.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 12),
-        itemBuilder: (context, index) => buildItem(index),
       ),
     );
   }

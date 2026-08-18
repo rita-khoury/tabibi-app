@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
+import 'package:tabibi/core/routes/app_routes.dart';
 import '../data/models/user_model.dart';
 import '../repository/auth_repository.dart';
 
@@ -86,7 +87,7 @@ class AuthController extends GetxController {
     await box.write('profileCompleted', completed);
   }
 
-  Future<void> logout() async {
+  Future<void> logout({bool navigateToGuestHome = false}) async {
     if (_loggingOut) {
       return;
     }
@@ -104,7 +105,7 @@ class AuthController extends GetxController {
 
       _loggingOut = false;
 
-      Get.offAllNamed('/login');
+      Get.offAllNamed(navigateToGuestHome ? AppRoutes.home : AppRoutes.login);
     }
   }
 

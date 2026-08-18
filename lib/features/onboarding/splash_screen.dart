@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tabibi/core/routes/app_routes.dart';
+import 'package:tabibi/features/auth/repository/AuthController.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,20 +26,21 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    Future.delayed(const Duration(seconds: 4), () async {
-      final box = GetStorage();
-      final prefs = await SharedPreferences.getInstance();
+    Future.delayed(const Duration(seconds: 4), () {
+      if (!mounted) return;
 
-      // مؤقتًا: مسح جلسة تسجيل الدخول عند كل تشغيل
-      await prefs.remove('auth_token');
-      await prefs.remove('refresh_token');
-      await box.remove('isLoggedIn');
-      await box.remove('userData');
-      await box.remove('profileCompleted');
+      final authController = Get.find<AuthController>();
+      final profileCompleted =
+          authController.isProfileCompleted.value ||
+          GetStorage().read('profileCompleted') == true;
 
+      if (authController.isLoggedIn) {
+        Get.offAllNamed(
+          profileCompleted ? AppRoutes.home : AppRoutes.medicalProfile,
+        );
+        return;
+      }
 
-
-      // بعد المسح نذهب مباشرة إلى الـ Onboarding
       Get.offAllNamed(AppRoutes.onboarding);
     });
   }
@@ -53,10 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
           opacity: opacity,
           duration: const Duration(seconds: 2),
           curve: Curves.easeInOut,
-          child: Image.asset(
-            "assets/images/logo2.png",
-            fit: BoxFit.cover,
-          ),
+          child: Image.asset("assets/images/logo2.png", fit: BoxFit.cover),
         ),
       ),
     );

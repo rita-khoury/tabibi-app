@@ -38,10 +38,6 @@ import 'core/constance/app_colors.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
-  await GetStorage().erase();
-
-
-  print('TOKEN: ${GetStorage().read('accessToken')}');
 
   final GetStorage box = GetStorage();
   bool isDark = box.read('isDarkMode') ?? false;

@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '../../auth/data/models/RatingModel.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../appointments/model/appointment_model.dart';
-import '../../appointments/controller/appointments_controller.dart'; // تأكد من مسار نموذج الموعد الصحيح
+import '../../appointments/controller/appointments_controller.dart'; // ØªØ£ÙƒØ¯ Ù…Ù† Ù…Ø³Ø§Ø± Ù†Ù…ÙˆØ°Ø¬ Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø§Ù„ØµØ­ÙŠØ­
 
 import '../../../core/constance/app_messages.dart';
 import '../../../core/constance/app_alerts.dart';
@@ -35,7 +35,7 @@ class DoctorRatingsController extends GetxController {
     fetchDoctorRatings();
   }
 
-  /// دالة لاستخراج معرف الموعد بأمان من المصادر المتاحة
+  /// Ø¯Ø§Ù„Ø© Ù„Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ù…Ø¹Ø±Ù Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø¨Ø£Ù…Ø§Ù† Ù…Ù† Ø§Ù„Ù…ØµØ§Ø¯Ø± Ø§Ù„Ù…ØªØ§Ø­Ø©
   int? resolveAppointmentId(int? passedId) {
     if (passedId != null) return passedId;
     if (initialAppointmentId != null) return initialAppointmentId;
@@ -105,27 +105,27 @@ class DoctorRatingsController extends GetxController {
     }
   }
 
-  /// **دالة التشخيص الأقوى (Deep Debugging):** تفحص كل موعد وتقارنه مع الطبيب الحالي وتطبع السبب بالتفصيل
+  /// **Ø¯Ø§Ù„Ø© Ø§Ù„ØªØ´Ø®ÙŠØµ Ø§Ù„Ø£Ù‚ÙˆÙ‰ (Deep Debugging):** ØªÙØ­Øµ ÙƒÙ„ Ù…ÙˆØ¹Ø¯ ÙˆØªÙ‚Ø§Ø±Ù†Ù‡ Ù…Ø¹ Ø§Ù„Ø·Ø¨ÙŠØ¨ Ø§Ù„Ø­Ø§Ù„ÙŠ ÙˆØªØ·Ø¨Ø¹ Ø§Ù„Ø³Ø¨Ø¨ Ø¨Ø§Ù„ØªÙØµÙŠÙ„
   Future<void> checkAndCreateRating() async {
     int? finalAppointmentId = resolveAppointmentId(null);
 
     print("==================================================");
-    print("🔍 [DEBUG START] checkAndCreateRating called");
-    print("🎯 Target Current Doctor ID: $doctorId");
-    print("📌 initialAppointmentId: $initialAppointmentId");
-    print("📌 resolved appointmentId: $finalAppointmentId");
+    print("ðŸ” [DEBUG START] checkAndCreateRating called");
+    print("ðŸŽ¯ Target Current Doctor ID: $doctorId");
+    print("ðŸ“Œ initialAppointmentId: $initialAppointmentId");
+    print("ðŸ“Œ resolved appointmentId: $finalAppointmentId");
     print("==================================================");
 
-    // إذا كان الموعد موجوداً مسبقاً (قادم من شاشة المواعيد)، نفتح نافذة الإضافة مباشرة
+    // Ø¥Ø°Ø§ ÙƒØ§Ù† Ø§Ù„Ù…ÙˆØ¹Ø¯ Ù…ÙˆØ¬ÙˆØ¯Ø§Ù‹ Ù…Ø³Ø¨Ù‚Ø§Ù‹ (Ù‚Ø§Ø¯Ù… Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯)ØŒ Ù†ÙØªØ­ Ù†Ø§ÙØ°Ø© Ø§Ù„Ø¥Ø¶Ø§ÙØ© Ù…Ø¨Ø§Ø´Ø±Ø©
     if (finalAppointmentId != null) {
       print(
-        "✅ [DEBUG]: Found direct appointment ID without fetching appointments list: $finalAppointmentId",
+        "âœ… [DEBUG]: Found direct appointment ID without fetching appointments list: $finalAppointmentId",
       );
       _showRatingDialog(finalAppointmentId);
       return;
     }
 
-    // إذا لم يكن موجوداً (قادم من بروفايل الدكتور العام)، نبحث في مواعيد المريض
+    // Ø¥Ø°Ø§ Ù„Ù… ÙŠÙƒÙ† Ù…ÙˆØ¬ÙˆØ¯Ø§Ù‹ (Ù‚Ø§Ø¯Ù… Ù…Ù† Ø¨Ø±ÙˆÙØ§ÙŠÙ„ Ø§Ù„Ø¯ÙƒØªÙˆØ± Ø§Ù„Ø¹Ø§Ù…)ØŒ Ù†Ø¨Ø­Ø« ÙÙŠ Ù…ÙˆØ§Ø¹ÙŠØ¯ Ø§Ù„Ù…Ø±ÙŠØ¶
     try {
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
@@ -135,18 +135,18 @@ class DoctorRatingsController extends GetxController {
       List<AppointmentModel> appointments = await _authRepository
           .getMyAppointments();
       print(
-        "📦 [DEBUG]: Total appointments fetched from server = ${appointments.length}",
+        "ðŸ“¦ [DEBUG]: Total appointments fetched from server = ${appointments.length}",
       );
 
-      Get.back(); // إغلاق مؤشر التحميل
+      Get.back(); // Ø¥ØºÙ„Ø§Ù‚ Ù…Ø¤Ø´Ø± Ø§Ù„ØªØ­Ù…ÙŠÙ„
 
       if (appointments.isEmpty) {
         print(
-          "❌ [DEBUG]: The appointments list returned from server is completely EMPTY!",
+          "âŒ [DEBUG]: The appointments list returned from server is completely EMPTY!",
         );
       }
 
-      // طباعة تفصيلية لكل موعد يجلبه السيرفر لكي نرى ما هي حالته ولمن يتبع
+      // Ø·Ø¨Ø§Ø¹Ø© ØªÙØµÙŠÙ„ÙŠØ© Ù„ÙƒÙ„ Ù…ÙˆØ¹Ø¯ ÙŠØ¬Ù„Ø¨Ù‡ Ø§Ù„Ø³ÙŠØ±ÙØ± Ù„ÙƒÙŠ Ù†Ø±Ù‰ Ù…Ø§ Ù‡ÙŠ Ø­Ø§Ù„ØªÙ‡ ÙˆÙ„Ù…Ù† ÙŠØªØ¨Ø¹
       for (int i = 0; i < appointments.length; i++) {
         var app = appointments[i];
         print("--------------------------------------------------");
@@ -176,15 +176,15 @@ class DoctorRatingsController extends GetxController {
 
       if (completedAppointment != null) {
         print(
-          "🎉 [DEBUG SUCCESS]: Found a matching completed appointment! ID: ${completedAppointment.id}",
+          "ðŸŽ‰ [DEBUG SUCCESS]: Found a matching completed appointment! ID: ${completedAppointment.id}",
         );
         _showRatingDialog(completedAppointment.id);
       } else {
         print(
-          "❌ [DEBUG FAILED]: No appointment matched BOTH conditions (doctorId == $doctorId && status == 'completed').",
+          "âŒ [DEBUG FAILED]: No appointment matched BOTH conditions (doctorId == $doctorId && status == 'completed').",
         );
 
-        // فحص تقريبي لتسهيل معرفة أين تكمن المشكلة هل في الحالة أم في رقم الطبيب
+        // ÙØ­Øµ ØªÙ‚Ø±ÙŠØ¨ÙŠ Ù„ØªØ³Ù‡ÙŠÙ„ Ù…Ø¹Ø±ÙØ© Ø£ÙŠÙ† ØªÙƒÙ…Ù† Ø§Ù„Ù…Ø´ÙƒÙ„Ø© Ù‡Ù„ ÙÙŠ Ø§Ù„Ø­Ø§Ù„Ø© Ø£Ù… ÙÙŠ Ø±Ù‚Ù… Ø§Ù„Ø·Ø¨ÙŠØ¨
         bool hasAnyCompletedWithOtherDoctor = appointments.any(
           (a) => a.status.toLowerCase().trim() == 'completed',
         );
@@ -194,38 +194,41 @@ class DoctorRatingsController extends GetxController {
 
         if (hasAnyCompletedWithOtherDoctor && !hasAnyWithThisDoctor) {
           print(
-            "💡 [DEBUG HINT]: You have completed appointments, but none of them belong to doctorId: $doctorId!",
+            "ðŸ’¡ [DEBUG HINT]: You have completed appointments, but none of them belong to doctorId: $doctorId!",
           );
         } else if (hasAnyWithThisDoctor && !hasAnyCompletedWithOtherDoctor) {
           print(
-            "💡 [DEBUG HINT]: You have appointments with this doctor, but none of them have the status 'completed'!",
+            "ðŸ’¡ [DEBUG HINT]: You have appointments with this doctor, but none of them have the status 'completed'!",
           );
         }
 
         AppAlerts.showError(
           title: AppMessages.ratingErrorTitle,
           message:
-              "يجب أن يكون لديك موعد مكتمل سابق مع هذا الطبيب لكي تتمكن من تقييمه. (راجع الـ Console لمعرفة السبب بالتفصيل)",
+              "ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒÙˆÙ† Ù„Ø¯ÙŠÙƒ Ù…ÙˆØ¹Ø¯ Ù…ÙƒØªÙ…Ù„ Ø³Ø§Ø¨Ù‚ Ù…Ø¹ Ù‡Ø°Ø§ Ø§Ù„Ø·Ø¨ÙŠØ¨ Ù„ÙƒÙŠ ØªØªÙ…ÙƒÙ† Ù…Ù† ØªÙ‚ÙŠÙŠÙ…Ù‡. (Ø±Ø§Ø¬Ø¹ Ø§Ù„Ù€ Console Ù„Ù…Ø¹Ø±ÙØ© Ø§Ù„Ø³Ø¨Ø¨ Ø¨Ø§Ù„ØªÙØµÙŠÙ„)",
         );
       }
     } catch (e, stackTrace) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print("🚨 [DEBUG ERROR] Exception occurred in checkAndCreateRating: $e");
+      print(
+        "ðŸš¨ [DEBUG ERROR] Exception occurred in checkAndCreateRating: $e",
+      );
       print(stackTrace);
       AppAlerts.showError(
         title: AppMessages.ratingErrorTitle,
-        message: "حدث خطأ أثناء التحقق من المواعيد: ${e.toString()}",
+        message:
+            "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù…ÙˆØ§Ø¹ÙŠØ¯: ${e.toString()}",
       );
     }
   }
 
-  /// عرض دايالوج إدخال التقييم
+  /// Ø¹Ø±Ø¶ Ø¯Ø§ÙŠØ§Ù„ÙˆØ¬ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…
   void _showRatingDialog(int appointmentId) {
     commentController.clear();
     scoreController.value = 5.0;
 
     Get.defaultDialog(
-      title: "إضافة تقييم للطبيب",
+      title: "Ø¥Ø¶Ø§ÙØ© ØªÙ‚ÙŠÙŠÙ… Ù„Ù„Ø·Ø¨ÙŠØ¨",
       content: Column(
         children: [
           Obx(
@@ -251,7 +254,7 @@ class DoctorRatingsController extends GetxController {
           TextField(
             controller: commentController,
             decoration: const InputDecoration(
-              labelText: "اكتب تعليقك هنا...",
+              labelText: "Ø§ÙƒØªØ¨ ØªØ¹Ù„ÙŠÙ‚Ùƒ Ù‡Ù†Ø§...",
               border: OutlineInputBorder(),
             ),
             maxLines: 3,
@@ -261,27 +264,32 @@ class DoctorRatingsController extends GetxController {
             onPressed: () {
               createRating(appointmentId);
             },
-            child: const Text("إرسال التقييم"),
+            child: const Text("Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„ØªÙ‚ÙŠÙŠÙ…"),
           ),
         ],
       ),
     );
   }
 
-  // إضافة تقييم جديد للسيرفر مع طباعة الـ Payload واستجابة الخطأ بالتفصيل
+  // Ø¥Ø¶Ø§ÙØ© ØªÙ‚ÙŠÙŠÙ… Ø¬Ø¯ÙŠØ¯ Ù„Ù„Ø³ÙŠØ±ÙØ± Ù…Ø¹ Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„Ù€ Payload ÙˆØ§Ø³ØªØ¬Ø§Ø¨Ø© Ø§Ù„Ø®Ø·Ø£ Ø¨Ø§Ù„ØªÙØµÙŠÙ„
   Future<void> createRating(int? appointmentId) async {
     int? finalAppointmentId = resolveAppointmentId(appointmentId);
 
-    print("🚀 [DEBUG createRating]: finalAppointmentId = $finalAppointmentId");
-    print("🚀 [DEBUG createRating]: score = ${scoreController.value.toInt()}");
     print(
-      "🚀 [DEBUG createRating]: comment = ${commentController.text.trim()}",
+      "ðŸš€ [DEBUG createRating]: finalAppointmentId = $finalAppointmentId",
+    );
+    print(
+      "ðŸš€ [DEBUG createRating]: score = ${scoreController.value.toInt()}",
+    );
+    print(
+      "ðŸš€ [DEBUG createRating]: comment = ${commentController.text.trim()}",
     );
 
     if (finalAppointmentId == null) {
       AppAlerts.showError(
         title: AppMessages.ratingErrorTitle,
-        message: "لا يمكن إضافة التقييم بدون تحديد الموعد المكتمل.",
+        message:
+            "Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø¥Ø¶Ø§ÙØ© Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø¨Ø¯ÙˆÙ† ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ù…ÙˆØ¹Ø¯ Ø§Ù„Ù…ÙƒØªÙ…Ù„.",
       );
       return;
     }
@@ -298,12 +306,13 @@ class DoctorRatingsController extends GetxController {
         "comment": commentController.text.trim(),
       };
 
-      print("📤 [DEBUG createRating]: Sending payload -> $payload");
+      print("ðŸ“¤ [DEBUG createRating]: Sending payload -> $payload");
 
       await _authRepository.createRating(payload);
 
-      if (Get.isDialogOpen ?? false) Get.back(); // إغلاق التحميل
-      if (Get.isDialogOpen ?? false) Get.back(); // إغلاق دايالوج الإدخال
+      if (Get.isDialogOpen ?? false) Get.back(); // Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ØªØ­Ù…ÙŠÙ„
+      if (Get.isDialogOpen ?? false)
+        Get.back(); // Ø¥ØºÙ„Ø§Ù‚ Ø¯Ø§ÙŠØ§Ù„ÙˆØ¬ Ø§Ù„Ø¥Ø¯Ø®Ø§Ù„
 
       commentController.clear();
       scoreController.value = 5.0;
@@ -315,7 +324,7 @@ class DoctorRatingsController extends GetxController {
       fetchDoctorRatings(isRefresh: true);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print("🚨 [DEBUG createRating ERROR] Server Error Response: $e");
+      print("ðŸš¨ [DEBUG createRating ERROR] Server Error Response: $e");
       AppAlerts.showError(
         title: AppMessages.ratingErrorTitle,
         message: e.toString(),
@@ -323,14 +332,15 @@ class DoctorRatingsController extends GetxController {
     }
   }
 
-  // تعديل تقييم
+  // ØªØ¹Ø¯ÙŠÙ„ ØªÙ‚ÙŠÙŠÙ…
   Future<void> updateRating(int ratingId, int? appointmentId) async {
     int? finalAppointmentId = resolveAppointmentId(appointmentId);
 
     if (finalAppointmentId == null) {
       AppAlerts.showError(
         title: AppMessages.ratingErrorTitle,
-        message: "معرف الموعد مطلوب لتعديل التقييم.",
+        message:
+            "Ù…Ø¹Ø±Ù Ø§Ù„Ù…ÙˆØ¹Ø¯ Ù…Ø·Ù„ÙˆØ¨ Ù„ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„ØªÙ‚ÙŠÙŠÙ….",
       );
       return;
     }
@@ -367,7 +377,7 @@ class DoctorRatingsController extends GetxController {
     }
   }
 
-  // حذف تقييم
+  // Ø­Ø°Ù ØªÙ‚ÙŠÙŠÙ…
   Future<void> deleteRating(int ratingId) async {
     var appointmentId = 0;
     for (final rating in ratingsList) {
@@ -407,6 +417,11 @@ class DoctorRatingsController extends GetxController {
 
   void markRatingReported(int ratingId) {
     reportedRatingIds.add(ratingId);
+    final index = ratingsList.indexWhere((rating) => rating.id == ratingId);
+    if (index >= 0) {
+      ratingsList[index].isReportedByMe = true;
+      ratingsList.refresh();
+    }
   }
 
   Future<void> reportRating(

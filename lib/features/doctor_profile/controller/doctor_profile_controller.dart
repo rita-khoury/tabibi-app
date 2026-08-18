@@ -196,6 +196,10 @@ class DoctorProfileController extends GetxController {
     }
   }
 
+  Future<void> refreshDoctor() async {
+    await _initializeDoctor();
+  }
+
   Future<void> _refreshFavoriteState() async {
     try {
       isFavoriteLoading.value = true;

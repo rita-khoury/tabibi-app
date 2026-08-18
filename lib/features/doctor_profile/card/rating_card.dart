@@ -39,7 +39,6 @@ class RatingCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _ReviewerAvatar(
                 imageUrl: rating.userAvatarUrl,
@@ -159,8 +158,9 @@ class RatingCard extends StatelessWidget {
   }
 
   static TextDirection _textDirection(String value) {
-    final arabic = RegExp(r'[\u0600-\u06FF]').hasMatch(value);
-    return arabic ? TextDirection.rtl : TextDirection.ltr;
+    return RegExp(r'[\u0600-\u06FF]').hasMatch(value)
+        ? TextDirection.rtl
+        : TextDirection.ltr;
   }
 
   static String _formatDate(String raw) {
@@ -203,21 +203,45 @@ class _ReviewerAvatar extends StatelessWidget {
         .map((part) => part[0].toUpperCase())
         .join();
 
-    return CircleAvatar(
-      radius: 24,
-      backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
-      foregroundImage: url.isEmpty ? null : NetworkImage(url),
-      onForegroundImageError: url.isEmpty ? null : (exception, stackTrace) {},
-      child: url.isEmpty
-          ? Text(
-              initials.isEmpty ? 'P' : initials,
-              style: const TextStyle(
-                color: AppColors.primaryBlue,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
+    return SizedBox(
+      height: 48,
+      width: 48,
+      child: ClipOval(
+        child: url.isEmpty
+            ? _AvatarFallback(initials: initials)
+            : Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _AvatarFallback(initials: initials);
+                },
               ),
-            )
-          : const Icon(Icons.person_outline, color: AppColors.primaryBlue),
+      ),
+    );
+  }
+}
+
+class _AvatarFallback extends StatelessWidget {
+  const _AvatarFallback({required this.initials});
+
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.primaryBlue.withValues(alpha: 0.12),
+      child: Center(
+        child: initials.isEmpty
+            ? const Icon(Icons.person_outline, color: AppColors.primaryBlue)
+            : Text(
+                initials,
+                style: const TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+      ),
     );
   }
 }

@@ -23,6 +23,7 @@ class DoctorModel {
   final String image;
   final String specialization;
   final String? subSpecialization;
+  final String? licenseNumber;
   final String? bio;
   final String? initialVisitFee;
   final String? returnVisitFee;
@@ -43,6 +44,7 @@ class DoctorModel {
     required this.image,
     required this.specialization,
     this.subSpecialization,
+    this.licenseNumber,
     this.bio,
     this.initialVisitFee,
     this.returnVisitFee,
@@ -113,13 +115,18 @@ class DoctorModel {
       return DoctorModel(
         id: parsedId,
         name: _parseDoctorName(json['user']),
-        image: json['user']?['avatarUrl']?.toString() ??
+        image:
+            json['user']?['avatarUrl']?.toString() ??
             json['user']?['avatar']?.toString() ??
             json['avatarUrl']?.toString() ??
             json['avatar']?.toString() ??
             '',
         specialization: json['specialization']?.toString() ?? 'General',
-        subSpecialization: json['subSpecialization']?.toString(),
+        subSpecialization:
+            (json['subSpecialization'] ?? json['sub_specialization'])
+                ?.toString(),
+        licenseNumber: (json['licenseNumber'] ?? json['license_number'])
+            ?.toString(),
         bio: json['bio']?.toString(),
         initialVisitFee: json['initialVisitFee']?.toString(),
         returnVisitFee: json['returnVisitFee']?.toString(),

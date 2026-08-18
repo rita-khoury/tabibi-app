@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../constance/api_constants.dart';
 
 class DoctorService {
@@ -10,52 +11,54 @@ class DoctorService {
     ),
   );
 
-  Future<List<dynamic>> getAll() async {
+  Future<List<dynamic>> getAll({
+    String? search,
+    String? specialization,
+    String? language,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
     try {
-      final response = await _dio.get('/doctors');
+      final queryParameters = <String, dynamic>{};
+      if (search != null && search.isNotEmpty) {
+        queryParameters['search'] = search;
+      }
+      if (specialization != null && specialization.isNotEmpty) {
+        queryParameters['specialization'] = specialization;
+      }
+      if (language != null && language.isNotEmpty) {
+        queryParameters['language'] = language;
+      }
+      if (sortBy != null && sortBy.isNotEmpty) {
+        queryParameters['sortBy'] = sortBy;
+      }
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        queryParameters['sortOrder'] = sortOrder;
+      }
+
+      final response = await _dio.get(
+        '/doctors',
+        queryParameters: queryParameters.isEmpty ? null : queryParameters,
+      );
       return response.data;
     } catch (e) {
       throw Exception('Failed to load doctors: $e');
     }
   }
 
-  Future<List<dynamic>> getSpecialities() async {
-    try {
-      final response = await _dio.get('/specialities');
-
-      if (response.statusCode == 200) {
-        return response.data;
-      } else {
-        throw Exception('Failed to load specialities');
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
-    }
-  }
-
   Future<Map<String, dynamic>> getDoctorById(int doctorId) async {
     try {
       final response = await _dio.get('/doctor-profiles/$doctorId');
-
       if (response.statusCode == 200) {
         return response.data;
-      } else {
-        throw Exception('Failed to load doctor details');
       }
+      throw Exception('Failed to load doctor details');
     } catch (e) {
       throw Exception('Error: $e');
     }
   }
 
-  Future<List<dynamic>> search(String query) async {
-    try {
-      final response = await _dio.get(
-        '/doctor-profiles/search',
-        queryParameters: {'q': query},
-      );
-      return response.data;
-    } catch (e) {
-      throw Exception('Error searching doctors: $e');
-    }
+  Future<List<dynamic>> search(String query) {
+    return getAll(search: query);
   }
 }

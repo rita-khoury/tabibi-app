@@ -37,6 +37,8 @@ class _SplashScreenState extends State<SplashScreen> {
       await box.remove('userData');
       await box.remove('profileCompleted');
 
+
+
       // بعد المسح نذهب مباشرة إلى الـ Onboarding
       Get.offAllNamed(AppRoutes.onboarding);
     });

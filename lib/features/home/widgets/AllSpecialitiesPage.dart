@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/constance/app_colors.dart';
-import '../controller/SpecialitiesController.dart';
+import '../controller/home_controller.dart';
 import '../widgets/specialities_section.dart';
 
 class AllSpecialitiesPage extends StatelessWidget {
@@ -9,20 +10,19 @@ class AllSpecialitiesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final SpecialitiesController controller = Get.put(SpecialitiesController());
-
+    final HomeController controller = Get.find<HomeController>();
     return Scaffold(
-      backgroundColor:  AppColors.lightGray,
+      backgroundColor: AppColors.lightGray,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new_rounded,
             color: AppColors.primaryBlue,
           ),
-          onPressed: () => Get.back(),
+          onPressed: Get.back,
         ),
         title: const Text(
-          "All Specialities",
+          'All Specialities',
           style: TextStyle(
             color: AppColors.primaryBlue,
             fontWeight: FontWeight.bold,
@@ -33,27 +33,62 @@ class AllSpecialitiesPage extends StatelessWidget {
         backgroundColor: AppColors.lightGray,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Obx(() {
-          if (controller.isLoading.value) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (controller.specialities.isEmpty) {
-            return const Center(
-              child: Text(
-                "No specialities available at the moment.",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            );
-          }
-
-          return SpecialitiesSection(
+      body: Obx(() {
+        if (controller.isSpecialitiesLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final error = controller.specialitiesErrorMessage.value;
+        if (error != null) {
+          return _SpecialitiesError(
+            message: error,
+            onRetry: controller.loadSpecialities,
+          );
+        }
+        if (controller.specialities.isEmpty) {
+          return const Center(
+            child: Text(
+              'No specialities available at the moment.',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          );
+        }
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(15),
+          child: SpecialitiesSection(
             isGrid: true,
             specialities: controller.specialities,
-          );
-        }),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+class _SpecialitiesError extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _SpecialitiesError({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 52, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
       ),
     );
   }

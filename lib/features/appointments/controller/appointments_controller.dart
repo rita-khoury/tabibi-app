@@ -17,6 +17,7 @@ class AppointmentsController extends GetxController {
   List<AppointmentModel> canceledAppointments = [];
   List<AppointmentModel> noShowAppointments = [];
   List<WaitlistModel> waitlistAppointments = [];
+  final Set<int> ratedAppointmentIds = <int>{};
 
   bool isLoading = true;
   final RxInt upcomingTabRevision = 0.obs;
@@ -36,41 +37,76 @@ class AppointmentsController extends GetxController {
     try {
       isLoading = true;
       update();
-
-      List<AppointmentModel> result = await _repo.getMyAppointments();
+      final result = await _repo.getMyAppointments();
 
       upcomingAppointments = result
           .where(
-            (a) =>
-                a.status.toLowerCase() == 'pending' ||
-                a.status.toLowerCase() == 'confirmed',
+            (appointment) =>
+                appointment.status.toLowerCase() == 'pending' ||
+                appointment.status.toLowerCase() == 'confirmed',
           )
           .toList();
-
       completedAppointments = result
-          .where((a) => a.status.toLowerCase() == 'completed')
-          .toList();
-
-      canceledAppointments = result
           .where(
-            (a) =>
-                a.status.toLowerCase() == 'cancelled' ||
-                a.status.toLowerCase() == 'canceled',
+            (appointment) => appointment.status.toLowerCase() == 'completed',
           )
           .toList();
-
+      canceledAppointments = result.where((appointment) {
+        final status = appointment.status.toLowerCase();
+        return status == 'cancelled' || status == 'canceled';
+      }).toList();
       noShowAppointments = result
-          .where((a) => a.status.toLowerCase() == 'no_show')
+          .where((appointment) => appointment.status.toLowerCase() == 'no_show')
           .toList();
-    } catch (e) {
-      debugPrint("❌ خطأ في جلب المواعيد: $e");
+
+      await fetchRatedAppointmentIds();
+    } catch (error) {
+      debugPrint('Unable to load appointments: $error');
     } finally {
       isLoading = false;
       update();
     }
   }
 
-  Future<void> rateDoctorForAppointment({
+  bool isAppointmentRated(int appointmentId) =>
+      ratedAppointmentIds.contains(appointmentId);
+
+  Future<void> fetchRatedAppointmentIds() async {
+    try {
+      final reviews = await _repo.getMyReviews();
+      final ids = <int>{};
+      for (final review in reviews) {
+        final status = (review['status'] ?? '').toString().toUpperCase();
+        if (status == 'DELETED') continue;
+        final nestedAppointment = review['appointment'];
+        final value =
+            review['appointmentId'] ??
+            review['appointment_id'] ??
+            (nestedAppointment is Map ? nestedAppointment['id'] : null);
+        final appointmentId = int.tryParse(value?.toString() ?? '');
+        if (appointmentId != null && appointmentId > 0) {
+          ids.add(appointmentId);
+        }
+      }
+      ratedAppointmentIds
+        ..clear()
+        ..addAll(ids);
+    } catch (error) {
+      debugPrint('Unable to load rating state: $error');
+    }
+  }
+
+  void markAppointmentRated(int appointmentId) {
+    ratedAppointmentIds.add(appointmentId);
+    update();
+  }
+
+  void markAppointmentUnrated(int appointmentId) {
+    ratedAppointmentIds.remove(appointmentId);
+    update();
+  }
+
+  Future<bool> rateDoctorForAppointment({
     required int appointmentId,
     required double rating,
     String? comment,
@@ -81,22 +117,18 @@ class AppointmentsController extends GetxController {
         rating: rating,
         comment: comment,
       );
-
-      AppAlerts.showSuccess(
-        title: AppMessages.successTitle,
-        message: "تم إرسال تقييمك بنجاح، شكراً لك!",
-      );
-
-      await fetchAppointments();
-    } catch (e) {
-      String errorMessage = e.toString().replaceFirst(
+      markAppointmentRated(appointmentId);
+      return true;
+    } catch (error) {
+      final message = error.toString().replaceFirst(
         RegExp(r'^Exception:\s*'),
         '',
       );
       AppAlerts.showError(
         title: AppMessages.errorTitle,
-        message: errorMessage.isNotEmpty ? errorMessage : "فشل إرسال التقييم",
+        message: message.isNotEmpty ? message : 'Unable to submit your rating.',
       );
+      return false;
     }
   }
 

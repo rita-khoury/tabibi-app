@@ -1,41 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
-
-import '../card/rating_card.dart';
-import '../controller/doctor_ratings_controller.dart';
+import 'package:tabibi/features/auth/repository/AuthController.dart';
+import 'package:tabibi/features/doctor_profile/card/rating_card.dart';
+import 'package:tabibi/features/doctor_profile/controller/doctor_ratings_controller.dart';
 
 class DoctorRatingsView extends GetView<DoctorRatingsController> {
-  final int? appointmentId;
-
-  const DoctorRatingsView({Key? key, this.appointmentId}) : super(key: key);
+  const DoctorRatingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final authController = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>()
+        : null;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.lightGray,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
+        backgroundColor: AppColors.white,
+        foregroundColor: AppColors.primaryBlue,
         centerTitle: true,
         title: const Text(
-          "Doctor Ratings",
-          style: TextStyle(
-            color: AppColors.primaryBlue,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: AppColors.primaryBlue,
-            size: 20,
-          ),
-          onPressed: () => Get.back(),
+          'Doctor Ratings',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         ),
       ),
       body: Obx(() {
+        final currentUserId =
+            int.tryParse(
+              authController?.currentUser.value?.id.toString() ?? '',
+            ) ??
+            0;
         if (controller.isLoading.value && controller.ratingsList.isEmpty) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primaryBlue),
@@ -43,22 +39,19 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
         }
 
         if (controller.ratingsList.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.star_border_rounded,
-                  size: 64,
-                  color: AppColors.gray.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  "No ratings for this doctor yet.",
-                  style: TextStyle(
-                    color: AppColors.gray,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+          return RefreshIndicator(
+            color: AppColors.primaryBlue,
+            onRefresh: () => controller.fetchDoctorRatings(isRefresh: true),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(
+                  height: 360,
+                  child: Center(
+                    child: Text(
+                      'No ratings yet',
+                      style: TextStyle(color: AppColors.gray, fontSize: 15),
+                    ),
                   ),
                 ),
               ],
@@ -70,32 +63,47 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
           color: AppColors.primaryBlue,
           onRefresh: () => controller.fetchDoctorRatings(isRefresh: true),
           child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
-            itemCount: controller.ratingsList.length + (controller.hasMore ? 1 : 0),
+            itemCount:
+                controller.ratingsList.length + (controller.hasMore ? 1 : 0),
             itemBuilder: (context, index) {
               if (index == controller.ratingsList.length) {
                 if (!controller.isMoreLoading.value) {
-                  controller.fetchDoctorRatings();
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    controller.fetchDoctorRatings();
+                  });
                 }
                 return const Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16),
                   child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.primaryBlue,
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   ),
                 );
               }
 
               final rating = controller.ratingsList[index];
-
+              final isOwner =
+                  currentUserId > 0 && rating.authorUserId == currentUserId;
+              final isReportedByMe =
+                  rating.isReportedByMe ||
+                  controller.isRatingReported(rating.id);
               return Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
+                padding: const EdgeInsets.only(bottom: 14),
                 child: RatingCard(
                   rating: rating,
-                  onReportPressed: () => _showReportDialog(context, rating.id),
-                  // تمرير دالة الحذف للكارد مباشرة
-                  onDeletePressed: () => _confirmDelete(rating.id),
+                  onDeletePressed: isOwner
+                      ? () => _confirmDelete(rating.id)
+                      : null,
+                  showReportAction: !isOwner,
+                  isReportDisabled: !isOwner && isReportedByMe,
+                  onReportPressed: !isOwner && !isReportedByMe
+                      ? () => _showReportDialog(context, rating.id)
+                      : null,
                 ),
               );
             },
@@ -107,103 +115,81 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
 
   void _confirmDelete(int ratingId) {
     Get.defaultDialog(
-      title: "Delete Rating",
+      title: 'Delete Rating',
       titleStyle: const TextStyle(
         color: AppColors.primaryBlue,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w800,
       ),
-      middleText: "Are you sure you want to delete this rating?",
-      textConfirm: "Delete",
+      middleText: 'Are you sure you want to delete this rating?',
+      textConfirm: 'Delete',
       confirmTextColor: Colors.white,
       buttonColor: Colors.red,
       onConfirm: () {
         Get.back();
         controller.deleteRating(ratingId);
       },
-      textCancel: "Cancel",
+      textCancel: 'Cancel',
       cancelTextColor: AppColors.gray,
     );
   }
 
   void _showReportDialog(BuildContext context, int ratingId) {
-    String selectedReason = 'spam';
     final explanationController = TextEditingController();
+    String selectedReason = 'spam';
 
     Get.defaultDialog(
-      title: "Report Rating",
+      title: 'Report Rating',
       titleStyle: const TextStyle(
         color: AppColors.primaryBlue,
-        fontWeight: FontWeight.bold,
-        fontSize: 18,
+        fontWeight: FontWeight.w800,
       ),
-      backgroundColor: Colors.white,
-      radius: 16,
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        child: Column(
-          children: [
-            DropdownButtonFormField<String>(
-              value: selectedReason,
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              elevation: 8,
-              decoration: InputDecoration(
-                labelText: 'Reason',
-                labelStyle: const TextStyle(color: AppColors.gray),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.gray),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: AppColors.primaryBlue,
-                    width: 2,
+      content: StatefulBuilder(
+        builder: (context, setState) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: selectedReason,
+                decoration: const InputDecoration(labelText: 'Reason'),
+                items: const [
+                  DropdownMenuItem(value: 'spam', child: Text('Spam')),
+                  DropdownMenuItem(
+                    value: 'abuse',
+                    child: Text('Abusive content'),
                   ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 14,
+                  DropdownMenuItem(value: 'other', child: Text('Other')),
+                ],
+                onChanged: (value) {
+                  if (value != null) setState(() => selectedReason = value);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: explanationController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Details (optional)',
+                  border: OutlineInputBorder(),
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 'spam', child: Text('Spam')),
-                DropdownMenuItem(value: 'inappropriate', child: Text('Inappropriate')),
-                DropdownMenuItem(value: 'abusive', child: Text('Abusive')),
-                DropdownMenuItem(value: 'other', child: Text('Other')),
-              ],
-              onChanged: (val) {
-                if (val != null) selectedReason = val;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: explanationController,
-              decoration: InputDecoration(
-                labelText: 'Details (Optional)',
-                labelStyle: const TextStyle(color: AppColors.gray),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.gray),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 14,
-                ),
-              ),
-              maxLines: 2,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      textConfirm: "Submit Report",
+      textConfirm: 'Report',
       confirmTextColor: Colors.white,
       buttonColor: AppColors.primaryBlue,
       onConfirm: () {
+        final explanation = explanationController.text.trim();
         Get.back();
-        controller.reportRating(ratingId, selectedReason, explanationController.text);
+        controller.reportRating(
+          ratingId,
+          selectedReason,
+          explanation.isEmpty ? null : explanation,
+        );
       },
-      textCancel: "Cancel",
+      textCancel: 'Cancel',
       cancelTextColor: AppColors.gray,
     );
   }

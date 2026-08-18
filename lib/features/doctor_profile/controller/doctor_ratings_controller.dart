@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 
 import '../../auth/data/models/RatingModel.dart';
 import '../../auth/repository/auth_repository.dart';
-import '../../appointments/model/appointment_model.dart'; // تأكد من مسار نموذج الموعد الصحيح
+import '../../appointments/model/appointment_model.dart';
+import '../../appointments/controller/appointments_controller.dart'; // تأكد من مسار نموذج الموعد الصحيح
 
 import '../../../core/constance/app_messages.dart';
 import '../../../core/constance/app_alerts.dart';
@@ -19,6 +20,7 @@ class DoctorRatingsController extends GetxController {
   var ratingsList = <RatingModel>[].obs;
   var isLoading = false.obs;
   var isMoreLoading = false.obs;
+  final reportedRatingIds = <int>{}.obs;
 
   int page = 1;
   int limit = 10;
@@ -86,6 +88,11 @@ class DoctorRatingsController extends GetxController {
       }
 
       ratingsList.addAll(fetchedRatings);
+      reportedRatingIds.addAll(
+        fetchedRatings
+            .where((rating) => rating.isReportedByMe)
+            .map((rating) => rating.id),
+      );
       page++;
     } catch (e) {
       AppAlerts.showError(
@@ -111,7 +118,9 @@ class DoctorRatingsController extends GetxController {
 
     // إذا كان الموعد موجوداً مسبقاً (قادم من شاشة المواعيد)، نفتح نافذة الإضافة مباشرة
     if (finalAppointmentId != null) {
-      print("✅ [DEBUG]: Found direct appointment ID without fetching appointments list: $finalAppointmentId");
+      print(
+        "✅ [DEBUG]: Found direct appointment ID without fetching appointments list: $finalAppointmentId",
+      );
       _showRatingDialog(finalAppointmentId);
       return;
     }
@@ -123,13 +132,18 @@ class DoctorRatingsController extends GetxController {
         barrierDismissible: false,
       );
 
-      List<AppointmentModel> appointments = await _authRepository.getMyAppointments();
-      print("📦 [DEBUG]: Total appointments fetched from server = ${appointments.length}");
+      List<AppointmentModel> appointments = await _authRepository
+          .getMyAppointments();
+      print(
+        "📦 [DEBUG]: Total appointments fetched from server = ${appointments.length}",
+      );
 
       Get.back(); // إغلاق مؤشر التحميل
 
       if (appointments.isEmpty) {
-        print("❌ [DEBUG]: The appointments list returned from server is completely EMPTY!");
+        print(
+          "❌ [DEBUG]: The appointments list returned from server is completely EMPTY!",
+        );
       }
 
       // طباعة تفصيلية لكل موعد يجلبه السيرفر لكي نرى ما هي حالته ولمن يتبع
@@ -143,15 +157,17 @@ class DoctorRatingsController extends GetxController {
         print("  - Status string raw: '${app.status}'");
         print("  - Status lower/trimmed: '${app.status.toLowerCase().trim()}'");
         print("  - Matches Target Doctor ID (${app.doctorId == doctorId})?");
-        print("  - Is Status Completed (${app.status.toLowerCase().trim() == 'completed'})?");
+        print(
+          "  - Is Status Completed (${app.status.toLowerCase().trim() == 'completed'})?",
+        );
       }
       print("--------------------------------------------------");
 
       AppointmentModel? completedAppointment;
       try {
         completedAppointment = appointments.firstWhere(
-              (appointment) =>
-          appointment.doctorId == doctorId &&
+          (appointment) =>
+              appointment.doctorId == doctorId &&
               appointment.status.toLowerCase().trim() == 'completed',
         );
       } catch (e) {
@@ -159,24 +175,37 @@ class DoctorRatingsController extends GetxController {
       }
 
       if (completedAppointment != null) {
-        print("🎉 [DEBUG SUCCESS]: Found a matching completed appointment! ID: ${completedAppointment.id}");
+        print(
+          "🎉 [DEBUG SUCCESS]: Found a matching completed appointment! ID: ${completedAppointment.id}",
+        );
         _showRatingDialog(completedAppointment.id);
       } else {
-        print("❌ [DEBUG FAILED]: No appointment matched BOTH conditions (doctorId == $doctorId && status == 'completed').");
+        print(
+          "❌ [DEBUG FAILED]: No appointment matched BOTH conditions (doctorId == $doctorId && status == 'completed').",
+        );
 
         // فحص تقريبي لتسهيل معرفة أين تكمن المشكلة هل في الحالة أم في رقم الطبيب
-        bool hasAnyCompletedWithOtherDoctor = appointments.any((a) => a.status.toLowerCase().trim() == 'completed');
-        bool hasAnyWithThisDoctor = appointments.any((a) => a.doctorId == doctorId);
+        bool hasAnyCompletedWithOtherDoctor = appointments.any(
+          (a) => a.status.toLowerCase().trim() == 'completed',
+        );
+        bool hasAnyWithThisDoctor = appointments.any(
+          (a) => a.doctorId == doctorId,
+        );
 
         if (hasAnyCompletedWithOtherDoctor && !hasAnyWithThisDoctor) {
-          print("💡 [DEBUG HINT]: You have completed appointments, but none of them belong to doctorId: $doctorId!");
+          print(
+            "💡 [DEBUG HINT]: You have completed appointments, but none of them belong to doctorId: $doctorId!",
+          );
         } else if (hasAnyWithThisDoctor && !hasAnyCompletedWithOtherDoctor) {
-          print("💡 [DEBUG HINT]: You have appointments with this doctor, but none of them have the status 'completed'!");
+          print(
+            "💡 [DEBUG HINT]: You have appointments with this doctor, but none of them have the status 'completed'!",
+          );
         }
 
         AppAlerts.showError(
           title: AppMessages.ratingErrorTitle,
-          message: "يجب أن يكون لديك موعد مكتمل سابق مع هذا الطبيب لكي تتمكن من تقييمه. (راجع الـ Console لمعرفة السبب بالتفصيل)",
+          message:
+              "يجب أن يكون لديك موعد مكتمل سابق مع هذا الطبيب لكي تتمكن من تقييمه. (راجع الـ Console لمعرفة السبب بالتفصيل)",
         );
       }
     } catch (e, stackTrace) {
@@ -199,21 +228,25 @@ class DoctorRatingsController extends GetxController {
       title: "إضافة تقييم للطبيب",
       content: Column(
         children: [
-          Obx(() => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              return IconButton(
-                onPressed: () {
-                  scoreController.value = (index + 1).toDouble();
-                },
-                icon: Icon(
-                  index < scoreController.value ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
-                  size: 32,
-                ),
-              );
-            }),
-          )),
+          Obx(
+            () => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return IconButton(
+                  onPressed: () {
+                    scoreController.value = (index + 1).toDouble();
+                  },
+                  icon: Icon(
+                    index < scoreController.value
+                        ? Icons.star
+                        : Icons.star_border,
+                    color: Colors.amber,
+                    size: 32,
+                  ),
+                );
+              }),
+            ),
+          ),
           const SizedBox(height: 10),
           TextField(
             controller: commentController,
@@ -241,7 +274,9 @@ class DoctorRatingsController extends GetxController {
 
     print("🚀 [DEBUG createRating]: finalAppointmentId = $finalAppointmentId");
     print("🚀 [DEBUG createRating]: score = ${scoreController.value.toInt()}");
-    print("🚀 [DEBUG createRating]: comment = ${commentController.text.trim()}");
+    print(
+      "🚀 [DEBUG createRating]: comment = ${commentController.text.trim()}",
+    );
 
     if (finalAppointmentId == null) {
       AppAlerts.showError(
@@ -334,40 +369,57 @@ class DoctorRatingsController extends GetxController {
 
   // حذف تقييم
   Future<void> deleteRating(int ratingId) async {
+    var appointmentId = 0;
+    for (final rating in ratingsList) {
+      if (rating.id == ratingId) {
+        appointmentId = rating.appointmentId;
+        break;
+      }
+    }
+
     try {
       Get.dialog(
         const Center(child: CircularProgressIndicator()),
         barrierDismissible: false,
       );
-
       await _authRepository.deleteRating(ratingId);
-
       Get.back();
-
+      if (appointmentId > 0 && Get.isRegistered<AppointmentsController>()) {
+        Get.find<AppointmentsController>().markAppointmentUnrated(
+          appointmentId,
+        );
+      }
       AppAlerts.showSuccess(
-        title: "Success",
-        message: "Rating deleted successfully",
+        title: 'Success',
+        message: 'Rating deleted successfully',
       );
-      fetchDoctorRatings(isRefresh: true);
-    } catch (e) {
+      await fetchDoctorRatings(isRefresh: true);
+    } catch (error) {
       Get.back();
       AppAlerts.showError(
         title: AppMessages.ratingErrorTitle,
-        message: e.toString(),
+        message: error.toString(),
       );
     }
   }
 
+  bool isRatingReported(int ratingId) => reportedRatingIds.contains(ratingId);
+
+  void markRatingReported(int ratingId) {
+    reportedRatingIds.add(ratingId);
+  }
+
   Future<void> reportRating(
-      int ratingId,
-      String reason,
-      String? explanation,
-      ) async {
+    int ratingId,
+    String reason,
+    String? explanation,
+  ) async {
     try {
       await _authRepository.reportRating(ratingId, {
         "reason": reason,
         "explanation": explanation,
       });
+      markRatingReported(ratingId);
       AppAlerts.showSuccess(
         title: AppMessages.reportSuccessTitle,
         message: AppMessages.reportSuccessBody,

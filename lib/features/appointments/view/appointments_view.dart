@@ -482,6 +482,7 @@ import 'package:tabibi/features/appointments/widget/empty_appointment_state.dart
 import '../controller/appointments_controller.dart';
 import '../model/appointment_model.dart';
 import '../widgets/appointment_card.dart';
+import '../widgets/rate_doctor_dialog.dart';
 
 class AppointmentsView extends StatelessWidget {
   const AppointmentsView({super.key});
@@ -646,124 +647,57 @@ class AppointmentsView extends StatelessWidget {
     String title, {
     required bool isCompletedTab,
   }) {
+    final Widget content;
     if (list.isEmpty) {
-      return EmptyAppointmentState(
-        imagePath: img,
-        title: title,
-        subtitle: "Check back later",
+      content = ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        children: [
+          SizedBox(
+            height: 320,
+            child: EmptyAppointmentState(
+              imagePath: img,
+              title: title,
+              subtitle: 'Check back later',
+            ),
+          ),
+        ],
+      );
+    } else {
+      content = ListView.builder(
+        key: ValueKey(
+          '${isCompletedTab}_${controller.ratedAppointmentIds.length}',
+        ),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: list.length,
+        itemBuilder: (context, index) {
+          final appointment = list[index];
+          return AppointmentCard(
+            appointment: appointment,
+            onCancel: appointment.status.toLowerCase() == 'confirmed'
+                ? () => controller.cancelAppointmentById(appointment.id)
+                : null,
+            onRate:
+                isCompletedTab && !controller.isAppointmentRated(appointment.id)
+                ? () => _showRatingDialog(context, appointment)
+                : null,
+          );
+        },
       );
     }
 
-    return ListView.builder(
-      key: UniqueKey(),
-      padding: const EdgeInsets.all(16),
-      itemCount: list.length,
-      itemBuilder: (context, index) {
-        final appointment = list[index];
-        return Column(
-          children: [
-            AppointmentCard(
-              appointment: appointment,
-              onCancel: appointment.status.toLowerCase() == 'confirmed'
-                  ? () => controller.cancelAppointmentById(appointment.id)
-                  : null,
-            ),
-            if (isCompletedTab) ...[
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _showRatingDialog(context, appointment),
-                  icon: const Icon(Icons.star, size: 16, color: Colors.amber),
-                  label: const Text("Rate Doctor"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-          ],
-        );
-      },
+    return RefreshIndicator(
+      color: AppColors.primaryBlue,
+      onRefresh: controller.fetchAppointments,
+      child: content,
     );
   }
 
   void _showRatingDialog(BuildContext context, AppointmentModel appointment) {
-    double selectedRating = 5.0;
-    final TextEditingController commentController = TextEditingController();
-    final AppointmentsController controller =
-        Get.find<AppointmentsController>();
-
-    Get.defaultDialog(
-      title: "Rate Doctor",
-      titleStyle: const TextStyle(
-        fontWeight: FontWeight.bold,
-        color: AppColors.primaryBlue,
-      ),
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Column(
-          children: [
-            const Text("How satisfied are you with your consultation?"),
-            const SizedBox(height: 10),
-            Slider(
-              value: selectedRating,
-              min: 1,
-              max: 5,
-              divisions: 4,
-              activeColor: Colors.amber,
-              label: selectedRating.toStringAsFixed(0),
-              onChanged: (val) {
-                selectedRating = val;
-              },
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: commentController,
-              decoration: const InputDecoration(
-                hintText: "Write your comment here (optional)",
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                TextButton(
-                  onPressed: () => Get.back(),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    Get.back();
-                    controller.rateDoctorForAppointment(
-                      appointmentId: appointment.id,
-                      rating: selectedRating,
-                      comment: commentController.text,
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                  ),
-                  child: const Text(
-                    "Submit",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    Get.dialog<void>(
+      RateDoctorDialog(appointment: appointment),
+      barrierDismissible: false,
     );
   }
 }

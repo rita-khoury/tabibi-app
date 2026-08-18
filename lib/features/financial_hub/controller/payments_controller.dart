@@ -13,19 +13,35 @@ class PaymentRecord {
     required this.appointmentType,
     required this.paidAt,
     required this.doctorName,
+    required this.doctorSpecialty,
     required this.clinicName,
+    required this.appointmentAt,
+    required this.appointmentStatus,
+    this.refundAmount,
+    this.penaltyAmount,
+    this.failureReason,
+    this.doctorId,
+    this.appointmentId,
   });
 
   final String id;
   final double amount;
   final double? netPaidAmount;
+  final double? refundAmount;
+  final double? penaltyAmount;
+  final String? failureReason;
+  final String? doctorId;
+  final String? appointmentId;
   final String paymentMethod;
   final String status;
   final String humanReadableStatus;
   final String appointmentType;
   final DateTime? paidAt;
   final String doctorName;
+  final String doctorSpecialty;
   final String clinicName;
+  final DateTime? appointmentAt;
+  final String appointmentStatus;
 
   double get displayAmount => netPaidAmount ?? amount;
 
@@ -33,32 +49,27 @@ class PaymentRecord {
     if (humanReadableStatus.trim().isNotEmpty) {
       return humanReadableStatus.trim();
     }
-    if (status.trim().isEmpty) {
-      return 'Unknown';
-    }
-    return status
-        .toLowerCase()
-        .split(RegExp(r'[_\s-]+'))
-        .where((part) => part.isNotEmpty)
-        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
-        .join(' ');
+    return _humanize(status, fallback: 'Unknown');
   }
 
-  String get displayMethod {
-    if (paymentMethod.trim().isEmpty) {
-      return 'Not specified';
-    }
-    return paymentMethod
-        .toLowerCase()
-        .split(RegExp(r'[_\s-]+'))
-        .where((part) => part.isNotEmpty)
-        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
-        .join(' ');
-  }
+  String get displayMethod =>
+      _humanize(paymentMethod, fallback: 'Not specified');
+
+  String get displayAppointmentStatus =>
+      _humanize(appointmentStatus, fallback: displayStatus);
+
+  bool get hasPenalty => penaltyAmount != null && penaltyAmount! > 0;
+
+  bool get hasFailureReason =>
+      failureReason != null && failureReason!.trim().isNotEmpty;
 
   factory PaymentRecord.fromJson(Map<String, dynamic> json) {
     final appointment = _map(json['appointment']);
-    final doctor = _map(appointment['doctor']);
+    final appointmentDoctor = _map(appointment['doctor']);
+    final rootDoctor = _map(json['doctor']);
+    final doctor = appointmentDoctor.isNotEmpty
+        ? appointmentDoctor
+        : rootDoctor;
     final doctorUser = _map(doctor['user']);
     final clinic = _map(appointment['clinic']);
 
@@ -66,9 +77,18 @@ class PaymentRecord {
       id: json['id']?.toString() ?? '',
       amount: _asDouble(json['amount']) ?? 0,
       netPaidAmount: _asDouble(
-        json.containsKey('net_paid_amount')
-            ? json['net_paid_amount']
-            : json['netPaidAmount'],
+        json['net_paid_amount'] ?? json['netPaidAmount'],
+      ),
+      refundAmount: _asDouble(json['refund_amount'] ?? json['refundAmount']),
+      penaltyAmount: _asDouble(json['penalty_amount'] ?? json['penaltyAmount']),
+      failureReason: _asOptionalString(
+        json['failure_reason'] ?? json['failureReason'] ?? json['reason'],
+      ),
+      doctorId: _asOptionalString(
+        doctor['id'] ?? doctor['_id'] ?? json['doctorId'],
+      ),
+      appointmentId: _asOptionalString(
+        appointment['id'] ?? appointment['_id'] ?? json['appointmentId'],
       ),
       paymentMethod:
           json['paymentMethod']?.toString() ??
@@ -82,13 +102,49 @@ class PaymentRecord {
       appointmentType:
           json['appointmentType']?.toString() ??
           json['appointment_type']?.toString() ??
+          appointment['type']?.toString() ??
           '',
       paidAt: _asDateTime(
         json['paidAt'] ?? json['created_at'] ?? json['createdAt'],
       ),
-      doctorName: doctorUser['fullName']?.toString() ?? '',
+      doctorName:
+          doctorUser['fullName']?.toString() ??
+          doctorUser['full_name']?.toString() ??
+          doctor['fullName']?.toString() ??
+          doctor['name']?.toString() ??
+          '',
+      doctorSpecialty:
+          doctor['specialization']?.toString() ??
+          doctor['specialty']?.toString() ??
+          doctor['subSpecialization']?.toString() ??
+          '',
       clinicName: clinic['name']?.toString() ?? '',
+      appointmentAt: _asDateTime(
+        appointment['scheduledAt'] ??
+            appointment['appointmentDate'] ??
+            appointment['date'] ??
+            appointment['requestedDate'] ??
+            appointment['startAt'] ??
+            json['appointmentDate'],
+      ),
+      appointmentStatus:
+          appointment['status']?.toString() ??
+          json['appointmentStatus']?.toString() ??
+          '',
     );
+  }
+
+  static String _humanize(String value, {required String fallback}) {
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      return fallback;
+    }
+    return normalized
+        .toLowerCase()
+        .split(RegExp(r'[_\s-]+'))
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
   }
 
   static Map<String, dynamic> _map(dynamic value) {
@@ -98,7 +154,7 @@ class PaymentRecord {
     if (value is Map) {
       return Map<String, dynamic>.from(value);
     }
-    return const {};
+    return const <String, dynamic>{};
   }
 
   static double? _asDouble(dynamic value) {
@@ -109,6 +165,11 @@ class PaymentRecord {
       return value.toDouble();
     }
     return double.tryParse(value.toString());
+  }
+
+  static String? _asOptionalString(dynamic value) {
+    final result = value?.toString().trim();
+    return result == null || result.isEmpty ? null : result;
   }
 
   static DateTime? _asDateTime(dynamic value) {
@@ -124,12 +185,11 @@ class PaymentsController extends GetxController {
     : _authRepository = authRepository ?? Get.find<AuthRepository>();
 
   final AuthRepository _authRepository;
-
-  Dio get _dio => _authRepository.dio;
-
   final payments = <PaymentRecord>[].obs;
   final isLoading = false.obs;
   final errorMessage = RxnString();
+
+  Dio get _dio => _authRepository.dio;
 
   @override
   void onReady() {
@@ -141,16 +201,12 @@ class PaymentsController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = null;
-
       final response = await _dio.get('/payments/my');
       final data = _extractList(response.data);
       payments.assignAll(
-        data
-            .whereType<Map>()
-            .map(
-              (item) => PaymentRecord.fromJson(Map<String, dynamic>.from(item)),
-            )
-            .toList(growable: false),
+        data.whereType<Map>().map(
+          (item) => PaymentRecord.fromJson(Map<String, dynamic>.from(item)),
+        ),
       );
     } on DioException catch (error) {
       errorMessage.value = _messageFromDio(error);

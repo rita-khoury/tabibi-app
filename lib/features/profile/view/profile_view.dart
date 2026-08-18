@@ -334,8 +334,8 @@ class ProfileView extends GetView<ProfileController> {
                     ),
                     MenuTile(
                       icon: Icons.payment,
-                      title: "Payments",
-                      onTap: () => Get.toNamed(AppRoutes.wallet),
+                      title: "Financial Hub",
+                      onTap: () => Get.toNamed(AppRoutes.financialHub),
                     ),
                     MenuTile(
                       icon: Icons.settings,

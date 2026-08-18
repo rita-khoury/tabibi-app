@@ -30,12 +30,17 @@ import '../../features/complete_profile/middleware/profile_guard.dart';
 import '../../features/complete_profile/view/complete_profile_view.dart';
 import '../../features/doctor_profile/binding/doctor_profile_binding.dart';
 import '../../features/doctor_profile/view/doctor_profile_view.dart';
-import '../../features/notifications/binding/notification_binding.dart';
 import '../../features/notifications/controller/notification_controller.dart';
 import '../../features/notifications/view/notification_view.dart';
 import '../../features/profile/view/violations_view.dart';
 import '../../features/wallet/binding/wallet_binding.dart';
 import '../../features/wallet/view/wallet_view.dart';
+
+import '../../features/financial_hub/view/financial_hub_view.dart';
+import '../../features/financial_hub/controller/transactions_controller.dart';
+import '../../features/financial_hub/view/transactions_view.dart';
+import '../../features/financial_hub/controller/payments_controller.dart';
+import '../../features/financial_hub/view/payments_view.dart';
 
 class AppPages {
   static final pages = [
@@ -46,12 +51,12 @@ class AppPages {
       page: () => ProfileView(),
       binding: ProfileBinding(),
     ),
+
     /*GetPage(
       name: AppRoutes.settings,
       page: () => const SettingsScreen(),
       binding: SettingsBinding(),
     ),*/
-
     GetPage(
       name: AppRoutes.settings,
       page: () => SettingsView(),
@@ -66,16 +71,15 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.medicalRecords,
-      page: () =>  MedicalRecordView(),
+      page: () => MedicalRecordView(),
       binding: MedicalRecordBinding(),
     ),
     GetPage(
       name: AppRoutes.favorites,
-      page: () =>  FavoritesDoctorsView(),
+      page: () => FavoritesDoctorsView(),
       binding: FavoritesDoctorsBinding(),
     ),
-    GetPage(name: AppRoutes.violationsView,
-        page: () => const ViolationsView()),
+    GetPage(name: AppRoutes.violationsView, page: () => const ViolationsView()),
     GetPage(
       name: AppRoutes.helpSupport,
       page: () => const HelpSupportView(),
@@ -105,6 +109,21 @@ class AppPages {
       page: () => const WalletView(),
 
       binding: WalletBinding(),
+    ),
+    GetPage(name: AppRoutes.financialHub, page: () => const FinancialHubView()),
+    GetPage(
+      name: AppRoutes.payments,
+      page: () => const PaymentsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<PaymentsController>(() => PaymentsController());
+      }),
+    ),
+    GetPage(
+      name: AppRoutes.transactions,
+      page: () => const TransactionsView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<TransactionsController>(() => TransactionsController());
+      }),
     ),
 
     GetPage(name: '/login', page: () => LoginScreen(), binding: LoginBinding()),

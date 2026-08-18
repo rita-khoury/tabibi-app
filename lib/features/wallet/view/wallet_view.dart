@@ -1,179 +1,205 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:tabibi/core/constance/app_colors.dart';
 import 'package:tabibi/features/wallet/controller/wallet_controller.dart';
 import 'package:tabibi/features/wallet/view/top_up_view.dart';
 import 'package:tabibi/features/wallet/widgets/wallet_widgets.dart';
-import 'package:tabibi/features/notifications/view/notification_view.dart';
 
 class WalletView extends GetView<WalletController> {
-  const WalletView({Key? key}) : super(key: key);
+  const WalletView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF6F8FC),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Get.to(() => const TopUpView()),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.add),
         label: const Text(
-          "Top Up",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Top Up',
+          style: TextStyle(fontWeight: FontWeight.w800),
         ),
-        icon: const Icon(Icons.add, color: Colors.white),
-        backgroundColor: const Color(0xFF1565C0),
       ),
       body: Stack(
         children: [
-          Container(
-            height: MediaQuery.of(context).size.height * 0.32,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF1E88E5), Color(0xFF1565C0)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-          ),
+          const _WalletHeaderBackground(),
           SafeArea(
             child: Obx(() {
               if (controller.isLoading.value &&
                   controller.wallet.value == null) {
                 return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryBlue,
+                  ),
                 );
               }
 
               if (controller.wallet.value == null) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.account_balance_wallet_outlined,
-                        size: 70,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        "No wallet data available",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF1565C0),
-                        ),
-                        onPressed: () => controller.fetchWallet(),
-                        icon: const Icon(Icons.refresh),
-                        label: const Text("Retry Connection"),
-                      ),
-                    ],
-                  ),
-                );
+                return _WalletUnavailable(onRetry: controller.fetchWallet);
               }
 
+              final wallet = controller.wallet.value!;
               return RefreshIndicator(
-                onRefresh: () async => await controller.fetchWallet(),
-                child: SingleChildScrollView(
+                color: AppColors.primaryBlue,
+                onRefresh: controller.fetchWallet,
+                child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Wallet",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Text(
-                                "Your wallet overview",
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.notifications_none_outlined,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                            onPressed: () =>
-                                Get.to(() => const NotificationView()),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 25),
-                      const TotalBalanceCard(),
-                      const SizedBox(height: 20),
-                      BalanceStatusCard(
-                        icon: Icons.account_balance_wallet_outlined,
-                        iconColor: const Color(0xFF1E88E5),
-                        iconBgColor: const Color(0xFFE3F2FD),
-                        title: "Available Balance",
-                        value: controller.wallet.value!.availableBalance,
-                        currency: controller.currency.value,
-                      ),
-                      const SizedBox(height: 16),
-                      BalanceStatusCard(
-                        icon: Icons.lock_outline,
-                        iconColor: const Color(0xFF673AB7),
-                        iconBgColor: const Color(0xFFEDE7F6),
-                        title: "Frozen Balance",
-                        value: controller.wallet.value!.frozenBalance,
-                        currency: controller.currency.value,
-                      ),
-                      const SizedBox(height: 16),
-                      const WalletStatusCard(),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 108),
+                  children: [
+                    const SizedBox(height: 74),
+                    const _WalletHeaderText(),
+                    const SizedBox(height: 24),
+                    const TotalBalanceCard(),
+                    const SizedBox(height: 18),
+                    BalanceStatusCard(
+                      icon: Icons.account_balance_wallet_outlined,
+                      iconColor: AppColors.primaryBlue,
+                      iconBgColor: const Color(0xFFE3F2FD),
+                      title: 'Available Balance',
+                      value: wallet.availableBalance,
+                      currency: controller.currency.value,
+                    ),
+                    const SizedBox(height: 12),
+                    BalanceStatusCard(
+                      icon: Icons.lock_outline,
+                      iconColor: const Color(0xFF7E57C2),
+                      iconBgColor: const Color(0xFFEDE7F6),
+                      title: 'Frozen Balance',
+                      value: wallet.frozenBalance,
+                      currency: controller.currency.value,
+                    ),
+                    const SizedBox(height: 12),
+                    const WalletStatusCard(),
+                  ],
                 ),
               );
             }),
           ),
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 55,
-            left: 16,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(50),
-                onTap: () => Get.back(),
-                child: Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.20),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.5)),
-                  ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white,
-                    size: 21,
-                  ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8, top: 10),
+              child: IconButton(
+                tooltip: 'Back',
+                onPressed: Get.back,
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.white.withValues(alpha: 0.18),
+                  foregroundColor: Colors.white,
                 ),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletHeaderBackground extends StatelessWidget {
+  const _WalletHeaderBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 286,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primaryBlue, AppColors.lightBlue],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletHeaderText extends StatelessWidget {
+  const _WalletHeaderText();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(left: 54),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Wallet',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              height: 1.1,
+            ),
+          ),
+          SizedBox(height: 5),
+          Text(
+            'Your wallet overview',
+            style: TextStyle(
+              color: Color(0xE6FFFFFF),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WalletUnavailable extends StatelessWidget {
+  const _WalletUnavailable({required this.onRetry});
+
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      color: AppColors.primaryBlue,
+      onRefresh: onRetry,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(28, 96, 28, 48),
+        children: [
+          const Icon(
+            Icons.account_balance_wallet_outlined,
+            color: Colors.white,
+            size: 52,
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'Wallet unavailable',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Please check your connection and try again.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 14),
+          ),
+          const SizedBox(height: 22),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryBlue,
+                backgroundColor: Colors.white,
+                side: BorderSide.none,
               ),
             ),
           ),

@@ -97,8 +97,10 @@ class HomeView extends StatelessWidget {
                     itemCount: controller.filteredDoctors.length,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) =>
-                        DoctorCard(doc: controller.filteredDoctors[index]),
+                    itemBuilder: (context, index) => DoctorCard(
+                      doc: controller.filteredDoctors[index],
+                      openWithFreshDetails: !controller.isSearching.value,
+                    ),
                   );
                 }),
               ],

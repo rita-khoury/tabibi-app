@@ -19,6 +19,7 @@ import 'package:tabibi/features/onboarding/splash_screen.dart';
 import 'package:tabibi/features/profile/binding/edit_profile_binding.dart';
 import 'package:tabibi/features/profile/binding/profile_binding.dart';
 import 'package:tabibi/features/profile/view/edit_profile_view.dart';
+import 'package:tabibi/features/profile/view/change_password_view.dart';
 import 'package:tabibi/features/profile/view/profile_view.dart';
 import 'package:tabibi/features/settings/binding/binding_settings.dart';
 import 'package:tabibi/features/settings/view/view_settings.dart';
@@ -91,6 +92,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.editProfile,
       page: () => const EditProfileView(),
+      binding: EditProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.changePassword,
+      page: () => const ChangePasswordView(),
       binding: EditProfileBinding(),
     ),
     GetPage(

@@ -170,13 +170,15 @@ class ProfileController extends GetxController {
     try {
       final response = await _authRepository.dio.get('/users/$id');
 
-      // طباعة الـ Response في الـ Console للتأكد من شكل البيانات القادمة من السيرفر
-      print("📦 Response Data: ${response.data}");
+      // Support either a direct user object or a standard { data: user } envelope.
+      final responseData = response.data;
+      final data = responseData is Map && responseData['data'] is Map
+          ? Map<String, dynamic>.from(responseData['data'] as Map)
+          : Map<String, dynamic>.from(responseData as Map);
 
-      profile.value = ProfileModel.fromJson(response.data);
+      profile.value = ProfileModel.fromJson(data);
 
       // التقاط رابط الصورة بالاعتماد على الحقل الصحيح القادم من الـ Backend (avatarUrl)
-      final data = response.data;
       final extractedAvatar =
           data['avatarUrl'] ??
           data['avatar'] ??

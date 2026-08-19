@@ -279,6 +279,8 @@ class EditProfileController extends GetxController {
 
   RxBool isProfileLoading = false.obs;
   RxBool isPasswordLoading = false.obs;
+  final RxBool isDirty = false.obs;
+  bool _isHydrating = false;
 
   @override
   void onInit() {
@@ -295,10 +297,36 @@ class EditProfileController extends GetxController {
     newPasswordController = TextEditingController();
     confirmPasswordController = TextEditingController();
 
+    _bindDirtyTracking();
     fillCurrentUserData();
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    fillCurrentUserData();
+  }
+
+  void _bindDirtyTracking() {
+    for (final field in [
+      firstNameController,
+      lastNameController,
+      addressController,
+      occupationController,
+      emergencyNameController,
+      emergencyPhoneController,
+    ]) {
+      field.addListener(() {
+        if (!_isHydrating) isDirty.value = true;
+      });
+    }
+    ever<String>(selectedMaritalStatus, (_) {
+      if (!_isHydrating) isDirty.value = true;
+    });
+  }
+
   void fillCurrentUserData() {
+    _isHydrating = true;
     if (Get.isRegistered<ProfileController>()) {
       final userProfile = Get.find<ProfileController>().profile.value;
       if (userProfile != null) {
@@ -309,19 +337,26 @@ class EditProfileController extends GetxController {
         addressController.text = userProfile.address;
         currentAvatarUrl.value = ApiConstants.getFullImageUrl(userProfile.avatarUrl);
 
-        if (userProfile.patientProfile != null) {
-          final patient = userProfile.patientProfile!;
-          occupationController.text = patient.occupation ?? "";
-          emergencyNameController.text = patient.emergencyContactName ?? "";
-          emergencyPhoneController.text = patient.emergencyContactPhone ?? "";
-          if (patient.maritalStatus != null &&
-              patient.maritalStatus!.isNotEmpty) {
-            selectedMaritalStatus.value =
-                patient.maritalStatus!.capitalizeFirst ?? "Married";
-          }
+        final patient = userProfile.patientProfile;
+        occupationController.text =
+            patient?.occupation ?? userProfile.occupation ?? '';
+        emergencyNameController.text = patient?.emergencyContactName ??
+            userProfile.emergencyContactName ??
+            '';
+        emergencyPhoneController.text = patient?.emergencyContactPhone ??
+            userProfile.emergencyContactPhone ??
+            '';
+
+        final maritalStatus =
+            patient?.maritalStatus ?? userProfile.maritalStatus;
+        if (maritalStatus != null && maritalStatus.isNotEmpty) {
+          selectedMaritalStatus.value =
+              maritalStatus.capitalizeFirst ?? 'Married';
         }
       }
     }
+    _isHydrating = false;
+    isDirty.value = false;
   }
 
   Future<void> pickImage() async {
@@ -400,7 +435,7 @@ class EditProfileController extends GetxController {
     }
   }
 
-  Future<void> saveChanges() async {
+  Future<bool> saveChanges() async {
     try {
       isProfileLoading.value = true;
       String userId = "1";
@@ -433,14 +468,17 @@ class EditProfileController extends GetxController {
         await Get.find<ProfileController>().fetchProfile(userId);
       }
 
+      isDirty.value = false;
       Get.snackbar(
         'Success',
         'Profile updated successfully',
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
+      return true;
     } catch (e) {
       _showErrorSnackBar(e);
+      return false;
     } finally {
       isProfileLoading.value = false;
     }

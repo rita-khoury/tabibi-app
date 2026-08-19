@@ -29,6 +29,7 @@ class HomeController extends GetxController {
   final isSearching = false.obs;
   final isLoading = true.obs;
   final isSpecialitiesLoading = true.obs;
+  final isRefreshing = false.obs;
   final isLoggedIn = false.obs;
   final referralsCount = 0.obs;
   final doctorsErrorMessage = RxnString();
@@ -74,6 +75,17 @@ class HomeController extends GetxController {
 
     await Get.toNamed('/login');
     await checkLoginStatus();
+  }
+
+  Future<void> refreshHome() async {
+    if (isRefreshing.value) return;
+    isRefreshing.value = true;
+    try {
+      await checkLoginStatus();
+      await Future.wait([loadData(), loadSpecialities()]);
+    } finally {
+      isRefreshing.value = false;
+    }
   }
 
   Future<void> loadData() async {

@@ -8,6 +8,7 @@ abstract class AppRoutes {
   static const favorites = '/favorites';
   static const helpSupport = '/help-support';
   static const editProfile = '/edit-profile';
+  static const changePassword = '/change-password';
   static const home = '/home';
   static const financialHub = '/financial-hub';
   static const payments = '/payments';

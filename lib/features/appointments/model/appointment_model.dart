@@ -84,11 +84,12 @@
 //   }
 // }
 
-
 class AppointmentModel {
   final int id;
   final int? doctorId; // <-- إضافة معرف الطبيب لتجنب خطأ undefined_getter
   final String status;
+  final String type;
+  final double? operationCost;
   final String doctorName;
   final String specialty;
   final String date;
@@ -99,7 +100,7 @@ class AppointmentModel {
 
   String get time =>
       "${startTime.length >= 5 ? startTime.substring(0, 5) : startTime} - "
-          "${endTime.length >= 5 ? endTime.substring(0, 5) : endTime}";
+      "${endTime.length >= 5 ? endTime.substring(0, 5) : endTime}";
 
   // الـ Getter لفحص الحالة مع طباعة الـ Debugging
   bool get isCompleted {
@@ -107,10 +108,14 @@ class AppointmentModel {
     return status.toLowerCase().trim() == 'completed';
   }
 
+  bool get isOperation => type.trim().toLowerCase() == 'operation';
+
   AppointmentModel({
     required this.id,
     this.doctorId,
     required this.status,
+    required this.type,
+    this.operationCost,
     required this.doctorName,
     required this.specialty,
     required this.date,
@@ -146,6 +151,8 @@ class AppointmentModel {
           : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       doctorId: extractedDoctorId,
       status: json['status']?.toString() ?? 'pending',
+      type: json['type']?.toString() ?? '',
+      operationCost: _asDouble(json['operationCost'] ?? json['operation_cost']),
       doctorName: userData?['full_name']?.toString() ?? 'طبيب غير معروف',
       specialty: doctorData?['specialization']?.toString() ?? 'غير محدد',
       date: (json['requestedDate'] ?? '').toString(),
@@ -162,6 +169,8 @@ class AppointmentModel {
     int? id,
     int? doctorId,
     String? status,
+    String? type,
+    double? operationCost,
     String? doctorName,
     String? specialty,
     String? date,
@@ -174,6 +183,8 @@ class AppointmentModel {
       id: id ?? this.id,
       doctorId: doctorId ?? this.doctorId,
       status: status ?? this.status,
+      type: type ?? this.type,
+      operationCost: operationCost ?? this.operationCost,
       doctorName: doctorName ?? this.doctorName,
       specialty: specialty ?? this.specialty,
       date: date ?? this.date,
@@ -182,5 +193,11 @@ class AppointmentModel {
       clinicName: clinicName ?? this.clinicName,
       referral: referral ?? this.referral,
     );
+  }
+
+  static double? _asDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
   }
 }

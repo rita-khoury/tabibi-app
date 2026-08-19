@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tabibi/features/appointments/binding/appointments_binding.dart';
+import 'package:tabibi/features/appointments/view/operations_view.dart';
 import 'package:tabibi/features/auth/repository/AuthController.dart';
 import 'package:tabibi/features/guest/widgets/guest_more_sheet.dart';
 import 'package:get/get.dart';
@@ -308,6 +310,21 @@ class HomeView extends StatelessWidget {
                                       ),
                                     ),
                                 ],
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            GestureDetector(
+                              onTap: () => Get.to(
+                                () => const OperationsView(),
+                                binding: AppointmentsBinding(),
+                              ),
+                              child: const Tooltip(
+                                message: 'Operations',
+                                child: Icon(
+                                  Icons.medical_services_outlined,
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
                               ),
                             ),
                           ] else ...[

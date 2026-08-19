@@ -12,6 +12,7 @@ class AppointmentsController extends GetxController {
   final AuthRepository _repo = Get.find<AuthRepository>();
   final _storage = GetStorage();
 
+  List<AppointmentModel> allAppointments = [];
   List<AppointmentModel> upcomingAppointments = [];
   List<AppointmentModel> completedAppointments = [];
   List<AppointmentModel> canceledAppointments = [];
@@ -38,6 +39,7 @@ class AppointmentsController extends GetxController {
       isLoading = true;
       update();
       final result = await _repo.getMyAppointments();
+      allAppointments = result;
 
       upcomingAppointments = result
           .where(

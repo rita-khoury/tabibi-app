@@ -292,6 +292,7 @@ class AppointmentCard extends StatelessWidget {
   final AppointmentModel appointment;
   final VoidCallback? onCancel;
   final VoidCallback? onRate;
+  final VoidCallback? onTap;
   final bool showCancellationAction;
 
   const AppointmentCard({
@@ -299,6 +300,7 @@ class AppointmentCard extends StatelessWidget {
     required this.appointment,
     this.onCancel,
     this.onRate,
+    this.onTap,
     this.showCancellationAction = true,
   });
 
@@ -313,7 +315,7 @@ class AppointmentCard extends StatelessWidget {
         shadowColor: Colors.grey.withValues(alpha: 0.08),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {},
+          onTap: onTap ?? () {},
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -466,6 +468,49 @@ class AppointmentCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (appointment.isOperation &&
+                    appointment.operationCost != null) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.medical_services_outlined,
+                          color: AppColors.primaryBlue,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Operation cost',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          appointment.operationCost!.toStringAsFixed(2),
+                          style: const TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (showCancellationAction &&
                     appointment.status.toLowerCase() == 'confirmed') ...[
                   const SizedBox(height: 14),

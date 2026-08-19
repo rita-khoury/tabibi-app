@@ -73,7 +73,7 @@ class _RateDoctorDialogState extends State<RateDoctorDialog> {
               ),
               const SizedBox(height: 8),
               Text(
-                '${_rating.toStringAsFixed(1)} out of 5',
+                '${_rating.toInt()} out of 5',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.primaryBlue,
@@ -190,8 +190,8 @@ class _InteractiveStarBar extends StatelessWidget {
         void updateFromPosition(double dx) {
           if (onChanged == null || constraints.maxWidth <= 0) return;
           final normalized = (dx / constraints.maxWidth).clamp(0.0, 1.0);
-          final halfStep = (normalized * 5 * 2).round() / 2;
-          onChanged!(halfStep.clamp(0.5, 5.0));
+          final wholeStar = (normalized * 5).ceil().clamp(1, 5).toDouble();
+          onChanged!(wholeStar);
         }
 
         return GestureDetector(

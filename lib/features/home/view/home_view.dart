@@ -27,8 +27,12 @@ class HomeView extends StatelessWidget {
       backgroundColor: const Color(0xffF5F7FB),
       body: Stack(
         children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.only(
+          RefreshIndicator(
+            onRefresh: controller.refreshHome,
+            color: const Color(0xff2F80ED),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(
               top: 290,
               left: 20,
               right: 20,
@@ -108,6 +112,7 @@ class HomeView extends StatelessWidget {
                   );
                 }),
               ],
+              ),
             ),
           ),
           _header(),

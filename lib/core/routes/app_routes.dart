@@ -17,6 +17,7 @@ abstract class AppRoutes {
   static const medicalProfile = '/medical-profile';
   static const notifications = '/notifications';
   static const doctorProfile = '/doctor-profile';
+  static const patientQueue = '/patient-queue';
   static const String violationsView = '/violations-view';
 
 }

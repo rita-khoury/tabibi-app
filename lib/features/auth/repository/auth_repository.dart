@@ -1896,19 +1896,7 @@ class AuthRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getPatientLiveQueueStatus(
-    int appointmentId,
-  ) async {
-    try {
-      final response = await _dio.get(
-        '/queues/patient/live-status/$appointmentId',
-        options: Options(validateStatus: (status) => status! < 500),
-      );
-      return response.data is Map<String, dynamic> ? response.data : {};
-    } on DioException catch (e) {
-      throw Exception(_handleDioError(e));
-    }
-  }
+  
 
   Future<Map<String, dynamic>?> getActiveCheckedInAppointment() async {
     try {

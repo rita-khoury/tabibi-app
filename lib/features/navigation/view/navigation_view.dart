@@ -1,3 +1,4 @@
+import 'package:tabibi/features/queue/view/patient_queue_view.dart';
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 // import 'package:get_storage/get_storage.dart';
@@ -78,9 +79,6 @@ import 'package:tabibi/features/favorites/view/favorites_doctors_view.dart';
 import 'package:tabibi/features/home/view/home_view.dart';
 import 'package:tabibi/features/navigation/controller/navigation_controller.dart';
 import 'package:tabibi/features/profile/view/profile_view.dart';
-
-
-import '../../appointments/view/PatientQueueView.dart' show PatientQueueView;
 
 class NavigationView extends GetView<NavigationController> {
   const NavigationView({super.key});

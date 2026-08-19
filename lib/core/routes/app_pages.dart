@@ -42,6 +42,8 @@ import '../../features/financial_hub/view/transactions_view.dart';
 import '../../features/financial_hub/controller/payments_controller.dart';
 import '../../features/financial_hub/view/payments_view.dart';
 
+import 'package:tabibi/features/queue/binding/patient_queue_binding.dart';
+import 'package:tabibi/features/queue/view/patient_queue_view.dart';
 class AppPages {
   static final pages = [
     GetPage(name: AppRoutes.splash, page: () => SplashScreen()),
@@ -142,5 +144,6 @@ class AppPages {
       page: () => DoctorProfileView(),
       binding: DoctorProfileBinding(),
     ),
+    GetPage(name: AppRoutes.patientQueue, page: () => const PatientQueueView(), binding: PatientQueueBinding()),
   ];
 }

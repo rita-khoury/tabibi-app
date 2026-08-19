@@ -109,6 +109,22 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> clearSessionAfterDeactivation() async {
+    if (_loggingOut) {
+      return;
+    }
+
+    _loggingOut = true;
+    isLoading.value = true;
+
+    try {
+      await _clearLocalData();
+    } finally {
+      _loggingOut = false;
+      Get.offAllNamed(AppRoutes.home);
+    }
+  }
+
   Future<void> _clearLocalData() async {
     final prefs = await SharedPreferences.getInstance();
 

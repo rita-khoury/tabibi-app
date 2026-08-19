@@ -7,8 +7,7 @@ import 'package:tabibi/features/favorites/view/favorites_doctors_view.dart';
 import 'package:tabibi/features/home/view/home_view.dart';
 import 'package:tabibi/features/navigation/controller/navigation_controller.dart';
 import 'package:tabibi/features/profile/view/profile_view.dart';
-
-import '../../appointments/view/PatientQueueView.dart' show PatientQueueView;
+import 'package:tabibi/features/queue/view/patient_queue_view.dart'; // ✅ المسار الصحيح
 
 class NavigationView extends GetView<NavigationController> {
   const NavigationView({super.key});
@@ -23,7 +22,7 @@ class NavigationView extends GetView<NavigationController> {
         HomeView(),
         if (isAuthenticated) const AppointmentsView(),
         if (isAuthenticated) FavoritesDoctorsView(),
-        if (isAuthenticated) const PatientQueueView(),
+        if (isAuthenticated) const PatientQueueView(), // ✅ بدون show
         if (isAuthenticated) const ProfileView(),
       ];
 
@@ -34,34 +33,34 @@ class NavigationView extends GetView<NavigationController> {
         ),
         bottomNavigationBar: isAuthenticated
             ? BottomNavigationBar(
-                currentIndex: controller.selectedIndex.value,
-                onTap: controller.changeTab,
-                selectedItemColor: AppColors.primaryBlue,
-                unselectedItemColor: AppColors.gray,
-                type: BottomNavigationBarType.fixed,
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_month),
-                    label: 'Appointments',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.favorite),
-                    label: 'Favorites',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.people_alt_rounded),
-                    label: 'Queue',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.person),
-                    label: 'Profile',
-                  ),
-                ],
-              )
+          currentIndex: controller.selectedIndex.value,
+          onTap: controller.changeTab,
+          selectedItemColor: AppColors.primaryBlue,
+          unselectedItemColor: AppColors.gray,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month),
+              label: 'Appointments',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.favorite),
+              label: 'Favorites',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people_alt_rounded),
+              label: 'Queue',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        )
             : _GuestHomeBar(onTap: () => controller.changeTab(0)),
       );
     });

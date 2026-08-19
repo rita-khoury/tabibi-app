@@ -1157,6 +1157,10 @@ class RegistrationConflictException implements Exception {
   const RegistrationConflictException();
 }
 
+class AccountDeactivatedException implements Exception {
+  const AccountDeactivatedException();
+}
+
 class AuthRepository {
   final Dio _dio = Dio(
     BaseOptions(
@@ -1377,6 +1381,11 @@ class AuthRepository {
       final response = await _dio.post('/auth/login', data: data);
       return AuthResponseModel.fromJson(response.data);
     } on DioException catch (e) {
+      final responseData = e.response?.data;
+      if (responseData is Map &&
+          responseData['code'] == 'ACCOUNT_DEACTIVATED') {
+        throw const AccountDeactivatedException();
+      }
       throw Exception(_handleDioError(e));
     }
   }
@@ -2391,6 +2400,14 @@ class AuthRepository {
   Future<void> removeFavorite(int doctorId) async {
     try {
       await _dio.delete('/favorite-doctors/$doctorId');
+    } on DioException catch (e) {
+      throw Exception(_handleDioError(e));
+    }
+  }
+
+  Future<void> deactivateAccount() async {
+    try {
+      await _dio.patch('/auth/deactivate-account');
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
     }

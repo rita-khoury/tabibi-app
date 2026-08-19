@@ -9,7 +9,7 @@ import '../../auth/data/models/auth_response_model.dart';
 import '../../auth/repository/AuthController.dart';
 import '../../auth/repository/auth_repository.dart';
 
-enum OtpFlowType { registration, forgotPassword }
+enum OtpFlowType { registration, forgotPassword, reactivation }
 
 class OtpController extends GetxController {
   static const List<int> _resendCooldowns = <int>[30, 60, 120, 240, 1800, 7200];
@@ -27,8 +27,7 @@ class OtpController extends GetxController {
   Timer? _resendTimer;
   int _resendAttempt = 0;
 
-  bool get canResend =>
-      !isLoading.value && resendCountdownSeconds.value == 0;
+  bool get canResend => !isLoading.value && resendCountdownSeconds.value == 0;
 
   String get resendCountdownLabel {
     final seconds = resendCountdownSeconds.value;
@@ -56,6 +55,8 @@ class OtpController extends GetxController {
     }
     flowType = purpose == 'reset-password'
         ? OtpFlowType.forgotPassword
+        : purpose == 'reactivate'
+        ? OtpFlowType.reactivation
         : OtpFlowType.registration;
     _startResendCooldown(30);
   }
@@ -85,15 +86,22 @@ class OtpController extends GetxController {
 
     try {
       isLoading.value = true;
-      final verification = await _authRepository.verifyOtp(_verificationPayload());
-      final auth = _authFromVerification(verification) ??
+      final verification = await _authRepository.verifyOtp(
+        _verificationPayload(),
+      );
+      final auth =
+          _authFromVerification(verification) ??
           await _loginAfterVerification();
 
       if (auth == null) {
-        throw Exception('Account verified, but automatic sign-in could not be completed.');
+        throw Exception(
+          'Account verified, but automatic sign-in could not be completed.',
+        );
       }
       if (auth.role?.trim().toUpperCase() != 'PATIENT') {
-        throw Exception('Access denied. Only patient accounts are allowed to log in to this app.');
+        throw Exception(
+          'Access denied. Only patient accounts are allowed to log in to this app.',
+        );
       }
 
       await _authController.loginSuccess(
@@ -101,7 +109,14 @@ class OtpController extends GetxController {
         auth.accessToken,
         auth.refreshToken,
       );
-      await _authController.updateProfileCompletionStatus(auth.profileCompleted);
+      if (flowType == OtpFlowType.reactivation) {
+        await _routeAfterReactivation();
+        return;
+      }
+
+      await _authController.updateProfileCompletionStatus(
+        auth.profileCompleted,
+      );
       Get.offAllNamed(AppRoutes.home);
     } catch (error) {
       Get.snackbar(
@@ -110,6 +125,27 @@ class OtpController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _routeAfterReactivation() async {
+    try {
+      final status = await _authRepository.getCompletionStatus();
+      await _authController.updateProfileCompletionStatus(status.completed);
+
+      if (status.completed) {
+        Get.offAllNamed(AppRoutes.home);
+      } else {
+        Get.offAllNamed(
+          AppRoutes.medicalProfile,
+          arguments: {
+            'completionPercentage': status.completionPercentage,
+            'missingFields': status.missingFields,
+          },
+        );
+      }
+    } catch (_) {
+      Get.offAllNamed(AppRoutes.medicalProfile);
     }
   }
 
@@ -130,7 +166,9 @@ class OtpController extends GetxController {
         : Map<String, dynamic>.from(response);
     final accessToken = payload['accessToken'] ?? payload['token'];
     final user = payload['user'];
-    if (accessToken == null || accessToken.toString().trim().isEmpty || user is! Map) {
+    if (accessToken == null ||
+        accessToken.toString().trim().isEmpty ||
+        user is! Map) {
       return null;
     }
     return AuthResponseModel.fromJson({
@@ -149,7 +187,10 @@ class OtpController extends GetxController {
   Future<void> resendOtp() async {
     if (!canResend) return;
     if (identifier.isEmpty) {
-      Get.snackbar('Error', 'Verification identifier is unavailable. Please register again.');
+      Get.snackbar(
+        'Error',
+        'Verification identifier is unavailable. Please register again.',
+      );
       return;
     }
 

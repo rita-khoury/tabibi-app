@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tabibi/features/auth/repository/AuthController.dart';
+import 'package:tabibi/features/guest/widgets/guest_more_sheet.dart';
 import 'package:get/get.dart';
 
 import '../binding/doctor_reminders_binding.dart';
@@ -167,21 +169,17 @@ class HomeView extends StatelessWidget {
             ),
           ),
           Obx(() {
-            final canFilter = controller.isSearching.value;
             final filtersActive =
-                canFilter && controller.hasActiveDoctorFilters;
+                controller.isSearching.value &&
+                controller.hasActiveDoctorFilters;
             return Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: canFilter
-                        ? 'Filter & Sort'
-                        : 'Enter a search term to filter results',
-                    onPressed: canFilter
-                        ? () => _openHomeFilters(context)
-                        : null,
+                    tooltip: 'Filter & Sort',
+                    onPressed: () => _openHomeFilters(context),
                     icon: Icon(
                       Icons.tune_rounded,
                       color: filtersActive
@@ -253,11 +251,13 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Obx(
-                      () => Row(
+                    Obx(() {
+                      final isAuthenticated =
+                          Get.find<AuthController>().isLoggedIn;
+                      return Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (controller.isLoggedIn.value) ...[
+                          if (isAuthenticated) ...[
                             GestureDetector(
                               onTap: () =>
                                   Get.to(() => const NotificationsScreen()),
@@ -310,7 +310,7 @@ class HomeView extends StatelessWidget {
                                 ],
                               ),
                             ),
-                          ] else
+                          ] else ...[
                             Material(
                               color: Colors.transparent,
                               child: InkWell(
@@ -329,9 +329,31 @@ class HomeView extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 4),
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () {
+                                  final currentContext = Get.context;
+                                  if (currentContext != null) {
+                                    showGuestMoreSheet(currentContext);
+                                  }
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: Icon(
+                                    Icons.more_vert_rounded,
+                                    color: Colors.white,
+                                    size: 26,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ),
-                    ),
+                      );
+                    }),
                   ],
                 ),
                 const Expanded(

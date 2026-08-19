@@ -110,7 +110,6 @@
 //   String toString() => message;
 // }
 
-
 import 'package:dio/dio.dart';
 import '../../../core/constance/api_constants.dart';
 import 'package:get/get.dart';
@@ -128,6 +127,7 @@ class ProfileController extends GetxController {
 
   var violationsList = <dynamic>[].obs;
   var violationsCount = 0.obs;
+  final isDeactivating = false.obs;
 
   // متغير خاص برابط أو مسار الصورة الشخصية للمستخدم في البروفايل
   var profileAvatarUrl = ''.obs;
@@ -177,7 +177,8 @@ class ProfileController extends GetxController {
 
       // التقاط رابط الصورة بالاعتماد على الحقل الصحيح القادم من الـ Backend (avatarUrl)
       final data = response.data;
-      final extractedAvatar = data['avatarUrl'] ??
+      final extractedAvatar =
+          data['avatarUrl'] ??
           data['avatar'] ??
           data['image'] ??
           data['profile_image'];
@@ -192,7 +193,7 @@ class ProfileController extends GetxController {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        logout();
+        _authController.logout();
       }
       throw ProfileRepositoryException(_handleDioError(e));
     } catch (e) {
@@ -229,8 +230,31 @@ class ProfileController extends GetxController {
     selectedIndex.value = index;
   }
 
+  Future<bool> deactivateAccount() async {
+    if (isDeactivating.value) {
+      return false;
+    }
+
+    isDeactivating.value = true;
+    try {
+      await _authRepository.deactivateAccount();
+      await _authController.clearSessionAfterDeactivation();
+      return true;
+    } catch (error) {
+      Get.snackbar(
+        'Error',
+        error.toString().replaceFirst(RegExp(r'^Exception:\\s*'), ''),
+      );
+      return false;
+    } finally {
+      if (!isClosed) {
+        isDeactivating.value = false;
+      }
+    }
+  }
+
   void logout() {
-    _authController.logout();
+    _authController.logout(navigateToGuestHome: true);
   }
 }
 

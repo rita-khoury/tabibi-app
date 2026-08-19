@@ -221,7 +221,6 @@ import '../../../core/widgets/app_network_image.dart';
 //   }
 // }
 
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '/core/constance/app_colors.dart';
@@ -266,19 +265,19 @@ class ProfileView extends GetView<ProfileController> {
                     const SizedBox(height: 20),
 
                     // --- جزء عرض الصورة الشخصية (Profile Avatar) ---
-                  Obx(
-                    () => AppAvatar(
-                      imageUrl: controller.profileAvatarUrl.value,
-                      radius: 45,
-                      fallbackIcon: Icons.person,
-                      backgroundColor: Colors.white,
-                    ),
-                  ),
-                    const SizedBox(height: 15),
-                    // ----------------------------------------------
-
                     Obx(
-                          () => Text(
+                      () => AppAvatar(
+                        imageUrl: controller.profileAvatarUrl.value,
+                        radius: 45,
+                        fallbackIcon: Icons.person,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+
+                    // ----------------------------------------------
+                    Obx(
+                      () => Text(
                         controller.userName,
                         style: const TextStyle(
                           color: AppColors.white,
@@ -290,7 +289,7 @@ class ProfileView extends GetView<ProfileController> {
                     const SizedBox(height: 6),
 
                     Obx(
-                          () => Text(
+                      () => Text(
                         controller.email,
                         style: const TextStyle(
                           color: Colors.white70,
@@ -338,17 +337,14 @@ class ProfileView extends GetView<ProfileController> {
                       onTap: () => Get.toNamed(AppRoutes.financialHub),
                     ),
                     MenuTile(
-                      icon: Icons.settings,
-                      title: "Settings",
-                      onTap: () => Get.toNamed(AppRoutes.settings),
-                    ),
-                    MenuTile(
-                      icon: Icons.help_outline,
-                      title: "Help & Support",
-                      onTap: () => Get.toNamed(AppRoutes.helpSupport),
+                      icon: Icons.person_off_outlined,
+                      title: "Deactivate Account",
+                      accentColor: Colors.orange.shade800,
+                      onTap: () => _showDeactivateWarning(context),
                     ),
                     MenuTile(
                       icon: Icons.logout,
+
                       title: "Logout",
                       isLogout: true,
                       onTap: () => controller.logout(),
@@ -364,43 +360,43 @@ class ProfileView extends GetView<ProfileController> {
             bottom: 20,
             right: 20,
             child: Obx(
-                  () => controller.violationsCount.value > 0
+              () => controller.violationsCount.value > 0
                   ? FloatingActionButton(
-                onPressed: () {
-                  Get.toNamed(AppRoutes.violationsView);
-                },
-                backgroundColor: Colors.red,
-                elevation: 8,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          "${controller.violationsCount.value}",
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
+                      onPressed: () {
+                        Get.toNamed(AppRoutes.violationsView);
+                      },
+                      backgroundColor: Colors.red,
+                      elevation: 8,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.white,
+                            size: 32,
                           ),
-                        ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                "${controller.violationsCount.value}",
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              )
+                    )
                   : const SizedBox.shrink(),
             ),
           ),
@@ -408,12 +404,181 @@ class ProfileView extends GetView<ProfileController> {
       ),
     );
   }
+
+  Future<void> _showDeactivateWarning(BuildContext context) async {
+    final shouldContinue = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.person_off_outlined, color: Colors.orange.shade800),
+            const SizedBox(width: 10),
+            const Expanded(child: Text('Deactivate Account?')),
+          ],
+        ),
+        content: const Text(
+          'Deactivating your account will disable it and sign you out after successful deactivation. You can continue to confirm your decision with your current password.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldContinue == true && context.mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => const _DeactivatePasswordDialog(),
+      );
+    }
+  }
+}
+
+class _DeactivatePasswordDialog extends StatefulWidget {
+  const _DeactivatePasswordDialog();
+
+  @override
+  State<_DeactivatePasswordDialog> createState() =>
+      _DeactivatePasswordDialogState();
+}
+
+class _DeactivatePasswordDialogState extends State<_DeactivatePasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _passwordController = TextEditingController();
+  bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profileController = Get.find<ProfileController>();
+
+    return Obx(() {
+      final isDeactivating = profileController.isDeactivating.value;
+      return PopScope(
+        canPop: !isDeactivating,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.person_off_outlined, color: Colors.orange.shade800),
+              const SizedBox(width: 10),
+              const Expanded(child: Text('Confirm Deactivation')),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Enter your current password to confirm account deactivation.',
+                  ),
+                  const SizedBox(height: 18),
+                  TextFormField(
+                    controller: _passwordController,
+                    autofocus: true,
+                    obscureText: _obscurePassword,
+                    keyboardType: TextInputType.visiblePassword,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _confirm(),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Enter your current password.'
+                        : null,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        tooltip: _obscurePassword
+                            ? 'Show password'
+                            : 'Hide password',
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: isDeactivating
+                  ? null
+                  : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isDeactivating ? null : _confirm,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+              ),
+              child: isDeactivating
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Confirm Deactivation'),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Future<void> _confirm() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    final profileController = Get.find<ProfileController>();
+    if (profileController.isDeactivating.value) {
+      return;
+    }
+
+    await profileController.deactivateAccount();
+  }
 }
 
 class MenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final bool isLogout;
+  final Color? accentColor;
   final VoidCallback? onTap;
 
   const MenuTile({
@@ -421,6 +586,7 @@ class MenuTile extends StatelessWidget {
     required this.icon,
     required this.title,
     this.isLogout = false,
+    this.accentColor,
     this.onTap,
   });
 
@@ -442,13 +608,13 @@ class MenuTile extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           icon,
-          color: isLogout ? Colors.red : AppColors.primaryBlue,
+          color: isLogout ? Colors.red : accentColor ?? AppColors.primaryBlue,
         ),
         title: Text(
           title,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: isLogout ? Colors.red : AppColors.gray,
+            color: isLogout ? Colors.red : accentColor ?? AppColors.gray,
           ),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 18),

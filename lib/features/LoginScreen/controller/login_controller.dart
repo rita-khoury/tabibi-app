@@ -6,6 +6,8 @@ import '../../../core/routes/app_routes.dart';
 import '../../../core/constance/app_messages.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../auth/repository/AuthController.dart';
+import '../../OTP/binding/otp_binding.dart';
+import '../../OTP/view/otp_screen.dart';
 
 class LoginController extends GetxController {
   final AuthRepository _authRepository = Get.find<AuthRepository>();
@@ -96,6 +98,16 @@ class LoginController extends GetxController {
         debugPrint("Error checking profile status (New user likely): $e");
         Get.offAllNamed('/medical-profile');
       }
+    } on AccountDeactivatedException {
+      Get.to(
+        () => const OtpScreen(),
+        binding: OtpBinding(),
+        arguments: {
+          'identifier': identifier,
+          'password': password,
+          'purpose': 'reactivate',
+        },
+      );
     } catch (e) {
       debugPrint('Login error: $e');
       Get.snackbar(
@@ -144,8 +156,8 @@ class LoginController extends GetxController {
     }
     return null;
   }
-  bool _isPatientRole(String? role) =>
-      role?.trim().toUpperCase() == 'PATIENT';
+
+  bool _isPatientRole(String? role) => role?.trim().toUpperCase() == 'PATIENT';
 
   Future<void> _saveEmailToHistory() async {
     List<String> history = _getSavedEmails();

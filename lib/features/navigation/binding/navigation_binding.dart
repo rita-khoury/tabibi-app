@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:tabibi/features/appointments/controller/appointments_controller.dart';
 import 'package:tabibi/features/favorites/controller/favorites_doctors_controller.dart';
+import 'package:tabibi/features/queue/binding/patient_queue_binding.dart';
 
 import '../../auth/repository/auth_repository.dart';
 import '../../profile/controller/profile_controller.dart';
@@ -15,5 +16,6 @@ class NavigationBinding extends Bindings {
     Get.lazyPut(() => ProfileController());
     Get.lazyPut(() => FavoritesDoctorsController(Get.find<AuthRepository>()));
     Get.lazyPut(() => AppointmentsController());
+    PatientQueueBinding().dependencies();
   }
 }

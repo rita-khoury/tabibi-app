@@ -79,9 +79,9 @@ class _DoctorFilterSortSheetState extends State<_DoctorFilterSortSheet> {
           maxHeight: MediaQuery.sizeOf(context).height * 0.88,
         ),
         padding: EdgeInsets.fromLTRB(20, 14, 20, 20 + bottomInset),
-        decoration: const BoxDecoration(
-          color: AppColors.lightGray,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -90,19 +90,19 @@ class _DoctorFilterSortSheetState extends State<_DoctorFilterSortSheet> {
               width: 42,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade400,
+                color: Theme.of(context).colorScheme.outlineVariant,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
             const SizedBox(height: 18),
-            const Row(
+            Row(
               children: [
-                Icon(Icons.tune_rounded, color: AppColors.primaryBlue),
-                SizedBox(width: 8),
+                const Icon(Icons.tune_rounded, color: AppColors.primaryBlue),
+                const SizedBox(width: 8),
                 Text(
                   'Filter & Sort',
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -137,11 +137,15 @@ class _DoctorFilterSortSheetState extends State<_DoctorFilterSortSheet> {
                     const _FilterSectionTitle('Sort order'),
                     const SizedBox(height: 8),
                     if (orderOptions.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
                           'Choose Rating or Experience first.',
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       )
                     else
@@ -158,9 +162,11 @@ class _DoctorFilterSortSheetState extends State<_DoctorFilterSortSheet> {
                     const _FilterSectionTitle('Language'),
                     const SizedBox(height: 10),
                     if (widget.availableLanguages.isEmpty)
-                      const Text(
+                      Text(
                         'No doctor languages are available to filter yet.',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       )
                     else
                       Wrap(
@@ -177,7 +183,7 @@ class _DoctorFilterSortSheetState extends State<_DoctorFilterSortSheet> {
                                 labelStyle: TextStyle(
                                   color: _language == language
                                       ? AppColors.primaryBlue
-                                      : Colors.black87,
+                                      : Theme.of(context).colorScheme.onSurface,
                                   fontWeight: _language == language
                                       ? FontWeight.w700
                                       : FontWeight.w500,
@@ -242,8 +248,8 @@ class _FilterSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        color: Colors.black87,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
         fontSize: 15,
         fontWeight: FontWeight.bold,
       ),
@@ -275,10 +281,18 @@ class _OptionTile extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_off_rounded,
-              color: selected ? AppColors.primaryBlue : Colors.grey,
+              color: selected
+                  ? AppColors.primaryBlue
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 10),
-            Text(label, style: const TextStyle(fontSize: 15)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
           ],
         ),
       ),

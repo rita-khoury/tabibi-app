@@ -14,7 +14,7 @@ class ProfileUpdatesView extends StatelessWidget {
         ? Get.find<ProfileUpdatesController>()
         : Get.put(ProfileUpdatesController());
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Profile Updates'),
         centerTitle: true,
@@ -99,11 +99,11 @@ class _ProfileUpdateCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: 0.05),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -134,8 +134,8 @@ class _ProfileUpdateCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     fieldLabel,
-                    style: const TextStyle(
-                      color: Colors.black87,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -146,8 +146,8 @@ class _ProfileUpdateCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               '$oldValue → $newValue',
-              style: const TextStyle(
-                color: Colors.black87,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 14,
                 height: 1.35,
               ),
@@ -194,7 +194,10 @@ class _MetaLine extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: AppColors.gray, fontSize: 12),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
         ),
       ],
@@ -230,7 +233,10 @@ class _ReasonBox extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             reason,
-            style: const TextStyle(color: Colors.black87, fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 13,
+            ),
           ),
         ],
       ),

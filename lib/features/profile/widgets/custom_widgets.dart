@@ -12,9 +12,9 @@ class CustomCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.lightGray),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,10 +51,10 @@ class CustomInputField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         const SizedBox(height: 6),
@@ -62,13 +62,19 @@ class CustomInputField extends StatelessWidget {
           controller: controller,
           readOnly: readOnly,
           obscureText: obscureText,
-          style: TextStyle(color: readOnly ? AppColors.gray : Colors.black87),
+          style: TextStyle(
+            color: readOnly
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.onSurface,
+          ),
           decoration: InputDecoration(
             hintText: hintText,
             filled: true,
             fillColor: readOnly
-                ? AppColors.lightGray.withOpacity(0.5)
-                : AppColors.lightGray,
+                ? Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
             prefixIcon: Icon(
               prefixIcon,
               color: AppColors.primaryBlue,
@@ -81,7 +87,9 @@ class CustomInputField extends StatelessWidget {
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.black12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),

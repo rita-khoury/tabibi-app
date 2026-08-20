@@ -12,7 +12,7 @@ class AllSpecialitiesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final HomeController controller = Get.find<HomeController>();
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(
@@ -30,7 +30,7 @@ class AllSpecialitiesPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: AppColors.lightGray,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: Obx(() {
@@ -45,10 +45,13 @@ class AllSpecialitiesPage extends StatelessWidget {
           );
         }
         if (controller.specialities.isEmpty) {
-          return const Center(
+          return Center(
             child: Text(
               'No specialities available at the moment.',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           );
         }
@@ -83,7 +86,9 @@ class _SpecialitiesError extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             ElevatedButton(onPressed: onRetry, child: const Text('Retry')),

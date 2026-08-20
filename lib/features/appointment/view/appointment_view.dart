@@ -10,7 +10,13 @@ class AppointmentView extends GetView<AppointmentController> {
   final int? referralId;
   final String? referralSourceName;
 
-  const AppointmentView({super.key, required this.doctorId, this.clinicId, this.referralId, this.referralSourceName});
+  const AppointmentView({
+    super.key,
+    required this.doctorId,
+    this.clinicId,
+    this.referralId,
+    this.referralSourceName,
+  });
 
   void _showFinalBookingDialog() {
     Get.dialog(
@@ -121,9 +127,7 @@ class AppointmentView extends GetView<AppointmentController> {
             child: Column(
               children: [
                 if (referralId != null)
-                  _referralBookingBanner(
-                    sourceDoctorName: referralSourceName,
-                  ),
+                  _referralBookingBanner(sourceDoctorName: referralSourceName),
                 if (referralId != null) const SizedBox(height: 12),
                 Expanded(
                   child: SingleChildScrollView(
@@ -193,8 +197,10 @@ class AppointmentView extends GetView<AppointmentController> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.assignment_turned_in_outlined,
-              color: AppColors.primaryBlue),
+          const Icon(
+            Icons.assignment_turned_in_outlined,
+            color: AppColors.primaryBlue,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -209,6 +215,7 @@ class AppointmentView extends GetView<AppointmentController> {
       ),
     );
   }
+
   Widget _dateCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -475,14 +482,14 @@ class AppointmentView extends GetView<AppointmentController> {
               ? Colors.red.shade50
               : selected
               ? AppColors.primaryBlue
-              : Colors.white,
+              : Get.theme.cardColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: unavailable
                 ? Colors.red.shade300
                 : selected
                 ? Colors.transparent
-                : Colors.grey.shade300,
+                : Get.theme.colorScheme.outlineVariant,
           ),
         ),
         child: Center(
@@ -494,7 +501,7 @@ class AppointmentView extends GetView<AppointmentController> {
                   ? Colors.red.shade700
                   : selected
                   ? Colors.white
-                  : Colors.black,
+                  : Get.theme.colorScheme.onSurface,
               fontSize: 12,
             ),
           ),
@@ -549,10 +556,12 @@ class AppointmentView extends GetView<AppointmentController> {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue : Colors.white,
+          color: isSelected ? AppColors.primaryBlue : Get.theme.cardColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey.shade300,
+            color: isSelected
+                ? Colors.transparent
+                : Get.theme.colorScheme.outlineVariant,
           ),
         ),
         child: Center(
@@ -560,7 +569,9 @@ class AppointmentView extends GetView<AppointmentController> {
             text,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : Colors.black,
+              color: isSelected
+                  ? Colors.white
+                  : Get.theme.colorScheme.onSurface,
               fontSize: 12,
             ),
           ),
@@ -622,8 +633,8 @@ class AppointmentView extends GetView<AppointmentController> {
     await controller.loadBookingSummaryDoctor(doctorId);
     Get.dialog(
       AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: Get.theme.cardColor,
+        surfaceTintColor: Get.theme.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Column(
           children: [

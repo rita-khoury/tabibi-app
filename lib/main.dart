@@ -64,13 +64,29 @@ class MyApp extends StatelessWidget {
       themeMode: initialThemeMode,
       theme: ThemeData(
         brightness: Brightness.light,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryBlue,
+          brightness: Brightness.light,
+        ),
         scaffoldBackgroundColor: AppColors.lightGray,
         primaryColor: AppColors.primaryBlue,
+        cardColor: AppColors.white,
+        dialogTheme: const DialogThemeData(
+          backgroundColor: AppColors.white,
+          surfaceTintColor: AppColors.white,
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: AppColors.white,
+          surfaceTintColor: AppColors.white,
+        ),
       ),
 
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryBlue,
+          brightness: Brightness.dark,
+        ),
         scaffoldBackgroundColor: const Color(0xFF121619),
         primaryColor: AppColors.primaryBlue,
 
@@ -81,6 +97,14 @@ class MyApp extends StatelessWidget {
         ),
 
         cardColor: const Color(0xFF1A2126),
+        dialogTheme: const DialogThemeData(
+          backgroundColor: Color(0xFF1A2126),
+          surfaceTintColor: Color(0xFF1A2126),
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Color(0xFF1A2126),
+          surfaceTintColor: Color(0xFF1A2126),
+        ),
 
         textTheme: const TextTheme(
           bodyLarge: TextStyle(color: Colors.white70),

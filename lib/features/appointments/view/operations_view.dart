@@ -13,7 +13,7 @@ class OperationsView extends GetView<AppointmentsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           'Operations',
@@ -22,7 +22,7 @@ class OperationsView extends GetView<AppointmentsController> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: AppColors.lightGray,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: AppColors.primaryBlue,
         elevation: 0,
         centerTitle: true,
@@ -346,10 +346,12 @@ class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
           future: _walletFuture,
           builder: (context, snapshot) {
             final wallet = snapshot.data;
-            final isLoading = snapshot.connectionState == ConnectionState.waiting;
+            final isLoading =
+                snapshot.connectionState == ConnectionState.waiting;
             final availableBalance = wallet?.availableBalance;
             final canPay = availableBalance != null && availableBalance >= cost;
-            final isInsufficient = availableBalance != null && availableBalance < cost;
+            final isInsufficient =
+                availableBalance != null && availableBalance < cost;
 
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -368,7 +370,10 @@ class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    const Icon(Icons.payments_outlined, color: AppColors.primaryBlue),
+                    const Icon(
+                      Icons.payments_outlined,
+                      color: AppColors.primaryBlue,
+                    ),
                     const SizedBox(width: 10),
                     const Expanded(
                       child: Text(
@@ -380,14 +385,21 @@ class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
                         ),
                       ),
                     ),
-                    IconButton(onPressed: Get.back, icon: const Icon(Icons.close)),
+                    IconButton(
+                      onPressed: Get.back,
+                      icon: const Icon(Icons.close),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _PaymentSummaryRow(label: 'Doctor', value: widget.appointment.doctorName),
+                _PaymentSummaryRow(
+                  label: 'Doctor',
+                  value: widget.appointment.doctorName,
+                ),
                 _PaymentSummaryRow(
                   label: 'Date & time',
-                  value: '${widget.appointment.date} • ${widget.appointment.time}',
+                  value:
+                      '${widget.appointment.date} • ${widget.appointment.time}',
                 ),
                 _PaymentSummaryRow(
                   label: 'Operation cost',
@@ -400,7 +412,9 @@ class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                    border: Border.all(
+                      color: Colors.black.withValues(alpha: 0.06),
+                    ),
                   ),
                   child: isLoading
                       ? const Row(
@@ -416,7 +430,10 @@ class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
                       : wallet?.hasError == true
                       ? Row(
                           children: [
-                            const Icon(Icons.error_outline, color: Colors.redAccent),
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.redAccent,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(child: Text(wallet!.errorMessage!)),
                             IconButton(
@@ -428,8 +445,10 @@ class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
                         )
                       : Row(
                           children: [
-                            const Icon(Icons.account_balance_wallet_outlined,
-                                color: AppColors.primaryBlue),
+                            const Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: AppColors.primaryBlue,
+                            ),
                             const SizedBox(width: 10),
                             const Expanded(
                               child: Text(

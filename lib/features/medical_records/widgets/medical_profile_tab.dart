@@ -17,15 +17,15 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
       }
 
       final profile = controller.medicalProfile.value;
-      if (profile == null) return _emptyState();
+      if (profile == null) return _emptyState(context);
 
       return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _completionCard(),
+            _completionCard(context),
             const SizedBox(height: 20),
-            _profileCard(profile),
+            _profileCard(context, profile),
             const SizedBox(height: 30),
           ],
         ),
@@ -33,7 +33,7 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
     });
   }
 
-  Widget _emptyState() {
+  Widget _emptyState(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(28),
@@ -51,10 +51,13 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Use Create Profile to add your medical profile information.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.gray, height: 1.4),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -62,20 +65,20 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
     );
   }
 
-  Widget _completionCard() {
+  Widget _completionCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: _cardDecoration(),
+      decoration: _cardDecoration(context),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Your Medical Profile Completion',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: AppColors.gray,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               Text(
@@ -100,7 +103,7 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
     );
   }
 
-  Widget _profileCard(MedicalProfileModel profile) {
+  Widget _profileCard(BuildContext context, MedicalProfileModel profile) {
     final rows = <_ProfileRowData>[
       _ProfileRowData(Icons.bloodtype, 'Blood type', _one(profile.bloodType)),
       _ProfileRowData(
@@ -156,15 +159,18 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
     ];
 
     return Container(
-      decoration: _cardDecoration(),
+      decoration: _cardDecoration(context),
       child: Column(
         children: List.generate(rows.length, (index) {
           final row = rows[index];
           return Column(
             children: [
-              _profileTile(row.icon, row.title, row.value),
+              _profileTile(context, row.icon, row.title, row.value),
               if (index != rows.length - 1)
-                const Divider(height: 1, color: AppColors.lightGray),
+                Divider(
+                  height: 1,
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
             ],
           );
         }),
@@ -172,7 +178,12 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
     );
   }
 
-  Widget _profileTile(IconData icon, String title, String value) {
+  Widget _profileTile(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -184,7 +195,10 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
             flex: 2,
             child: Text(
               title,
-              style: const TextStyle(fontSize: 15, color: AppColors.gray),
+              style: TextStyle(
+                fontSize: 15,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -193,7 +207,11 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
         ],
@@ -201,12 +219,15 @@ class MedicalProfileTab extends GetView<MedicalRecordController> {
     );
   }
 
-  BoxDecoration _cardDecoration() {
+  BoxDecoration _cardDecoration(BuildContext context) {
     return BoxDecoration(
-      color: AppColors.white,
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
-        BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+        BoxShadow(
+          color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
+          blurRadius: 10,
+        ),
       ],
     );
   }

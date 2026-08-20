@@ -196,7 +196,6 @@ import '../../../core/widgets/app_network_image.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:tabibi/core/constance/app_colors.dart';
 import '../controller/favorites_doctors_controller.dart';
 import '../../auth/data/models/DoctorModel.dart';
 import '../../auth/repository/auth_repository.dart';
@@ -218,7 +217,7 @@ class FavoritesDoctorsView extends StatelessWidget {
     controller.fetchMyFavorites();
 
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(160),
         child: Container(
@@ -292,12 +291,12 @@ class FavoritesDoctorsView extends StatelessWidget {
                 children: [
                   Image.asset('assets/images/photo5.png.png', height: 180),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     "No Favorite Doctors Yet",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.gray,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -309,7 +308,7 @@ class FavoritesDoctorsView extends StatelessWidget {
             itemCount: controller.favoriteDoctors.length,
             itemBuilder: (context, index) {
               final doctor = controller.favoriteDoctors[index];
-              return _doctorCard(controller, doctor);
+              return _doctorCard(context, controller, doctor);
             },
           );
         }),
@@ -317,15 +316,19 @@ class FavoritesDoctorsView extends StatelessWidget {
     );
   }
 
-  Widget _doctorCard(FavoritesDoctorsController controller, DoctorModel doctor) {
+  Widget _doctorCard(
+    BuildContext context,
+    FavoritesDoctorsController controller,
+    DoctorModel doctor,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.12),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, 6),
           ),
@@ -342,13 +345,13 @@ class FavoritesDoctorsView extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Row(
               children: [
-              AppNetworkImage(
-                imageUrl: doctor.image,
-                width: 55,
-                height: 55,
-                borderRadius: BorderRadius.circular(16),
-                fallbackIcon: Icons.medical_services_rounded,
-              ),
+                AppNetworkImage(
+                  imageUrl: doctor.image,
+                  width: 55,
+                  height: 55,
+                  borderRadius: BorderRadius.circular(16),
+                  fallbackIcon: Icons.medical_services_rounded,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -356,18 +359,18 @@ class FavoritesDoctorsView extends StatelessWidget {
                     children: [
                       Text(
                         doctor.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
-                          color: AppColors.gray,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         doctor.specialization,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: Colors.grey,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

@@ -15,7 +15,7 @@ class MedicalRecordView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Medical Record'),
         centerTitle: true,
@@ -26,18 +26,21 @@ class MedicalRecordView extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
         children: [
-          const Text(
+          Text(
             'Your medical record',
             style: TextStyle(
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 5),
-          const Text(
+          Text(
             'Choose a section to view or manage your information.',
-            style: TextStyle(color: AppColors.gray, fontSize: 14),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
           ),
           const SizedBox(height: 20),
           _MedicalRecordSectionCard(
@@ -102,11 +105,11 @@ class _MedicalRecordSectionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: 0.06),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -140,8 +143,8 @@ class _MedicalRecordSectionCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Colors.black87,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -149,8 +152,8 @@ class _MedicalRecordSectionCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: const TextStyle(
-                          color: AppColors.gray,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 13,
                         ),
                       ),
@@ -239,7 +242,7 @@ class _MedicalRecordSectionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(title),
         centerTitle: true,

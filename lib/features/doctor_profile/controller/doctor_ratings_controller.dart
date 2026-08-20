@@ -9,6 +9,8 @@ import '../../appointments/controller/appointments_controller.dart'; // ØªØ£
 import '../../../core/constance/app_messages.dart';
 import '../../../core/constance/app_alerts.dart';
 
+enum ReportRatingResult { success, duplicate, failure }
+
 class DoctorRatingsController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
 
@@ -424,27 +426,35 @@ class DoctorRatingsController extends GetxController {
     }
   }
 
-  Future<void> reportRating(
+  Future<ReportRatingResult> reportRating(
     int ratingId,
     String reason,
     String? explanation,
   ) async {
     try {
       await _authRepository.reportRating(ratingId, {
-        "reason": reason,
-        "explanation": explanation,
+        'reason': reason,
+        'explanation': explanation,
       });
       markRatingReported(ratingId);
-      AppAlerts.showSuccess(
-        title: AppMessages.reportSuccessTitle,
-        message: AppMessages.reportSuccessBody,
-      );
-    } catch (e) {
-      AppAlerts.showError(
-        title: AppMessages.ratingErrorTitle,
-        message: e.toString(),
-      );
+      return ReportRatingResult.success;
+    } catch (error) {
+      return _isDuplicateReportError(error)
+          ? ReportRatingResult.duplicate
+          : ReportRatingResult.failure;
     }
+  }
+
+  bool _isDuplicateReportError(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('already reported') ||
+        message.contains('already reviewed') ||
+        message.contains('report already exists') ||
+        message.contains('duplicate') ||
+        message.contains('status code: 400') ||
+        message.contains('status code: 409') ||
+        message.contains('bad request') ||
+        message.contains('conflict');
   }
 
   @override

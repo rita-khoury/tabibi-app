@@ -135,7 +135,13 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
 
   void _showReportDialog(BuildContext context, int ratingId) {
     final explanationController = TextEditingController();
-    String selectedReason = 'spam';
+    const reasonValues = <String, String>{
+      'Spam': 'spam',
+      'Abusive content': 'abusive',
+      'Inappropriate content': 'inappropriate',
+      'Other': 'other',
+    };
+    String selectedReasonLabel = 'Spam';
 
     Get.defaultDialog(
       title: 'Report Rating',
@@ -150,18 +156,15 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                initialValue: selectedReason,
+                initialValue: selectedReasonLabel,
                 decoration: const InputDecoration(labelText: 'Reason'),
-                items: const [
-                  DropdownMenuItem(value: 'spam', child: Text('Spam')),
-                  DropdownMenuItem(
-                    value: 'abuse',
-                    child: Text('Abusive content'),
-                  ),
-                  DropdownMenuItem(value: 'other', child: Text('Other')),
-                ],
+                items: reasonValues.keys
+                    .map((label) => DropdownMenuItem(value: label, child: Text(label)))
+                    .toList(),
                 onChanged: (value) {
-                  if (value != null) setState(() => selectedReason = value);
+                  if (value != null) {
+                    setState(() => selectedReasonLabel = value);
+                  }
                 },
               ),
               const SizedBox(height: 12),
@@ -182,15 +185,75 @@ class DoctorRatingsView extends GetView<DoctorRatingsController> {
       buttonColor: AppColors.primaryBlue,
       onConfirm: () {
         final explanation = explanationController.text.trim();
-        Get.back();
-        controller.reportRating(
-          ratingId,
-          selectedReason,
-          explanation.isEmpty ? null : explanation,
+        _showReportConfirmation(
+          ratingId: ratingId,
+          reason: reasonValues[selectedReasonLabel]!,
+          explanation: explanation.isEmpty ? null : explanation,
         );
       },
       textCancel: 'Cancel',
       cancelTextColor: AppColors.gray,
+    );
+  }
+
+  void _showReportConfirmation({
+    required int ratingId,
+    required String reason,
+    required String? explanation,
+  }) {
+    Get.dialog<void>(
+      AlertDialog(
+        title: const Text('Confirm Report'),
+        content: const Text('Are you sure you want to report this rating?'),
+        actions: [
+          TextButton(onPressed: Get.back, child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              final result = await controller.reportRating(
+                ratingId,
+                reason,
+                explanation,
+              );
+              Get.back();
+              Get.back();
+              switch (result) {
+                case ReportRatingResult.success:
+                  Get.snackbar(
+                    'Thank you!',
+                    'Thank you for helping us improve our platform experience!',
+                    backgroundColor: AppColors.primaryBlue,
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.TOP,
+                  );
+                  break;
+                case ReportRatingResult.duplicate:
+                  Get.snackbar(
+                    'Report unavailable',
+                    'You have already reported this rating, or it has already been reviewed by the admin.',
+                    backgroundColor: const Color(0xFF17A2B8),
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.TOP,
+                  );
+                  break;
+                case ReportRatingResult.failure:
+                  Get.snackbar(
+                    'Unable to report rating',
+                    'Unable to submit this report right now. Please try again later.',
+                    backgroundColor: Colors.redAccent,
+                    colorText: Colors.white,
+                    snackPosition: SnackPosition.TOP,
+                  );
+                  break;
+              }
+            },
+            child: const Text(
+              'Confirm',
+              style: TextStyle(color: AppColors.primaryBlue),
+            ),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
     );
   }
 }

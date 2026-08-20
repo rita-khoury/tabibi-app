@@ -28,6 +28,9 @@ PatientQueueModel queue({
   int? patientsAhead = 1,
   int? expectedWaitingTimeMinutes = 20,
   int? patientDelayMinutes,
+  DateTime? checkInAt,
+  DateTime? calledAt,
+  PatientQueueAppointment? appointment,
 }) {
   return PatientQueueModel(
     id: 1,
@@ -38,10 +41,12 @@ PatientQueueModel queue({
     patientsAhead: patientsAhead,
     priorityGroup: priorityGroup,
     status: status,
-    checkInAt: DateTime.utc(2026, 8, 20, 8, 30),
-    calledAt: status == PatientQueueStatus.calling
-        ? DateTime.utc(2026, 8, 20, 8, 55)
-        : null,
+    checkInAt: checkInAt ?? DateTime.utc(2026, 8, 20, 8, 30),
+    calledAt:
+        calledAt ??
+        (status == PatientQueueStatus.calling
+            ? DateTime.utc(2026, 8, 20, 8, 55)
+            : null),
     consultationStartedAt: status == PatientQueueStatus.inProgress
         ? DateTime.utc(2026, 8, 20, 9)
         : null,
@@ -62,9 +67,19 @@ PatientQueueModel queue({
       fullName: 'Dr. Maha Saleh',
       specialization: 'Cardiology',
     ),
-    appointment: null,
+    appointment: appointment,
   );
 }
+
+final _appointment = PatientQueueAppointment(
+  id: 2,
+  requestedDate: DateTime(2026, 8, 20),
+  startTime: '3:15 PM',
+  endTime: '3:45 PM',
+  type: 'consultation',
+  status: 'confirmed',
+  patient: null,
+);
 
 Future<void> pumpQueue(
   WidgetTester tester,
@@ -112,7 +127,44 @@ void main() {
     await pumpQueue(tester, () async => null);
 
     expect(find.byKey(const Key('queue-empty')), findsOneWidget);
-    expect(find.text('لا يوجد لديك طابور فعال حاليًا'), findsOneWidget);
+    expect(find.text('You currently have no active queue.'), findsOneWidget);
+  });
+
+  testWidgets('renders English appointment and check-in date/time text', (
+    tester,
+  ) async {
+    await pumpQueue(
+      tester,
+      () async => queue(
+        appointment: _appointment,
+        checkInAt: DateTime(2026, 8, 20, 15, 02),
+      ),
+    );
+
+    expect(find.text('Aug 20, 2026 · 3:15 PM'), findsOneWidget);
+    expect(find.text('3:02 PM'), findsOneWidget);
+    expect(find.textContaining('أغسطس'), findsNothing);
+    expect(find.textContaining(' ص'), findsNothing);
+    expect(find.textContaining(' م'), findsNothing);
+  });
+
+  testWidgets('renders English appointment and called time text', (
+    tester,
+  ) async {
+    await pumpQueue(
+      tester,
+      () async => queue(
+        status: PatientQueueStatus.calling,
+        appointment: _appointment,
+        calledAt: DateTime(2026, 8, 20, 15, 51),
+      ),
+    );
+
+    expect(find.text('Aug 20, 2026 · 3:15 PM'), findsOneWidget);
+    expect(find.text('Called: 3:51 PM'), findsOneWidget);
+    expect(find.textContaining('أغسطس'), findsNothing);
+    expect(find.textContaining(' ص'), findsNothing);
+    expect(find.textContaining(' م'), findsNothing);
   });
 
   testWidgets(
@@ -123,9 +175,12 @@ void main() {
       expect(find.byKey(const Key('queue-waiting')), findsOneWidget);
       expect(find.text('#2'), findsOneWidget);
       expect(find.text('1'), findsOneWidget);
-      expect(find.text('20 د'), findsOneWidget);
-      expect(find.text('عادي'), findsOneWidget);
-      expect(find.text('متأخر عن موعدك بـ 5 دقائق'), findsOneWidget);
+      expect(find.text('20 min'), findsOneWidget);
+      expect(find.text('Normal'), findsOneWidget);
+      expect(
+        find.text('You are 5 minutes late for your appointment.'),
+        findsOneWidget,
+      );
     },
   );
 
@@ -140,8 +195,8 @@ void main() {
       ),
     );
 
-    expect(find.text('متأخر'), findsOneWidget);
-    expect(find.textContaining('متأخر عن موعدك'), findsNothing);
+    expect(find.text('Late'), findsOneWidget);
+    expect(find.textContaining('late for your appointment'), findsNothing);
   });
 
   testWidgets(
@@ -153,10 +208,10 @@ void main() {
       );
 
       expect(find.byKey(const Key('queue-calling')), findsOneWidget);
-      expect(find.text('حان دورك'), findsOneWidget);
-      expect(find.text('يرجى التوجه إلى الطبيب'), findsOneWidget);
-      expect(find.text('موقعك'), findsNothing);
-      expect(find.text('الانتظار'), findsNothing);
+      expect(find.text("It's your turn"), findsOneWidget);
+      expect(find.text('Please proceed to the doctor'), findsOneWidget);
+      expect(find.text('Your position'), findsNothing);
+      expect(find.text('Waiting'), findsNothing);
     },
   );
 
@@ -167,9 +222,9 @@ void main() {
     );
 
     expect(find.byKey(const Key('queue-in-progress')), findsOneWidget);
-    expect(find.text('أنت الآن مع الطبيب'), findsOneWidget);
-    expect(find.text('موقعك'), findsNothing);
-    expect(find.text('أمامك'), findsNothing);
+    expect(find.text('You are now with the doctor'), findsOneWidget);
+    expect(find.text('Your position'), findsNothing);
+    expect(find.text('Ahead of you'), findsNothing);
   });
 
   Future<void> expectTerminalQueueAsEmpty(

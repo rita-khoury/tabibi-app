@@ -60,7 +60,7 @@ class _PatientQueueViewState extends State<PatientQueueView> {
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
-          'الطابور',
+          'Queue',
           style: TextStyle(
             color: Color(0xFF172033),
             fontWeight: FontWeight.w800,
@@ -69,7 +69,7 @@ class _PatientQueueViewState extends State<PatientQueueView> {
         ),
         actions: [
           IconButton(
-            tooltip: 'تحديث',
+            tooltip: 'Refresh',
             onPressed: _controller.loadActiveQueue,
             icon: const Icon(Icons.refresh_rounded),
           ),
@@ -141,8 +141,11 @@ class _QueueHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final doctorName = queue.doctor?.fullName ?? 'الطبيب';
-    final clinicName = queue.clinic?.name ?? 'العيادة';
+    final doctorFullName = queue.doctor?.fullName;
+    final doctorName = doctorFullName == null || doctorFullName.trim().isEmpty
+        ? 'Doctor'
+        : doctorFullName;
+    final clinicName = queue.clinic?.name ?? 'Clinic';
     final appointment = queue.appointment;
     final appointmentTime = appointment == null
         ? null
@@ -231,34 +234,34 @@ class _WaitingQueueCard extends StatelessWidget {
         children: [
           const _StatusTitle(
             icon: Icons.hourglass_top_rounded,
-            title: 'في الانتظار',
-            subtitle: 'سيتم إشعارك عند حلول دورك',
+            title: 'Waiting',
+            subtitle: 'You will be notified when it is your turn.',
             color: AppColors.primaryBlue,
           ),
           const SizedBox(height: 20),
           Row(
             children: [
               _Metric(
-                label: 'موقعك',
+                label: 'Your position',
                 value: position == null ? '—' : '#$position',
               ),
               _Metric(
-                label: 'أمامك',
+                label: 'Ahead of you',
                 value: patientsAhead == null ? '—' : '$patientsAhead',
               ),
               _Metric(
-                label: 'الانتظار',
-                value: waitMinutes == null ? '—' : '$waitMinutes د',
+                label: 'Waiting',
+                value: waitMinutes == null ? '—' : '$waitMinutes min',
               ),
             ],
           ),
           const Divider(height: 30),
           _DetailRow(
             icon: Icons.flag_outlined,
-            label: 'التصنيف',
+            label: 'Priority',
             value: queue.priorityGroup == PatientQueuePriorityGroup.normal
-                ? 'عادي'
-                : 'متأخر',
+                ? 'Normal'
+                : 'Late',
             valueColor: queue.priorityGroup == PatientQueuePriorityGroup.normal
                 ? const Color(0xFF15803D)
                 : const Color(0xFFB45309),
@@ -267,14 +270,14 @@ class _WaitingQueueCard extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailRow(
               icon: Icons.login_rounded,
-              label: 'وقت تسجيل الوصول',
+              label: 'Check-in time',
               value: _formatTime(queue.checkInAt!),
             ),
           ],
           if (delay != null && delay > 0) ...[
             const SizedBox(height: 12),
             Text(
-              'متأخر عن موعدك بـ $delay دقائق',
+              'You are $delay minutes late for your appointment.',
               style: const TextStyle(
                 color: Color(0xFFB45309),
                 fontSize: 13,
@@ -312,7 +315,7 @@ class _CallingQueueCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           const Text(
-            'حان دورك',
+            "It's your turn",
             style: TextStyle(
               color: Color(0xFF14532D),
               fontSize: 24,
@@ -321,14 +324,14 @@ class _CallingQueueCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'يرجى التوجه إلى الطبيب',
+            'Please proceed to the doctor',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF166534), fontSize: 15),
           ),
           if (queue.calledAt != null) ...[
             const SizedBox(height: 18),
             Text(
-              'تم النداء: ${_formatTime(queue.calledAt!)}',
+              'Called: ${_formatTime(queue.calledAt!)}',
               style: const TextStyle(
                 color: Color(0xFF166534),
                 fontWeight: FontWeight.w600,
@@ -365,7 +368,7 @@ class _InProgressQueueCard extends StatelessWidget {
           ),
           SizedBox(height: 14),
           Text(
-            'أنت الآن مع الطبيب',
+            'You are now with the doctor',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Color(0xFF172033),
@@ -375,7 +378,7 @@ class _InProgressQueueCard extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'نتمنى لك دوام الصحة والعافية',
+            'We wish you continued health and well-being',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF5C6B82), fontSize: 14),
           ),
@@ -519,7 +522,7 @@ class _QueueEmptyState extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Text(
-              'لا يوجد لديك طابور فعال حاليًا',
+              'You currently have no active queue.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Color(0xFF172033),
@@ -529,7 +532,7 @@ class _QueueEmptyState extends StatelessWidget {
             ),
             SizedBox(height: 8),
             Text(
-              'عندما يكون لديك موعد داخل الطابور، ستظهر حالته هنا.',
+              'When you have an appointment in the queue, its status will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.gray, fontSize: 14),
             ),
@@ -561,7 +564,7 @@ class _QueueErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'تعذر تحميل حالة الطابور',
+              'Unable to load queue status',
               style: TextStyle(
                 color: Color(0xFF172033),
                 fontSize: 18,
@@ -570,7 +573,7 @@ class _QueueErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'يرجى المحاولة مرة أخرى.',
+              'Please try again.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.gray),
             ),
@@ -578,7 +581,7 @@ class _QueueErrorState extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة'),
+              label: const Text('Try again'),
             ),
           ],
         ),
@@ -590,11 +593,11 @@ class _QueueErrorState extends StatelessWidget {
 String? _formatAppointmentTime(DateTime? date, String? time) {
   final formattedDate = date == null
       ? null
-      : DateFormat('d MMM y', 'ar').format(date);
+      : DateFormat('MMM d, y', 'en_US').format(date);
   if (formattedDate == null && (time == null || time.isEmpty)) return null;
   if (formattedDate == null) return time;
   if (time == null || time.isEmpty) return formattedDate;
   return '$formattedDate · $time';
 }
 
-String _formatTime(DateTime date) => DateFormat('h:mm a', 'ar').format(date);
+String _formatTime(DateTime date) => DateFormat('h:mm a', 'en_US').format(date);

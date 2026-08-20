@@ -344,7 +344,7 @@
 //                       userData['fullName']?.toString() ??
 //                       userData['name']?.toString() ??
 //                       'Doctor';
-//                   avatarUrl = userData['avatarUrl']?.toString();
+//                   // Avatar URL is normalized by WaitlistModel.
 //                 } else {
 //                   doctorName = doctorData['full_name']?.toString() ??
 //                       doctorData['fullName']?.toString() ??
@@ -353,14 +353,14 @@
 //                 }
 //               }
 //
-//               final requestedDate = waitlistItem.requestedDate ?? '';
+//               final requestedDate = waitlistItem.requestedDate;
 //
 //               int doctorId = 0;
 //               if (doctorData != null && doctorData is Map) {
 //                 doctorId = int.tryParse(doctorData['id']?.toString() ?? '0') ?? 0;
 //               }
 //
-//               final int clinicId = waitlistItem.clinicId ?? 0;
+//               final int clinicId = waitlistItem.clinicId;
 //
 //               return Container(
 //                 margin: const EdgeInsets.only(bottom: 16),
@@ -487,12 +487,7 @@ import '../widgets/rate_doctor_dialog.dart';
 class AppointmentsView extends StatelessWidget {
   const AppointmentsView({super.key});
 
-  AppointmentsController _ensureController() {
-    if (!Get.isRegistered<AppointmentsController>()) {
-      return Get.put(AppointmentsController());
-    }
-    return Get.find<AppointmentsController>();
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -766,7 +761,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
               final waitlistItem = controller.waitlistAppointments[index];
 
               String doctorName = 'Doctor';
-              String? avatarUrl;
+              final avatarUrl = waitlistItem.doctorAvatarUrl;
               String specialization = 'Specialist';
 
               final dynamic doctorData = waitlistItem.doctor;
@@ -782,7 +777,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
                       userData['fullName']?.toString() ??
                       userData['name']?.toString() ??
                       'Doctor';
-                  avatarUrl = userData['avatarUrl']?.toString();
+                  // Avatar URL is normalized by WaitlistModel.
                 } else {
                   doctorName =
                       doctorData['full_name']?.toString() ??
@@ -792,7 +787,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
                 }
               }
 
-              final requestedDate = waitlistItem.requestedDate ?? '';
+              final requestedDate = waitlistItem.requestedDate;
 
               int doctorId = 0;
               if (doctorData != null && doctorData is Map) {
@@ -800,7 +795,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
                     int.tryParse(doctorData['id']?.toString() ?? '0') ?? 0;
               }
 
-              final int clinicId = waitlistItem.clinicId ?? 0;
+              final int clinicId = waitlistItem.clinicId;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -820,22 +815,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(15),
-                          child: SizedBox(
-                            width: 60,
-                            height: 60,
-                            child: avatarUrl != null && avatarUrl.isNotEmpty
-                                ? Image.network(
-                                    avatarUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            _buildDefaultAvatar(),
-                                  )
-                                : _buildDefaultAvatar(),
-                          ),
-                        ),
+                        _WaitlistDoctorAvatar(imageUrl: avatarUrl),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
@@ -908,10 +888,62 @@ class WaitlistBottomSheetView extends StatelessWidget {
     );
   }
 
-  Widget _buildDefaultAvatar() {
-    return Container(
-      color: AppColors.primaryBlue.withValues(alpha: 0.1),
-      child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 30),
+}
+
+class _WaitlistDoctorAvatar extends StatelessWidget {
+  const _WaitlistDoctorAvatar({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+    return SizedBox(
+      width: 60,
+      height: 60,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: hasImage
+            ? Image.network(
+                imageUrl!,
+                fit: BoxFit.cover,
+                cacheWidth: 120,
+                filterQuality: FilterQuality.medium,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return _WaitlistAvatarPlaceholder(
+                    child: SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: progress.expectedTotalBytes == null
+                            ? null
+                            : progress.cumulativeBytesLoaded /
+                                progress.expectedTotalBytes!,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) =>
+                    const _WaitlistAvatarPlaceholder(),
+              )
+            : const _WaitlistAvatarPlaceholder(),
+      ),
     );
   }
+}
+
+class _WaitlistAvatarPlaceholder extends StatelessWidget {
+  const _WaitlistAvatarPlaceholder({this.child});
+
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+    alignment: Alignment.center,
+    child: child ??
+        const Icon(Icons.person, color: AppColors.primaryBlue, size: 30),
+  );
 }

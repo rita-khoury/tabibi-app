@@ -1,3 +1,5 @@
+import 'package:tabibi/core/constance/api_constants.dart';
+
 // class WaitlistModel {
 //   final int id;
 //   final int doctorId;
@@ -70,7 +72,6 @@ class WaitlistModel {
   });
 
   factory WaitlistModel.fromJson(Map<String, dynamic> json) {
-    print("🔍 بيانات الويت ليست الكاملة من السيرفر: $json");
     return WaitlistModel(
       id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       patientProfileId: int.tryParse(json['patientProfileId']?.toString() ?? '0') ?? 0,
@@ -81,6 +82,27 @@ class WaitlistModel {
       doctor: json['doctor'] is Map<String, dynamic> ? json['doctor'] : null,
       clinic: json['clinic'] is Map<String, dynamic> ? json['clinic'] : null,
     );
+  }
+
+  String? get doctorAvatarUrl {
+    final userData = doctor?['user'];
+    final rawPath = userData is Map
+        ? userData['avatarUrl'] ??
+              userData['avatar_url'] ??
+              userData['profilePicture'] ??
+              userData['profile_picture'] ??
+              userData['avatar'] ??
+              userData['image']
+        : doctor?['avatarUrl'] ??
+              doctor?['avatar_url'] ??
+              doctor?['profilePicture'] ??
+              doctor?['profile_picture'] ??
+              doctor?['avatar'] ??
+              doctor?['image'];
+    final path = rawPath?.toString().trim() ?? '';
+    if (path.isEmpty) return null;
+    final normalized = ApiConstants.getFullImageUrl(path).trim();
+    return normalized.isEmpty ? null : normalized;
   }
 
   // **دالة ذكية لجلب اسم الدكتور المرتبط بالويت ليست حصراً**

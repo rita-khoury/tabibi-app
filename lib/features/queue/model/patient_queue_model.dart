@@ -124,7 +124,7 @@ class PatientQueueModel {
 
   static DateTime? _nullableDate(dynamic value, String key) {
     if (value == null) return null;
-    final parsed = DateTime.tryParse(value.toString());
+    final parsed = DateTime.tryParse(value.toString())?.toLocal();
     if (parsed == null) {
       throw FormatException(
         'Queue response contains an invalid $key timestamp.',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../auth/repository/auth_repository.dart';
@@ -7,6 +8,15 @@ import '../model/waitlist_model.dart';
 
 import '../../../core/constance/app_messages.dart';
 import '../../../core/constance/app_alerts.dart';
+
+class OperationWalletBalance {
+  const OperationWalletBalance({this.availableBalance, this.errorMessage});
+
+  final double? availableBalance;
+  final String? errorMessage;
+
+  bool get hasError => errorMessage != null;
+}
 
 class AppointmentsController extends GetxController {
   final AuthRepository _repo = Get.find<AuthRepository>();
@@ -134,13 +144,84 @@ class AppointmentsController extends GetxController {
     }
   }
 
+  Future<OperationWalletBalance> fetchOperationWalletBalance() async {
+    try {
+      final response = await _repo.dio.get('/wallets/me');
+      final raw = response.data;
+      final wallet = raw is Map && raw['data'] is Map ? raw['data'] : raw;
+      final value = wallet is Map ? wallet['availableBalance'] : null;
+      return OperationWalletBalance(
+        availableBalance: value is num
+            ? value.toDouble()
+            : double.tryParse(value?.toString() ?? ''),
+      );
+    } on DioException catch (error) {
+      return OperationWalletBalance(errorMessage: _dioMessage(error));
+    } catch (_) {
+      return const OperationWalletBalance(
+        errorMessage: 'Unable to load your wallet balance. Please try again.',
+      );
+    }
+  }
+
+  Future<String?> payForOperation(int appointmentId) async {
+    try {
+      final response = await _repo.dio.post(
+        '/payments/pay-operation/$appointmentId',
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        return 'Unable to confirm the operation payment. Please try again.';
+      }
+      _markOperationConfirmed(appointmentId);
+      return null;
+    } on DioException catch (error) {
+      return _dioMessage(error);
+    } catch (_) {
+      return 'Unable to confirm the operation payment. Please try again.';
+    }
+  }
+
+  void _markOperationConfirmed(int appointmentId) {
+    List<AppointmentModel> mark(List<AppointmentModel> appointments) =>
+        appointments
+            .map(
+              (appointment) => appointment.id == appointmentId
+                  ? appointment.copyWith(status: 'confirmed')
+                  : appointment,
+            )
+            .toList();
+
+    allAppointments = mark(allAppointments);
+    upcomingAppointments = mark(upcomingAppointments);
+    completedAppointments = mark(completedAppointments);
+    canceledAppointments = mark(canceledAppointments);
+    noShowAppointments = mark(noShowAppointments);
+    update();
+  }
+
+  String _dioMessage(DioException error) {
+    final data = error.response?.data;
+    final message = data is Map ? data['message'] ?? data['error'] : null;
+    if (message is List) return message.join('\n');
+    final text = message?.toString().trim() ?? '';
+    if (text.isNotEmpty) return text;
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout) {
+      return 'The request timed out. Please try again.';
+    }
+    if (error.type == DioExceptionType.connectionError) {
+      return 'Unable to connect. Please check your internet connection.';
+    }
+    return 'Unable to confirm the operation payment. Please try again.';
+  }
+
   Future<void> fetchWaitlist() async {
     try {
       var result = await _repo.getMyWaitlists();
 
       debugPrint("🔥 RAW WAITLIST DATA: $result");
 
-      waitlistAppointments = (result as List)
+      waitlistAppointments = result
           .map((item) => WaitlistModel.fromJson(item))
           .toList();
       update();

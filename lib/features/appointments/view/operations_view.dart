@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
+import 'package:tabibi/core/routes/app_routes.dart';
 
 import '../controller/appointments_controller.dart';
 import '../model/appointment_model.dart';
@@ -73,6 +74,10 @@ class OperationsView extends GetView<AppointmentsController> {
                         showCancellationAction: false,
                         onTap: () =>
                             _showOperationDetails(context, appointment),
+                        onPayOperation:
+                            appointment.status.trim().toLowerCase() == 'pending'
+                            ? () => _showOperationPayment(context, appointment)
+                            : null,
                       );
                     },
                   ),
@@ -97,6 +102,18 @@ class OperationsView extends GetView<AppointmentsController> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _OperationDetailsSheet(appointment: appointment),
+    );
+  }
+
+  void _showOperationPayment(
+    BuildContext context,
+    AppointmentModel appointment,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _OperationPaymentSheet(appointment: appointment),
     );
   }
 }
@@ -256,4 +273,277 @@ class _DetailCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _OperationPaymentSheet extends StatefulWidget {
+  const _OperationPaymentSheet({required this.appointment});
+
+  final AppointmentModel appointment;
+
+  @override
+  State<_OperationPaymentSheet> createState() => _OperationPaymentSheetState();
+}
+
+class _OperationPaymentSheetState extends State<_OperationPaymentSheet> {
+  late final AppointmentsController _controller;
+  late Future<OperationWalletBalance> _walletFuture;
+  bool _isPaying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.find<AppointmentsController>();
+    _walletFuture = _controller.fetchOperationWalletBalance();
+  }
+
+  void _reloadWallet() {
+    setState(() => _walletFuture = _controller.fetchOperationWalletBalance());
+  }
+
+  Future<void> _confirmPayment() async {
+    if (_isPaying) return;
+    setState(() => _isPaying = true);
+    final error = await _controller.payForOperation(widget.appointment.id);
+    if (!mounted) return;
+    if (error != null) {
+      setState(() => _isPaying = false);
+      Get.snackbar(
+        'Payment failed',
+        error,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+    Get.back();
+    Get.snackbar(
+      'Payment confirmed',
+      'Operation payment confirmed successfully.',
+      backgroundColor: AppColors.primaryBlue,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cost = widget.appointment.operationCost ?? 0;
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          14,
+          20,
+          24 + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.lightGray,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: FutureBuilder<OperationWalletBalance>(
+          future: _walletFuture,
+          builder: (context, snapshot) {
+            final wallet = snapshot.data;
+            final isLoading = snapshot.connectionState == ConnectionState.waiting;
+            final availableBalance = wallet?.availableBalance;
+            final canPay = availableBalance != null && availableBalance >= cost;
+            final isInsufficient = availableBalance != null && availableBalance < cost;
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    const Icon(Icons.payments_outlined, color: AppColors.primaryBlue),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Text(
+                        'Confirm Operation Payment',
+                        style: TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    IconButton(onPressed: Get.back, icon: const Icon(Icons.close)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _PaymentSummaryRow(label: 'Doctor', value: widget.appointment.doctorName),
+                _PaymentSummaryRow(
+                  label: 'Date & time',
+                  value: '${widget.appointment.date} • ${widget.appointment.time}',
+                ),
+                _PaymentSummaryRow(
+                  label: 'Operation cost',
+                  value: cost.toStringAsFixed(2),
+                  emphasized: true,
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                  ),
+                  child: isLoading
+                      ? const Row(
+                          children: [
+                            SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            SizedBox(width: 10),
+                            Text('Checking wallet balance...'),
+                          ],
+                        )
+                      : wallet?.hasError == true
+                      ? Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.redAccent),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(wallet!.errorMessage!)),
+                            IconButton(
+                              tooltip: 'Retry',
+                              onPressed: _reloadWallet,
+                              icon: const Icon(Icons.refresh),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            const Icon(Icons.account_balance_wallet_outlined,
+                                color: AppColors.primaryBlue),
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                'Available balance',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            Text(
+                              (availableBalance ?? 0).toStringAsFixed(2),
+                              style: const TextStyle(
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+                if (isInsufficient) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Insufficient Balance. Please top up your wallet to continue.',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Get.back();
+                      Get.toNamed(AppRoutes.wallet);
+                    },
+                    icon: const Icon(Icons.add_card_outlined),
+                    label: const Text('Top-Up Wallet'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                      side: const BorderSide(color: AppColors.primaryBlue),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: canPay && !_isPaying ? _confirmPayment : null,
+                    icon: _isPaying
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.lock_outline),
+                    label: Text(_isPaying ? 'Processing...' : 'Confirm & Pay'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey.shade300,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentSummaryRow extends StatelessWidget {
+  const _PaymentSummaryRow({
+    required this.label,
+    required this.value,
+    this.emphasized = false,
+  });
+
+  final String label;
+  final String value;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 9),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(label, style: const TextStyle(color: AppColors.gray)),
+        ),
+        Text(
+          value,
+          textAlign: TextAlign.end,
+          style: TextStyle(
+            color: emphasized ? AppColors.primaryBlue : Colors.black87,
+            fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
 }

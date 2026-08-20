@@ -293,6 +293,7 @@ class AppointmentCard extends StatelessWidget {
   final VoidCallback? onCancel;
   final VoidCallback? onRate;
   final VoidCallback? onTap;
+  final VoidCallback? onPayOperation;
   final bool showCancellationAction;
 
   const AppointmentCard({
@@ -301,6 +302,7 @@ class AppointmentCard extends StatelessWidget {
     this.onCancel,
     this.onRate,
     this.onTap,
+    this.onPayOperation,
     this.showCancellationAction = true,
   });
 
@@ -507,6 +509,32 @@ class AppointmentCard extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
+                        if (appointment.status.trim().toLowerCase() == 'pending' &&
+                            onPayOperation != null) ...[
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 32,
+                            child: ElevatedButton(
+                              onPressed: onPayOperation,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryBlue,
+                                foregroundColor: AppColors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                              child: const Text(
+                                'Pay Now',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

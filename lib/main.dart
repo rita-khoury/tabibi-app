@@ -34,9 +34,12 @@ import 'core/routes/app_pages.dart';
 import 'core/routes/app_routes.dart';
 import 'features/auth/repository/auth_binding.dart';
 import 'core/constance/app_colors.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ar');
+  await initializeDateFormatting('en');
   await GetStorage.init();
 
   final GetStorage box = GetStorage();

@@ -1314,16 +1314,6 @@ class AuthRepository {
     return response.data;
   }
 
-  Future<bool> checkInPatient(int appointmentId) async {
-    try {
-      final response = await _dio.patch('/queues/check-in/$appointmentId');
-      return response.statusCode == 200 || response.statusCode == 201;
-    } on DioException catch (e) {
-      debugPrint("❌ خطأ في الـ Check-in: ${e.response?.data}");
-      throw Exception(_handleDioError(e));
-    }
-  }
-
   Future<List<Map<String, dynamic>>> getLookupsByCategory(
     String category,
   ) async {
@@ -1902,25 +1892,6 @@ class AuthRepository {
       return response.data;
     } on DioException catch (e) {
       throw Exception(_handleDioError(e));
-    }
-  }
-
-  
-
-  Future<Map<String, dynamic>?> getActiveCheckedInAppointment() async {
-    try {
-      final response = await _dio.get(
-        '/queues/patient/active-checked-in',
-        options: Options(validateStatus: (status) => status! < 500),
-      );
-
-      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
-        return response.data;
-      }
-      return null;
-    } on DioException catch (e) {
-      debugPrint("❌ خطأ في جلب الموعد النشط: ${e.response?.data}");
-      return null;
     }
   }
 

@@ -43,15 +43,15 @@ void main() async {
   await GetStorage.init();
 
   final GetStorage box = GetStorage();
-  bool isDark = box.read('isDarkMode') ?? false;
+  final bool isDark = box.read('isDarkMode') ?? false;
 
-  Get.changeThemeMode(isDark ? ThemeMode.dark : ThemeMode.light);
-
-  runApp(const MyApp());
+  runApp(MyApp(initialThemeMode: isDark ? ThemeMode.dark : ThemeMode.light));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.initialThemeMode});
+
+  final ThemeMode initialThemeMode;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
       getPages: AppPages.pages,
       initialBinding: AuthBinding(),
 
-      themeMode: ThemeMode.system,
+      themeMode: initialThemeMode,
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.lightGray,

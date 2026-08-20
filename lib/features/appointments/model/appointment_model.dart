@@ -1,3 +1,5 @@
+import 'package:tabibi/core/constance/api_constants.dart';
+
 // class AppointmentModel {
 //   final int id;
 //   final String status;
@@ -91,6 +93,7 @@ class AppointmentModel {
   final String type;
   final double? operationCost;
   final String doctorName;
+  final String? doctorAvatarUrl;
   final String specialty;
   final String date;
   final String startTime;
@@ -102,11 +105,7 @@ class AppointmentModel {
       "${startTime.length >= 5 ? startTime.substring(0, 5) : startTime} - "
       "${endTime.length >= 5 ? endTime.substring(0, 5) : endTime}";
 
-  // الـ Getter لفحص الحالة مع طباعة الـ Debugging
-  bool get isCompleted {
-    print("Appointment Status is: $status");
-    return status.toLowerCase().trim() == 'completed';
-  }
+  bool get isCompleted => status.toLowerCase().trim() == 'completed';
 
   bool get isOperation => type.trim().toLowerCase() == 'operation';
 
@@ -117,6 +116,7 @@ class AppointmentModel {
     required this.type,
     this.operationCost,
     required this.doctorName,
+    this.doctorAvatarUrl,
     required this.specialty,
     required this.date,
     required this.startTime,
@@ -144,6 +144,19 @@ class AppointmentModel {
     final clinicData = json['clinic'] is Map
         ? json['clinic'] as Map<String, dynamic>
         : null;
+    final rawAvatarPath = userData?['avatarUrl'] ??
+        userData?['avatar_url'] ??
+        userData?['profilePicture'] ??
+        userData?['profile_picture'] ??
+        userData?['avatar'] ??
+        userData?['image'] ??
+        doctorData?['avatarUrl'] ??
+        doctorData?['avatar_url'] ??
+        doctorData?['profilePicture'] ??
+        doctorData?['profile_picture'] ??
+        doctorData?['avatar'] ??
+        json['doctorAvatarUrl'] ??
+        json['doctor_avatar_url'];
 
     return AppointmentModel(
       id: (json['id'] is int)
@@ -154,6 +167,7 @@ class AppointmentModel {
       type: json['type']?.toString() ?? '',
       operationCost: _asDouble(json['operationCost'] ?? json['operation_cost']),
       doctorName: userData?['full_name']?.toString() ?? 'طبيب غير معروف',
+      doctorAvatarUrl: _normalizeImageUrl(rawAvatarPath),
       specialty: doctorData?['specialization']?.toString() ?? 'غير محدد',
       date: (json['requestedDate'] ?? '').toString(),
       startTime: (json['startTime'] ?? '').toString(),
@@ -172,6 +186,7 @@ class AppointmentModel {
     String? type,
     double? operationCost,
     String? doctorName,
+    String? doctorAvatarUrl,
     String? specialty,
     String? date,
     String? startTime,
@@ -186,6 +201,7 @@ class AppointmentModel {
       type: type ?? this.type,
       operationCost: operationCost ?? this.operationCost,
       doctorName: doctorName ?? this.doctorName,
+      doctorAvatarUrl: doctorAvatarUrl ?? this.doctorAvatarUrl,
       specialty: specialty ?? this.specialty,
       date: date ?? this.date,
       startTime: startTime ?? this.startTime,
@@ -193,6 +209,13 @@ class AppointmentModel {
       clinicName: clinicName ?? this.clinicName,
       referral: referral ?? this.referral,
     );
+  }
+
+  static String? _normalizeImageUrl(dynamic value) {
+    final path = value?.toString().trim() ?? '';
+    if (path.isEmpty) return null;
+    final normalized = ApiConstants.getFullImageUrl(path).trim();
+    return normalized.isEmpty ? null : normalized;
   }
 
   static double? _asDouble(dynamic value) {

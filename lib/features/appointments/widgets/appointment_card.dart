@@ -326,19 +326,7 @@ class AppointmentCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 55,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: AppColors.primaryBlue,
-                        size: 30,
-                      ),
-                    ),
+                    _DoctorAvatar(imageUrl: appointment.doctorAvatarUrl),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -650,4 +638,67 @@ class AppointmentCard extends StatelessWidget {
       ),
     );
   }
+}
+
+
+class _DoctorAvatar extends StatelessWidget {
+  const _DoctorAvatar({this.imageUrl});
+
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
+    return SizedBox(
+      width: 55,
+      height: 55,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: hasImage
+            ? Image.network(
+                imageUrl!,
+                fit: BoxFit.cover,
+                cacheWidth: 110,
+                filterQuality: FilterQuality.medium,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return _AvatarPlaceholder(
+                    child: SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: progress.expectedTotalBytes == null
+                            ? null
+                            : progress.cumulativeBytesLoaded /
+                                progress.expectedTotalBytes!,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) =>
+                    const _AvatarPlaceholder(),
+              )
+            : const _AvatarPlaceholder(),
+      ),
+    );
+  }
+}
+
+class _AvatarPlaceholder extends StatelessWidget {
+  const _AvatarPlaceholder({this.child});
+
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+    alignment: Alignment.center,
+    child: child ??
+        const Icon(
+          Icons.person,
+          color: AppColors.primaryBlue,
+          size: 30,
+        ),
+  );
 }

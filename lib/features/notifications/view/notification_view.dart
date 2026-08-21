@@ -9,16 +9,16 @@ class NotificationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final NotificationController controller =
-    Get.isRegistered<NotificationController>()
+        Get.isRegistered<NotificationController>()
         ? Get.find<NotificationController>()
         : Get.put(NotificationController());
 
     const Color primaryColor = AppColors.primaryBlue;
 
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.lightGray,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
@@ -78,22 +78,22 @@ class NotificationView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
+                  Text(
                     "No notifications available",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     "We will let you know when you receive new notifications",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.gray,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -138,11 +138,13 @@ class NotificationView extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
+                          color: Theme.of(
+                            context,
+                          ).shadowColor.withValues(alpha: 0.03),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -157,7 +159,9 @@ class NotificationView extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isUnread
                                 ? primaryColor.withValues(alpha: 0.1)
-                                : AppColors.lightGray,
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -183,7 +187,9 @@ class NotificationView extends StatelessWidget {
                                         fontWeight: isUnread
                                             ? FontWeight.bold
                                             : FontWeight.w500,
-                                        color: Colors.black87,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                     ),
                                   ),
@@ -203,9 +209,11 @@ class NotificationView extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 notification.body,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: AppColors.gray,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],

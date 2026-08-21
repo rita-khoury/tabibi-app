@@ -9,10 +9,12 @@ class SettingsView extends GetView<SettingsController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.lightGray,
+        backgroundColor: theme.scaffoldBackgroundColor,
         iconTheme: const IconThemeData(color: AppColors.lightBlue),
 
         leading: IconButton(
@@ -70,11 +72,11 @@ class SettingsView extends GetView<SettingsController> {
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: theme.cardColor,
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.12),
+                  color: theme.shadowColor.withValues(alpha: 0.12),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),

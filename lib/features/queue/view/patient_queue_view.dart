@@ -53,16 +53,16 @@ class _PatientQueueViewState extends State<PatientQueueView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Theme.of(context).cardColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           'Queue',
           style: TextStyle(
-            color: Color(0xFF172033),
+            color: Theme.of(context).colorScheme.onSurface,
             fontWeight: FontWeight.w800,
             fontSize: 20,
           ),
@@ -157,17 +157,17 @@ class _QueueHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE0E7F0)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             doctorName,
-            style: const TextStyle(
-              color: Color(0xFF172033),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 19,
               fontWeight: FontWeight.w800,
             ),
@@ -175,7 +175,10 @@ class _QueueHeader extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             clinicName,
-            style: const TextStyle(color: AppColors.gray, fontSize: 14),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
           ),
           if (appointmentTime != null) ...[
             const Divider(height: 24),
@@ -189,8 +192,8 @@ class _QueueHeader extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   appointmentTime,
-                  style: const TextStyle(
-                    color: Color(0xFF415168),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -219,11 +222,11 @@ class _WaitingQueueCard extends StatelessWidget {
       key: const Key('queue-waiting'),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: .035),
+            color: Theme.of(context).shadowColor.withValues(alpha: .035),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -420,8 +423,8 @@ class _StatusTitle extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Color(0xFF172033),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
@@ -429,7 +432,10 @@ class _StatusTitle extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 subtitle,
-                style: const TextStyle(color: AppColors.gray, fontSize: 13),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -453,8 +459,8 @@ class _Metric extends StatelessWidget {
         children: [
           Text(
             value,
-            style: const TextStyle(
-              color: Color(0xFF172033),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 22,
               fontWeight: FontWeight.w800,
             ),
@@ -462,7 +468,10 @@ class _Metric extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(color: AppColors.gray, fontSize: 12),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -475,13 +484,13 @@ class _DetailRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
-    this.valueColor = const Color(0xFF172033),
+    this.valueColor,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final Color valueColor;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -491,12 +500,18 @@ class _DetailRow extends StatelessWidget {
         const SizedBox(width: 9),
         Text(
           label,
-          style: const TextStyle(color: AppColors.gray, fontSize: 13),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 13,
+          ),
         ),
         const Spacer(),
         Text(
           value,
-          style: TextStyle(color: valueColor, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: valueColor ?? Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ],
     );
@@ -508,10 +523,10 @@ class _QueueEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      key: Key('queue-empty'),
+    return Center(
+      key: const Key('queue-empty'),
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -525,7 +540,7 @@ class _QueueEmptyState extends StatelessWidget {
               'You currently have no active queue.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF172033),
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -534,7 +549,10 @@ class _QueueEmptyState extends StatelessWidget {
             Text(
               'When you have an appointment in the queue, its status will appear here.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.gray, fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
           ],
         ),
@@ -563,19 +581,21 @@ class _QueueErrorState extends StatelessWidget {
               size: 48,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Unable to load queue status',
               style: TextStyle(
-                color: Color(0xFF172033),
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Please try again.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.gray),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(

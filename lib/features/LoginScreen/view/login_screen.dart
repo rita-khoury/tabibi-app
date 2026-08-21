@@ -13,15 +13,14 @@ class LoginScreen extends GetView<LoginController> {
     permanent: true,
   );
 
-
   LoginScreen({super.key});
-  Future<void> _showForgotPasswordDialog() async {
+  Future<void> _showForgotPasswordDialog(BuildContext context) async {
     controller.forgotPasswordController.clear();
     final identifierController = controller.forgotPasswordController;
 
     await Get.dialog<void>(
       AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Forgot Password?'),
         content: TextField(
@@ -34,10 +33,7 @@ class LoginScreen extends GetView<LoginController> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           Obx(
             () => ElevatedButton(
               onPressed: controller.isLoading.value
@@ -47,9 +43,9 @@ class LoginScreen extends GetView<LoginController> {
                       final isEmail = RegExp(
                         r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
                       ).hasMatch(identifier);
-                      final isPhone = RegExp(r'^\+?[0-9]{7,15}$').hasMatch(
-                        identifier,
-                      );
+                      final isPhone = RegExp(
+                        r'^\+?[0-9]{7,15}$',
+                      ).hasMatch(identifier);
                       if (!isEmail && !isPhone) {
                         Get.snackbar(
                           'Invalid identifier',
@@ -59,7 +55,9 @@ class LoginScreen extends GetView<LoginController> {
                         );
                         return;
                       }
-                      final sent = await controller.handleForgotPassword(identifier);
+                      final sent = await controller.handleForgotPassword(
+                        identifier,
+                      );
                       if (sent) {
                         if (Get.isDialogOpen == true) {
                           Get.back();
@@ -96,7 +94,6 @@ class LoginScreen extends GetView<LoginController> {
         ],
       ),
     );
-
   }
 
   @override
@@ -136,11 +133,13 @@ class LoginScreen extends GetView<LoginController> {
                           child: Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
+                                  color: Theme.of(
+                                    context,
+                                  ).shadowColor.withValues(alpha: 0.1),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -187,7 +186,8 @@ class LoginScreen extends GetView<LoginController> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: _showForgotPasswordDialog,
+                                    onPressed: () =>
+                                        _showForgotPasswordDialog(context),
                                     child: const Text(
                                       "Forgot Password?",
                                       style: TextStyle(

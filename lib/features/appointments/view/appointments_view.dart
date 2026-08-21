@@ -499,7 +499,7 @@ class AppointmentsView extends StatelessWidget {
         key: ValueKey(appointmentsController.upcomingTabRevision.value),
         length: 3,
         child: Scaffold(
-          backgroundColor: AppColors.lightGray,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
               Container(
@@ -707,7 +707,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text(
           "Your Waitlist",
@@ -717,7 +717,7 @@ class WaitlistBottomSheetView extends StatelessWidget {
             color: AppColors.primaryBlue,
           ),
         ),
-        backgroundColor: AppColors.lightGray,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         foregroundColor: AppColors.primaryBlue,
         elevation: 0,
         centerTitle: true,
@@ -740,9 +740,12 @@ class WaitlistBottomSheetView extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     "No items in the waitlist",
-                    style: TextStyle(fontSize: 16, color: AppColors.gray),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
@@ -801,11 +804,13 @@ class WaitlistBottomSheetView extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
+                      color: Theme.of(
+                        context,
+                      ).shadowColor.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -823,17 +828,21 @@ class WaitlistBottomSheetView extends StatelessWidget {
                             children: [
                               Text(
                                 "Dr. $doctorName",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 specialization,
-                                style: const TextStyle(
-                                  color: AppColors.gray,
+                                style: TextStyle(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                   fontSize: 13,
                                 ),
                               ),
@@ -857,9 +866,12 @@ class WaitlistBottomSheetView extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(color: Colors.black12, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Divider(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        height: 1,
+                      ),
                     ),
                     Row(
                       children: [
@@ -871,8 +883,10 @@ class WaitlistBottomSheetView extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           "Requested Date: $requestedDate",
-                          style: const TextStyle(
-                            color: AppColors.gray,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             fontSize: 13,
                           ),
                         ),

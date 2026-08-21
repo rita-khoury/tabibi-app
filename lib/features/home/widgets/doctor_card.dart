@@ -69,11 +69,11 @@ class _DoctorCardState extends State<DoctorCard> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withValues(alpha: 0.05),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -95,7 +95,7 @@ class _DoctorCardState extends State<DoctorCard> {
                   height: 65,
                   borderRadius: BorderRadius.circular(16),
                   fallbackIcon: Icons.medical_services_rounded,
-                  fallbackColor: Colors.blue.shade50,
+                  fallbackColor: Theme.of(context).colorScheme.primaryContainer,
                 ),
                 const SizedBox(width: 14),
 
@@ -110,10 +110,10 @@ class _DoctorCardState extends State<DoctorCard> {
                           children: [
                             Text(
                               doc.name,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -122,7 +122,9 @@ class _DoctorCardState extends State<DoctorCard> {
                             Text(
                               doc.specialization,
                               style: TextStyle(
-                                color: Colors.grey.shade500,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -140,10 +142,12 @@ class _DoctorCardState extends State<DoctorCard> {
                                 const SizedBox(width: 3),
                                 Text(
                                   doc.averageRating.toStringAsFixed(1),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1E293B),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                               ],

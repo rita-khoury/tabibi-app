@@ -37,24 +37,24 @@ class DoctorProfileView extends StatelessWidget {
         centerTitle: true,
         actions: [
           Obx(
-                () => IconButton(
+            () => IconButton(
               onPressed: controller.isFavoriteLoading.value
                   ? null
                   : controller.toggleFavorite,
               icon: controller.isFavoriteLoading.value
                   ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : Icon(
-                controller.doctor.value?.isFavorite == true
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: controller.doctor.value?.isFavorite == true
-                    ? Colors.red.shade400
-                    : AppColors.primaryBlue,
-              ),
+                      controller.doctor.value?.isFavorite == true
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: controller.doctor.value?.isFavorite == true
+                          ? Colors.red.shade400
+                          : AppColors.primaryBlue,
+                    ),
               tooltip: 'Save doctor',
             ),
           ),
@@ -153,11 +153,11 @@ class _ProfileHeader extends StatelessWidget {
               child: imageUrl.isEmpty
                   ? _DoctorPhotoFallback(name: doctor.name)
                   : Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    _DoctorPhotoFallback(name: doctor.name),
-              ),
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _DoctorPhotoFallback(name: doctor.name),
+                    ),
             ),
           ),
           const SizedBox(width: 15),
@@ -298,9 +298,9 @@ class _MetricTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE9EEF5)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         children: [
@@ -434,24 +434,24 @@ class _LanguagesSection extends StatelessWidget {
             .where((language) => language.trim().isNotEmpty)
             .map(
               (language) => Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 7,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F6FE),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              language.trim(),
-              style: const TextStyle(
-                color: AppColors.primaryBlue,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F6FE),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  language.trim(),
+                  style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            ),
-          ),
-        )
+            )
             .toList(),
       ),
     );
@@ -467,7 +467,7 @@ class _RatingsEntry extends StatelessWidget {
     return _SectionCard(
       child: InkWell(
         onTap: () => Get.to(
-              () => const DoctorRatingsView(),
+          () => const DoctorRatingsView(),
           binding: DoctorRatingsBinding(),
           arguments: doctor.id,
         ),
@@ -513,10 +513,10 @@ class _BookingBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: Theme.of(context).cardColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
+              color: Theme.of(context).shadowColor.withValues(alpha: 0.12),
               blurRadius: 16,
               offset: const Offset(0, -4),
             ),
@@ -582,12 +582,12 @@ class _SectionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE9EEF5)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.035),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),

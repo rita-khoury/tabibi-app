@@ -311,10 +311,10 @@ class AppointmentCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Material(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         elevation: 2,
-        shadowColor: Colors.grey.withValues(alpha: 0.08),
+        shadowColor: Theme.of(context).shadowColor.withValues(alpha: 0.08),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: onTap ?? () {},
@@ -338,10 +338,12 @@ class AppointmentCard extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   appointment.doctorName,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                               ),
@@ -351,8 +353,10 @@ class AppointmentCard extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             appointment.specialty,
-                            style: const TextStyle(
-                              color: AppColors.gray,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -370,7 +374,9 @@ class AppointmentCard extends StatelessWidget {
                                 Text(
                                   appointment.clinicName!,
                                   style: TextStyle(
-                                    color: Colors.grey.shade600,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -383,7 +389,10 @@ class AppointmentCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Divider(color: Colors.grey.shade100, height: 1),
+                Divider(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  height: 1,
+                ),
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -409,9 +418,11 @@ class AppointmentCard extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 appointment.date,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontSize: 12,
                                 ),
                                 overflow: TextOverflow.ellipsis,
@@ -444,9 +455,11 @@ class AppointmentCard extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 "${appointment.startTime} - ${appointment.endTime}",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   fontSize: 12,
                                 ),
                                 overflow: TextOverflow.ellipsis,
@@ -479,11 +492,11 @@ class AppointmentCard extends StatelessWidget {
                           size: 18,
                         ),
                         const SizedBox(width: 8),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Operation cost',
                             style: TextStyle(
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -497,7 +510,8 @@ class AppointmentCard extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        if (appointment.status.trim().toLowerCase() == 'pending' &&
+                        if (appointment.status.trim().toLowerCase() ==
+                                'pending' &&
                             onPayOperation != null) ...[
                           const SizedBox(width: 8),
                           SizedBox(
@@ -508,7 +522,9 @@ class AppointmentCard extends StatelessWidget {
                                 backgroundColor: AppColors.primaryBlue,
                                 foregroundColor: AppColors.white,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(9),
                                 ),

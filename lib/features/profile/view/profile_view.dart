@@ -233,7 +233,7 @@ class ProfileView extends GetView<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           Column(
@@ -335,6 +335,11 @@ class ProfileView extends GetView<ProfileController> {
                       icon: Icons.payment,
                       title: "Financial Hub",
                       onTap: () => Get.toNamed(AppRoutes.financialHub),
+                    ),
+                    MenuTile(
+                      icon: Icons.settings,
+                      title: "Settings",
+                      onTap: () => Get.toNamed(AppRoutes.settings),
                     ),
                     MenuTile(
                       icon: Icons.person_off_outlined,
@@ -595,11 +600,11 @@ class MenuTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.12),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.12),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -614,7 +619,9 @@ class MenuTile extends StatelessWidget {
           title,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: isLogout ? Colors.red : accentColor ?? AppColors.gray,
+            color: isLogout
+                ? Colors.red
+                : accentColor ?? Theme.of(context).colorScheme.onSurface,
           ),
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 18),

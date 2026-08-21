@@ -164,7 +164,7 @@ class _DoctorsPageState extends State<DoctorsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.lightGray,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(
@@ -173,7 +173,7 @@ class _DoctorsPageState extends State<DoctorsPage> {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        backgroundColor: AppColors.lightGray,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
         title: Text(
@@ -190,33 +190,33 @@ class _DoctorsPageState extends State<DoctorsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSearchField(),
+            _buildSearchField(context),
             const SizedBox(height: 18),
             Text(
               '${widget.specialityLabel} Doctors',
-              style: const TextStyle(
-                color: Colors.black87,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 10),
-            Expanded(child: _buildDoctorsBody()),
+            Expanded(child: _buildDoctorsBody(context)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchField() {
+  Widget _buildSearchField(BuildContext context) {
     return Container(
       height: 55,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -229,8 +229,14 @@ class _DoctorsPageState extends State<DoctorsPage> {
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search doctors in ${widget.specialityLabel}...',
-                hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-                prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                hintStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 17,
@@ -249,7 +255,7 @@ class _DoctorsPageState extends State<DoctorsPage> {
                   Icons.tune_rounded,
                   color: _filters.isActive
                       ? AppColors.primaryBlue
-                      : Colors.grey.shade500,
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               if (_filters.isActive)
@@ -271,7 +277,7 @@ class _DoctorsPageState extends State<DoctorsPage> {
     );
   }
 
-  Widget _buildDoctorsBody() {
+  Widget _buildDoctorsBody(BuildContext context) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -287,7 +293,9 @@ class _DoctorsPageState extends State<DoctorsPage> {
               Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 12),
               ElevatedButton(

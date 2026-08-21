@@ -10,10 +10,10 @@ class TransactionsView extends GetView<TransactionsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
-        surfaceTintColor: AppColors.white,
+        backgroundColor: Theme.of(context).cardColor,
+        surfaceTintColor: Theme.of(context).cardColor,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: AppColors.primaryBlue),
@@ -86,12 +86,16 @@ class _PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'View your wallet deposits and top-up logs',
-          style: TextStyle(color: AppColors.gray, fontSize: 14, height: 1.45),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 14,
+            height: 1.45,
+          ),
         ),
         SizedBox(height: 6),
         Text(
@@ -114,14 +118,14 @@ class _TransactionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8EEF5)),
-        boxShadow: const [
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A0F172A),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.04),
             blurRadius: 12,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -151,8 +155,8 @@ class _TransactionCard extends StatelessWidget {
                       child: Text(
                         transaction.displayPaymentDetails,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF1F2937),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
@@ -168,7 +172,10 @@ class _TransactionCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   _formatDate(transaction.createdAt),
-                  style: const TextStyle(color: AppColors.gray, fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 13),
                 Text(
@@ -275,8 +282,8 @@ class _TransactionStateView extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFF1F2937),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -285,8 +292,8 @@ class _TransactionStateView extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: AppColors.gray,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 14,
               height: 1.45,
             ),

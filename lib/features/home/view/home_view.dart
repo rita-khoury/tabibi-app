@@ -24,7 +24,7 @@ class HomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF5F7FB),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           RefreshIndicator(
@@ -33,85 +33,87 @@ class HomeView extends StatelessWidget {
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(
-              top: 290,
-              left: 20,
-              right: 20,
-              bottom: 20,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                _buildSectionHeader(
-                  'Specialities',
-                  () => Get.to(() => const AllSpecialitiesPage()),
-                ),
-                const SizedBox(height: 15),
-                Obx(() {
-                  if (controller.isSpecialitiesLoading.value) {
-                    return const SizedBox(
-                      height: 50,
-                      child: Center(child: CircularProgressIndicator()),
+                top: 290,
+                left: 20,
+                right: 20,
+                bottom: 20,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 10),
+                  _buildSectionHeader(
+                    'Specialities',
+                    () => Get.to(() => const AllSpecialitiesPage()),
+                  ),
+                  const SizedBox(height: 15),
+                  Obx(() {
+                    if (controller.isSpecialitiesLoading.value) {
+                      return const SizedBox(
+                        height: 50,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final error = controller.specialitiesErrorMessage.value;
+                    if (error != null) {
+                      return _InlineError(
+                        message: error,
+                        onRetry: controller.loadSpecialities,
+                      );
+                    }
+                    if (controller.specialities.isEmpty) {
+                      return const SizedBox(
+                        height: 50,
+                        child: Center(
+                          child: Text(
+                            'No specialities available at the moment.',
+                          ),
+                        ),
+                      );
+                    }
+                    return SpecialitiesSection(
+                      specialities: controller.specialities,
                     );
-                  }
-                  final error = controller.specialitiesErrorMessage.value;
-                  if (error != null) {
-                    return _InlineError(
-                      message: error,
-                      onRetry: controller.loadSpecialities,
-                    );
-                  }
-                  if (controller.specialities.isEmpty) {
-                    return const SizedBox(
-                      height: 50,
-                      child: Center(
-                        child: Text('No specialities available at the moment.'),
+                  }),
+                  const SizedBox(height: 25),
+                  Obx(
+                    () => Text(
+                      controller.isSearching.value
+                          ? 'Your Requested Doctor'
+                          : 'Top Doctors',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  }
-                  return SpecialitiesSection(
-                    specialities: controller.specialities,
-                  );
-                }),
-                const SizedBox(height: 25),
-                Obx(
-                  () => Text(
-                    controller.isSearching.value
-                        ? 'Your Requested Doctor'
-                        : 'Top Doctors',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(height: 15),
-                Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  final error = controller.doctorsErrorMessage.value;
-                  if (error != null) {
-                    return _InlineError(
-                      message: error,
-                      onRetry: controller.retryDoctors,
+                  const SizedBox(height: 15),
+                  Obx(() {
+                    if (controller.isLoading.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final error = controller.doctorsErrorMessage.value;
+                    if (error != null) {
+                      return _InlineError(
+                        message: error,
+                        onRetry: controller.retryDoctors,
+                      );
+                    }
+                    if (controller.filteredDoctors.isEmpty) {
+                      return const Center(child: Text('No doctors found.'));
+                    }
+                    return ListView.builder(
+                      key: const ValueKey('doctor_list'),
+                      itemCount: controller.filteredDoctors.length,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemBuilder: (context, index) => DoctorCard(
+                        doc: controller.filteredDoctors[index],
+                        openWithFreshDetails: !controller.isSearching.value,
+                      ),
                     );
-                  }
-                  if (controller.filteredDoctors.isEmpty) {
-                    return const Center(child: Text('No doctors found.'));
-                  }
-                  return ListView.builder(
-                    key: const ValueKey('doctor_list'),
-                    itemCount: controller.filteredDoctors.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (context, index) => DoctorCard(
-                      doc: controller.filteredDoctors[index],
-                      openWithFreshDetails: !controller.isSearching.value,
-                    ),
-                  );
-                }),
-              ],
+                  }),
+                ],
               ),
             ),
           ),
@@ -148,11 +150,11 @@ class HomeView extends StatelessWidget {
     child: Container(
       height: 55,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -163,10 +165,16 @@ class HomeView extends StatelessWidget {
           Expanded(
             child: TextField(
               onChanged: controller.searchDoctor,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search for doctor or speciality...',
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
-                prefixIcon: Icon(Icons.search, color: Colors.blue),
+                hintStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(
                   vertical: 17,
@@ -191,7 +199,7 @@ class HomeView extends StatelessWidget {
                       Icons.tune_rounded,
                       color: filtersActive
                           ? const Color(0xff2F80ED)
-                          : Colors.grey.shade500,
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   if (filtersActive)
@@ -410,7 +418,9 @@ class _InlineError extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             TextButton(onPressed: onRetry, child: const Text('Retry')),

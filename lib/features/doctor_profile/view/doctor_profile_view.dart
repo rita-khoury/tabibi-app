@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:tabibi/core/constance/api_constants.dart';
 import 'package:tabibi/core/constance/app_colors.dart';
-import 'package:tabibi/features/appointment/view/appointment_view.dart';
+
 import 'package:tabibi/features/auth/data/models/DoctorModel.dart';
 import 'package:tabibi/features/doctor_profile/binding/doctor_ratings_binding.dart';
 import 'package:tabibi/features/doctor_profile/controller/doctor_profile_controller.dart';
@@ -121,7 +121,7 @@ class DoctorProfileView extends StatelessWidget {
         }
         return _BookingBar(
           doctor: doctor,
-          onBook: () => Get.to(() => AppointmentView(doctorId: doctor.id)),
+          onBook: () => controller.openBooking(doctor.id),
         );
       }),
     );

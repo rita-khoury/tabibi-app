@@ -128,14 +128,20 @@
 //   }
 // }
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/constance/app_alerts.dart';
 import '../../../core/constance/app_messages.dart';
+import '../../../core/constance/app_colors.dart';
+import '../../../core/routes/app_routes.dart';
+import '../../appointment/view/appointment_view.dart';
 import '../../auth/data/models/DoctorModel.dart';
+import '../../auth/repository/AuthController.dart';
 import '../../auth/repository/auth_repository.dart';
 import '../../favorites/controller/favorites_doctors_controller.dart';
+import '../../medical_records/controller/medical_records_controller.dart';
+import '../../medical_records/view/medical_profile_editor_view.dart';
 
 class DoctorProfileController extends GetxController {
   final AuthRepository _authRepo = Get.find<AuthRepository>();
@@ -145,6 +151,7 @@ class DoctorProfileController extends GetxController {
   final doctor = Rxn<DoctorModel>();
   final isLoading = true.obs;
   final isFavoriteLoading = false.obs;
+  final isBookingGuardLoading = false.obs;
 
   @override
   void onInit() {
@@ -222,6 +229,62 @@ class DoctorProfileController extends GetxController {
         value?.isFavorite = isFavorite;
       });
     }
+  }
+
+  Future<void> openBooking(int doctorId) async {
+    if (isBookingGuardLoading.value) return;
+
+    final authController = Get.isRegistered<AuthController>()
+        ? Get.find<AuthController>()
+        : null;
+    if (authController == null || !authController.isLoggedIn) {
+      _showTopNotice('Please log in first to proceed with your booking.');
+      Get.toNamed(AppRoutes.login);
+      return;
+    }
+
+    try {
+      isBookingGuardLoading.value = true;
+      final completion = await _authRepo.getCompletionStatus();
+      await authController.updateProfileCompletionStatus(completion.completed);
+      if (!completion.completed) {
+        _showTopNotice(
+          'Please complete your medical record first to proceed with your booking.',
+        );
+        final medicalController = Get.isRegistered<MedicalRecordController>()
+            ? Get.find<MedicalRecordController>()
+            : Get.put(MedicalRecordController());
+        await medicalController.fetchMedicalProfile();
+        Get.to<bool>(() => const MedicalProfileEditorView());
+        return;
+      }
+
+      Get.to(() => AppointmentView(doctorId: doctorId));
+    } catch (_) {
+      _showTopNotice(
+        'Unable to verify your medical record right now. Please try again.',
+        backgroundColor: Colors.redAccent,
+      );
+    } finally {
+      isBookingGuardLoading.value = false;
+    }
+  }
+
+  void _showTopNotice(
+    String message, {
+    Color backgroundColor = AppColors.primaryBlue,
+  }) {
+    Get.snackbar(
+      'Booking',
+      message,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: backgroundColor,
+      colorText: Colors.white,
+      margin: const EdgeInsets.all(12),
+      borderRadius: 12,
+      icon: const Icon(Icons.info_outline, color: Colors.white),
+      duration: const Duration(seconds: 3),
+    );
   }
 
   Future<void> toggleFavorite() async {
